@@ -365,7 +365,7 @@ int read_cards(char *suggestion)
 		if (feof(fff)) break;
 
 		/* Strip newline */
-		buf[strlen(buf) - 1] = '\0';
+		buf[strcspn(buf, "\r\n")] = '\0';
 
 		/* Skip comments and blank lines */
 		if (!buf[0] || buf[0] == '#') continue;
@@ -625,7 +625,7 @@ void read_campaign(void)
 		if (feof(fff)) break;
 
 		/* Strip newline */
-		buf[strlen(buf) - 1] = '\0';
+		buf[strcspn(buf, "\r\n")] = '\0';
 
 		/* Skip comments and blank lines */
 		if (!buf[0] || buf[0] == '#') continue;
