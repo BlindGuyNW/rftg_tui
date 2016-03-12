@@ -735,7 +735,7 @@ var GUI = (function() {
     card_popup(card_id(c));
     ev.preventDefault();
   });
-  var long_touch;
+  var long_touch, long_touch_x, long_touch_y;
   function do_touch(ev) {
     if (ev.touches.length === 1) {
       var c = target_card(ev.touches[0].target);
@@ -743,6 +743,8 @@ var GUI = (function() {
         card_popup(card_id(c));
         long_touch = undefined;
       }, 1000);
+      long_touch_x = ev.touches[0].clientX;
+      long_touch_y = ev.touches[0].clientY;
     } else {
       if (long_touch) window.clearTimeout(long_touch);
       long_touch = undefined;
@@ -751,6 +753,13 @@ var GUI = (function() {
   document.getElementById('board').addEventListener('touchstart', do_touch);
   document.getElementById('board').addEventListener('touchend', do_touch);
   document.getElementById('board').addEventListener('touchcancel', do_touch);
+  document.getElementById('board').addEventListener('touchmove', function(ev) {
+    if (Math.abs(long_touch_x - ev.touches[0].clientX) > 10 ||
+        Math.abs(long_touch_y - ev.touches[0].clientY) > 10) {
+      if (long_touch) window.clearTimeout(long_touch);
+      long_touch = undefined;
+    }
+  });
 
   function set_prompt(txt) {
     document.getElementById('actionprompt').innerHTML = txt;
