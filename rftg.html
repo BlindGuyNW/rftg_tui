@@ -229,6 +229,14 @@ td.icon, th.icon {
     text-align:center;
     border: 2px solid rgba(0,0,0,0);
 }
+td.goal img {
+    height:50px;
+    border-radius:5px;
+}
+td.goal1 {
+    filter: grayscale(1) brightness(.8);
+    -webkit-filter: grayscale(1) brightness(.8);
+}
 .icon.inactiveaction {
     opacity: .33;
     filter: grayscale(1);
@@ -296,8 +304,7 @@ display:inline-block;
 }
 .gamelog {
 text-align: left;
-border: 2px solid #333; background: #666;
-opacity:.95;
+border: 2px solid #333; background: rgba(100,100,100,0.95);
 border-radius: 10px;
 color: #ccc;
 padding: 0 10px;
@@ -326,6 +333,41 @@ color: #f66;
 }
 .logline.discard, .logline.draw, .logline.verbose {
 color: #888;
+}
+#goals {
+text-align: left;
+border: 2px solid #333; background: rgba(100,100,100,0.95);
+border-radius: 10px;
+position:absolute;
+right:0;
+z-index:1;
+}
+#goals img {
+  width: 120px;
+  border-radius: 10px;
+  margin: 3px;
+}
+#goals th.claimed img {
+  filter: grayscale(1) brightness(0.8);
+  -webkit-filter: grayscale(1) brightness(0.8);
+}
+#goals th {
+padding: 0px;
+vertical-align: bottom;
+}
+#goals td {
+color: #000;
+text-align: left;
+font-size: 20px;
+}
+#goals span {
+display: inline-block;
+text-align: right;
+border-radius: 10px;
+}
+#goals span.player0 {
+background-color: #44a;
+color: #fff;
 }
 .player {
 overflow: hidden;
@@ -390,7 +432,10 @@ width: 100px;
 <div style="text-align:right">
 <button id="restart_undo" data-accel="ctrl-90" onclick="GUI.do_undo(GUI.RESTART.UNDO)">Undo</button>
 <span style="position:relative;display:inline-block">
-<button onclick="var m=document.getElementById('gamelog');m.hidden=!m.hidden;m.scrollTop=m.scrollHeight">Log</button><div class="gamelog" id="gamelog" hidden style="">
+<button onclick="var m=document.getElementById('goals');m.hidden=!m.hidden;m.scrollTop=m.scrollHeight" id="goalsbutton" hidden>Goals</button><div id="goals" hidden>
+</div></span>
+<span style="position:relative;display:inline-block">
+<button onclick="var m=document.getElementById('gamelog');m.hidden=!m.hidden;m.scrollTop=m.scrollHeight">Log</button><div class="gamelog" id="gamelog" hidden>
 <table id="gamelogtext"></table>
 </div></span>
 <span style="position:relative;display:inline-block" onclick="var m=document.getElementById('menu');m.hidden=!m.hidden">
@@ -536,6 +581,8 @@ var GUI = (function() {
     ea.selectedIndex = exp_level;
     eb.selectedIndex = num_players - 2;
     if (advanced) ec.classList.add('selected');
+    if (goals) ed.classList.add('selected');
+    if (goals) document.getElementById('goalsbutton').hidden = false;
     update_menu();
   }
 
@@ -546,10 +593,10 @@ var GUI = (function() {
     var menu_num_players = document.getElementById('menu_num_players').value;
     var menu_exp_level = document.getElementById('menu_exp_level').value;
     var menu_advanced = !ec.hidden && ec.classList.contains('selected');
-    var menu_goals = !ec.hidden && ed.classList.contains('selected');
-    var menu_takeovers = !ec.hidden && ee.classList.contains('selected');
+    var menu_goals = !ed.hidden && ed.classList.contains('selected');
+    var menu_takeovers = !ee.hidden && ee.classList.contains('selected');
     if (menu_exp_level == exp_level && menu_num_players == num_players &&
-      menu_advanced == advanced) {
+      menu_advanced == advanced && menu_goals == goals) {
       set_screen('gamescreen');
       do_undo(RESTART.NEW);
       return;
@@ -653,6 +700,7 @@ var GUI = (function() {
   var num_players = 2;
   var exp_level = 0;
   var advanced = false;
+  var goals = false;
   var images = [];
   var images_data;
   var game_over = false;
@@ -679,17 +727,23 @@ var GUI = (function() {
       advanced = true;
       params.push('-a');
     }
-    if (true || ('nogoals' in url_params)) params.push('-nog');
+    if (('nogoals' in url_params)) {
+      goals = false;
+      params.push('-nog');
+    } else {
+      goals = exp_level >= 1 && exp_level <= 3;
+    }
     if (true || ('notakeovers' in url_params)) params.push('-not');
     history.replaceState({}, document.title, window.location.pathname);
   } else {
     var s = localStorage && localStorage.getItem('autosave.rftg');
     if (s) {
-      var m = s.match(/^RFTG Save\n0.9.4\n\d+\n(\d+) (\d+)\n(\d+) /);
+      var m = s.match(/^RFTG Save\n0.9.4\n\d+\n(\d+) (\d+)\n(\d+) (\d+)/);
       if (m) {
         num_players = parseInt(m[1]);
         exp_level = parseInt(m[2]);
         advanced = m[3] === '1';
+        goals = exp_level >= 1 && exp_level <= 3 && m[4] !== '1';
         save = s;
       }
     }
@@ -1299,6 +1353,9 @@ var GUI = (function() {
       if (diff && animate && content) content = '<div class="modified">' + content + '</div>';
       return '<td class="icon' + et + '"' + bg + '>' + (content || '&nbsp;') + '</td>';
     }
+    function makegoal(id, et) {
+      return '<td class="goal goal' + et + '"><img src="' + image_from_data(2000 + id) + '"></td>';
+    }
 
     function makecard(c, i) {
       var pos = i * cardspacing, top = 0, num_goods = c.num_goods;
@@ -1342,6 +1399,7 @@ var GUI = (function() {
       t += makesumicon(5);
       t += makesumicon(3);
       t += makesumicon(3, '6');
+      if (game_status.goals.length) t += '<td>Goals</td>';
       if (exp_level === 3) t += makesumicon(ICON.PRESTIGE);
       t += '<td>Sum</td>';
       var players = [];
@@ -1357,6 +1415,7 @@ var GUI = (function() {
         var p = game_status.player[e];
         var pos = players.filter(function(a) { return score(a) > score(e); }).length + 1;
         var cells = [pos + '.', p.vp, p.world_vp, p.dev_vp, p.dev6_vp];
+        if (game_status.goals.length) cells.push(p.goal_vp);
         if (exp_level === 3) cells.push(p.prestige);
         cells.push(p.total_vp);
         return '<tr class="player' + e + '">' + cells.map(function(e) { return '<td>' + e + '</td>'; }).join('');
@@ -1399,6 +1458,35 @@ var GUI = (function() {
     });
     txt += makeicon();
     document.getElementById('game_status').innerHTML = txt;
+    var goal_progress = [];
+    var goal_claimed = [];
+    var goal_maximum = game_status.goals.map(function(e){return e.min;});
+    txt = '<table><tr>';
+    txt += game_status.goals.map(function(e,i){
+      var claimed = i < 4 && game_status.player.some(function (p) {return p.goals_claimed[i] > 0;});
+      var et = claimed ? ' class="claimed"' : '';
+      goal_claimed[i] = claimed;
+      game_status.player.forEach(function(e){
+        if (e.goals_progress[i] > goal_maximum[i]) goal_maximum[i] = e.goals_progress[i];
+      });
+      goal_progress[i] = game_status.player.map(function (e,i){return i;}).sort(function (a,b) {
+        return (game_status.player[b].goals_progress[i] * 4 + game_status.player[b].goals_claimed[i]) -
+               (game_status.player[a].goals_progress[i] * 4 + game_status.player[a].goals_claimed[i]);
+      });
+      return '<th'+et+'><img src="' + image_from_data(2000 + e.idx) + '"></th>';
+    }).join('');
+    for (var j = 0; j < num_players; j++) {
+      txt += '<tr>'
+      txt += game_status.goals.map(function(e,i){
+        var p_nr = goal_progress[i][j];
+        var p = game_status.player[p_nr];
+        if (p.goals_progress[i] <= 0 || goal_claimed[i]) return '<td></td>';
+        var perc = p.goals_progress[i] / goal_maximum[i] * 100;
+        return '<td><span style="width:'+perc+'%" class="player'+p_nr+'">'+p.goals_progress[i]+'&nbsp;</span></td>';
+      }).join('');
+    }
+    txt += '</table>';
+    document.getElementById('goals').innerHTML = txt;
     for (var j = 0; j < num_players; j++) {
       var p = game_status.player[j];
       var txt = makeicon(ICON.VP, '<b style="font-size:20px">' + p.total_vp + '</b><br>' + p.vp, pdiff('total_vp'));
@@ -1414,7 +1502,12 @@ var GUI = (function() {
       if (p.military) txt += makeicon(ICON.MILITARY, '<b style="font-size:25px;color:red">' + p.military + '</b>', pdiff('military'));
       else txt += makeicon();
       if (p.action >= 0) txt += makeactionicon(p.action, true, false);
+      else txt += makeicon();
       if (advanced && p.second_action >= 0) txt += makeactionicon(p.second_action, true, false);
+      else if (advanced) txt += makeicon();
+      for (var i = 0; i < game_status.goals.length; i++)
+        if (p.goals_claimed[i])
+          txt += makegoal(game_status.goals[i].idx, p.goals_claimed[i]);
       document.getElementById('player_status' + j).innerHTML = txt;
       if (j) document.getElementById('player_status_over' + j).innerHTML = txt;
     }
@@ -1514,15 +1607,23 @@ var GUI = (function() {
           vp_stack: array[i++],
           phases: [],
           player: [],
+          goals: [],
         }
         for (var j = 0; j < (advanced ? 7 : 5); j++) {
           var v = array[i++];
           game_status.phases[j] = v > 0;
           if (v > 1) game_status.current_phase = j;
         }
+        while (array[i] >= 0) {
+          game_status.goals.push({
+            idx: array[i++],
+            min: array[i++],
+          });
+        }
+        i++;
         for (var j = 0; j < num_players; j++) {
-          var t;
-          game_status.player.push({
+          var t, p;
+          game_status.player.push(p = {
             action: array[i++],
             second_action: array[i++],
             vp: array[i++],
@@ -1538,7 +1639,13 @@ var GUI = (function() {
             dev_vp: array[i++],
             dev6_vp: array[i++],
             table_size: decks['table'+j].length,
+            goals_claimed: [],
+            goals_progress: [],
           });
+          for (var k = 0; k < game_status.goals.length; k++) {
+            p.goals_claimed[k] = array[i++];
+            p.goals_progress[k] = array[i++];
+          }
         }
       } else if (msgtype == MSG.LOGLINE) {
         add_log({

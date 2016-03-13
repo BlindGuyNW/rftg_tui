@@ -1317,10 +1317,10 @@ void get_vp(game *g, int who)
 				dev6 += get_score_bonus(g, who, x);
 		}
 	}
-        add_data(p_ptr->goal_vp);
+	add_data(p_ptr->goal_vp);
 	add_data(worlds);
-        add_data(devs);
-        add_data(dev6);
+	add_data(devs);
+	add_data(dev6);
 
 	/* Reset oort kind */
 	g->oort_kind = kind;
@@ -1375,43 +1375,6 @@ void get_player_state(game *g, int who)
 	/* Count military strength */
 	compute_military(g, who, &military);
 
-	/* Loop over goals */
-	for (i = 0; i < MAX_GOAL; i++)
-	{
-		/* Assume goal is not displayed */
-		goal_display[i] = 0;
-
-		/* Assume goal is not grayed */
-		goal_gray[i] = 0;
-
-		/* Skip inactive goals */
-		if (!g->goal_active[i]) continue;
-
-		/* Check for "first" goal */
-		if (i <= GOAL_FIRST_4_MILITARY)
-		{
-			/* Check for unclaimed */
-			if (!g->p[who].goal_claimed[i]) continue;
-		}
-		else
-		{
-			/* Check for insufficient progress */
-			if (g->p[who].goal_progress[i] < goal_minimum(i))
-				continue;
-
-			/* Check for less progress than other players */
-			if (g->p[who].goal_progress[i] < g->goal_most[i])
-				continue;
-
-			/* Unclaimed goals should be gray */
-			if (!g->p[who].goal_claimed[i])
-				goal_gray[i] = 1;
-		}
-
-		/* Goal should be displayed */
-		goal_display[i] = 1;
-
-	}
 //	printf("Player %d: actions %d/%d, vp %d/%d, prestige %d, goals ",who,act1,act2,vp,end_vp,prestige);
 	add_data(act1);
 	add_data(act2);
@@ -1421,8 +1384,15 @@ void get_player_state(game *g, int who)
 	add_data(military.base);
 	add_data(prestige);
 	get_vp(g, who);
-//	for (i = 0; i < MAX_GOAL; i++) if (g->goal_active[i]) printf("%d", goal_display[i] ? goal_gray[i] ? 2 : 1 : 0);
-//	printf("\n");
+	/* Loop over goals */
+	for (i = 0; i < MAX_GOAL; i++)
+	{
+		/* Skip inactive goals */
+		if (!g->goal_active[i]) continue;
+		add_data(g->p[who].goal_claimed[i] ? 2 : i > GOAL_FIRST_4_MILITARY &&
+		         g->p[who].goal_progress[i] == g->goal_most[i] && g->goal_most[i] >= goal_minimum(i));
+		add_data(g->p[who].goal_progress[i]);
+	}
 }
 
 static int get_trade_value(game *g, card *c_ptr, int no_bonus)
@@ -1514,6 +1484,14 @@ static void get_state(game *g, int get_trade_values) {
 		add_data(c);
 
 	}
+	for (i = 0; i < MAX_GOAL; i++)
+	{
+		/* Skip inactive goals */
+		if (!g->goal_active[i]) continue;
+		add_data(i);
+		add_data(goal_minimum(i));
+	}
+	add_data(-1);
 
 	score_game(g);
 	/* Loop over players */
