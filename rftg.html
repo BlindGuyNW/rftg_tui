@@ -397,6 +397,10 @@ position: fixed;
 bottom: 0;
 width: 100%;
 }
+#status_over div.hidden {
+position: relative;
+top: 1000px;
+}
 h1 {
 text-align: center;
 }
@@ -787,7 +791,7 @@ var GUI = (function() {
   load_settings();
   for (var i = num_players; i < 6; i++) {
     document.getElementById('player' + i).hidden = true;
-    document.getElementById('player_over' + i).hidden = true;
+    document.getElementById('player_over' + i).classList.add('hidden');
   }
 
   function image_from_data(nr) {
@@ -1308,7 +1312,7 @@ var GUI = (function() {
     for (var i = 1; i < num_players; i++) {
       var visible = bottom - document.getElementById('player' + i).offsetTop;
       var pos = (num_players - i) * 58;
-      document.getElementById('player_over' + i).hidden = visible > pos;
+      document.getElementById('player_over' + i).classList[visible > pos ? 'add' : 'remove']('hidden');
     }
   }
 
