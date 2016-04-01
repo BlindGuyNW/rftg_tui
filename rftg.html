@@ -286,9 +286,6 @@ font-size: 30px;
 font-family: Oswald, arial;
 cursor: default;
 }
-.menu div:hover {
-background: #88a;
-}
 span.modalopt.selected, button.selected {
 background: #88a;
 border: 2px solid yellow;
@@ -475,7 +472,8 @@ width: 100px;
  <div data-accel="ctrl-78" onclick="GUI.do_undo(GUI.RESTART.NEW)">New Game</div>
  <div data-accel="27" onclick="GUI.set_screen('menuscreen')">Exit Game</div>
  <div onclick="GUI.set_screen('settingsscreen')">Settings</div>
- <div data-accel="ctrl-83" onclick="window.open('data:text/plain;base64,'+window.btoa(localStorage['autosave.rftg']),'_blank')">Export Save</div>
+ <div style="position:relative">Export Save<a style="position:absolute;width:100%;height:100%;top:0;left:0" id="exportsavelink" target="_blank" download="save.rftg"></a></div>
+ <div style="position:relative">Import Save<input onchange="GUI.do_importsave(this.files[0])" style="position:absolute;width:100%;height:100%;top:0;left:0;opacity:0" type="file"></div>
  <div onclick="GUI.set_screen('aboutscreen')">About</div>
  </div></span>
 </td></table>
@@ -659,6 +657,27 @@ var GUI = (function() {
     document.getElementById('setting_pullup').selectedIndex = settings.pullup ? 1 : 0;
     document.getElementById('setting_revstart').selectedIndex = settings.revstart ? 1 : 0;
   }
+  function set_save_params(s) {
+    if (!s) return false;
+    var m = s.match(/^RFTG Save\n0.9.4\n\d+\n(\d+) (\d+)\n(\d+) (\d+)/);
+    if (!m) return false;
+    num_players = parseInt(m[1]);
+    exp_level = parseInt(m[2]);
+    advanced = m[3] === '1';
+    goals = exp_level >= 1 && exp_level <= 3 && m[4] !== '1';
+    return true;
+  }
+  GUI.do_importsave = function (file) {
+    if (!file) return;
+    var reader = new FileReader();
+    reader.onloadend = function (ev) {
+      if (!(ev.target.readyState === FileReader.DONE)) return;
+      if (!set_save_params(ev.target.result)) return;
+      localStorage.setItem('autosave.rftg', ev.target.result);
+      location.reload();
+    }
+    reader.readAsText(file.slice());
+  }
 
   function card_popup(cid) {
     document.getElementById('cardpopupimg').src = image_from_data(card_info[cid].image);
@@ -762,16 +781,7 @@ var GUI = (function() {
     history.replaceState({}, document.title, window.location.pathname);
   } else {
     var s = localStorage && localStorage.getItem('autosave.rftg');
-    if (s) {
-      var m = s.match(/^RFTG Save\n0.9.4\n\d+\n(\d+) (\d+)\n(\d+) (\d+)/);
-      if (m) {
-        num_players = parseInt(m[1]);
-        exp_level = parseInt(m[2]);
-        advanced = m[3] === '1';
-        goals = exp_level >= 1 && exp_level <= 3 && m[4] !== '1';
-        save = s;
-      }
-    }
+    if (set_save_params(s)) save = s;
   }
   init_menu();
   load_settings();
@@ -1704,8 +1714,10 @@ var GUI = (function() {
       }
     }
     do_select();
+    var autosave = FS.readFile('autosave.rftg', { encoding: 'utf8' });
     if (localStorage)
-      localStorage.setItem('autosave.rftg', FS.readFile('autosave.rftg', { encoding: 'utf8' }));
+      localStorage.setItem('autosave.rftg', autosave);
+    document.getElementById('exportsavelink').href = 'data:text/plain;base64,' + window.btoa(autosave);
   }
   function add_log(line) {
     var table = document.getElementById('gamelogtext');
