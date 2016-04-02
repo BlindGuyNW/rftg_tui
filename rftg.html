@@ -276,7 +276,15 @@ td.goal1 {
 span.modalopt {
 display: inline-block;
 }
-button, select, .menu, span.modalopt {
+
+input::-webkit-outer-spin-button,input::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+}
+input#menu_seed {
+    -moz-appearance:textfield;
+    width: 130px;
+}
+input#menu_seed, button, select, .menu, span.modalopt {
 border: 2px solid #333; background: #666;
 border-radius: 10px;
 color: #ccc;
@@ -536,11 +544,11 @@ goal images has been granted by Rio Grande Games.
 <option value="5">5 Players</option>
 <option value="6">6 Players</option>
 </select><br>
-&nbsp;
 <button onclick="this.classList.toggle('selected')" id="menu_advanced">Advanced</button>
 <button onclick="this.classList.toggle('selected')" id="menu_goals">Goals</button>
 <button onclick="this.classList.toggle('selected')" id="menu_takeovers">Takeovers</button>
-&nbsp;
+<button onclick="this.classList.toggle('selected');GUI.update_menu()" id="menu_seedset">Custom Seed</button>
+<input hidden type="number" id="menu_seed">
 <h1>
 <button data-accel="27" onclick="GUI.set_screen('gamescreen')">Return</button>
 <button data-accel="13" onclick="GUI.do_stargame()">Start Game</button>
@@ -590,6 +598,8 @@ var GUI = (function() {
     var ec = document.getElementById('menu_advanced');
     var ed = document.getElementById('menu_goals');
     var ee = document.getElementById('menu_takeovers');
+    var ef = document.getElementById('menu_seedset');
+    var eg = document.getElementById('menu_seed');
     var maxp = [4, 5, 6, 6, 5][ea.value];
     for (var i = 0; i < 5; i++)
       eb.options[i].disabled = i + 2 > maxp;
@@ -597,6 +607,7 @@ var GUI = (function() {
     ec.hidden = eb.value > 2;
     ed.hidden = [0, 1, 1, 1, 0][ea.value] === 0;
     ee.hidden = [0, 0, 1, 1, 0][ea.value] === 0;
+    eg.hidden = !ef.classList.contains('selected');
   }
 
   function init_menu() {
@@ -622,8 +633,10 @@ var GUI = (function() {
     var menu_advanced = !ec.hidden && ec.classList.contains('selected');
     var menu_goals = !ed.hidden && ed.classList.contains('selected');
     var menu_takeovers = !ee.hidden && ee.classList.contains('selected');
+    var menu_seed = document.getElementById('menu_seedset').classList.contains('selected') ?
+      document.getElementById('menu_seed').value : undefined;
     if (menu_exp_level == exp_level && menu_num_players == num_players &&
-      menu_advanced == advanced && menu_goals == goals) {
+      menu_advanced == advanced && menu_goals == goals && menu_seed === undefined) {
       set_screen('gamescreen');
       do_undo(RESTART.NEW);
       return;
@@ -632,6 +645,7 @@ var GUI = (function() {
     if (menu_advanced) loc += '&advanced';
     if (!menu_goals) loc += '&nogoals';
     if (!menu_takeovers) loc += '&notakeovers';
+    if (menu_seed !== undefined) loc += '&seed=' + menu_seed;
     location = loc;
     location.reload();
   }
@@ -775,13 +789,16 @@ var GUI = (function() {
       advanced = true;
       params.push('-a');
     }
-    if (('nogoals' in url_params)) {
+    if ('nogoals' in url_params) {
       goals = false;
       params.push('-nog');
     } else {
       goals = exp_level >= 1 && exp_level <= 3;
     }
     if (true || ('notakeovers' in url_params)) params.push('-not');
+    if ('seed' in url_params) {
+      params.push('-r', url_params.seed);
+    }
     history.replaceState({}, document.title, window.location.pathname);
   } else {
     var s = localStorage && localStorage.getItem('autosave.rftg');
