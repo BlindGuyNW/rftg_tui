@@ -269,9 +269,14 @@ td.goal1 {
     filter: grayscale(1) brightness(2.5);
     -webkit-filter: grayscale(1) brightness(2.5);
 }
-.icon.p_leader.p_turn {
+.icon.p_leader.p_turn div {
+    position: absolute;
+    top: 0;
+    left: 0;
     border: 2px solid white;
     border-radius: 50%;
+    width: 47px;
+    height: 47px;
 }
 span.modalopt {
 display: inline-block;
@@ -1632,7 +1637,7 @@ var GUI = (function() {
         if (p.prestige_leader) et.push('p_leader');
         if (p.prestige_used) et.push('p_used');
         if (p.prestige_turn) et.push('p_turn');
-        txt += makeicon(ICON.PRESTIGE, '<b style="font-size:25px">' + p.prestige + '</b>', pdiff('prestige'), et);
+        txt += makeicon(ICON.PRESTIGE, '<div></div><b style="font-size:25px">' + p.prestige + '</b></div>', pdiff('prestige'), et);
       }
       txt += makeicon(ICON.DRAW, '<b style="font-size:25px">' + p.table_size + '</b>', pdiff('table_size'));
       txt += makeicon(ICON.HANDSIZE, '<b style="font-size:25px">' + p.hand_size + '</b>', pdiff('hand_size'));
