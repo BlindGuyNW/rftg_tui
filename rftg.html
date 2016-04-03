@@ -236,6 +236,44 @@ td.icon, th.icon {
     text-align:center;
     border: 2px solid rgba(0,0,0,0);
 }
+.icon div.military div, .icon div.military {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%,-50%);
+    -webkit-transform: translate(-50%,-50%);
+}
+.icon div.military {
+    width:39px;
+    height:39px;
+    color: #ed1c24;
+    font-size: 25px;
+    border-radius: 50%;
+    font-weight: bold;
+    border: 3.5px solid #ed1c24;
+    text-shadow: none;
+    background-color: #fff;
+}
+.icon div.military.vsrebel {
+    color: #fff;
+    text-shadow: -1.5px -1.5px #ed1c24, -1.5px 1.5px #ed1c24, 1.5px -1.5px #ed1c24, 1.5px 1.5px #ed1c24;
+    border: 3.5px solid #ed1c24;
+    background-color: #fabfac;
+}
+.icon div.hasrebel, .icon div.hasimperium {
+    width:16px;
+    height:16px;
+    border-radius:50%;
+    margin:2px;
+}
+.icon div.hasrebel {
+    border:2.5px solid #ed1c24;
+    background-color: #fabfac;
+}
+.icon div.hasimperium {
+    border:2.5px solid #8c2b99;
+    background-color: #be86ca;
+}
 td.goal div {
     height: 50px;
     border-radius:5px;
@@ -1492,6 +1530,13 @@ var GUI = (function() {
       if (diff && animate && content) content = '<div class="modified">' + content + '</div>';
       return '<td class="icon' + et + '"' + bg + '>' + (content || '&nbsp;') + '</td>';
     }
+    function makemilitaryicon(value, diff, et) {
+      if (!value) return makeicon();
+      var modified = diff && animate && content ? ' class="modified"' : '';
+      if (value > 0) value = '+' + value;
+      et = et ? ' ' + et : '';
+      return '<td class="icon"><div class="military' + et + '"><div' + modified + '>' + value + '</div></div></td>';
+    }
     function makegoal(id, et) {
       if (id >= 12) et += ' goalbig';
       return '<td class="goal goal' + et + '"><div><img src="' + image_from_data(2000 + id) + '"></div></td>';
@@ -1642,8 +1687,12 @@ var GUI = (function() {
       }
       txt += makeicon(ICON.DRAW, '<b style="font-size:25px">' + p.table_size + '</b>', pdiff('table_size'));
       txt += makeicon(ICON.HANDSIZE, '<b style="font-size:25px">' + p.hand_size + '</b>', pdiff('hand_size'));
-      if (p.military) txt += makeicon(ICON.MILITARY, '<b style="font-size:25px;color:red">' + p.military + '</b>', pdiff('military'));
-      else txt += makeicon();
+      txt += makemilitaryicon(p.military,pdiff('military'));
+      txt += makemilitaryicon(p.military_vsrebel,pdiff('military_vsrebel'),'vsrebel');
+      if (takeovers) {
+        txt += makeicon(undefined, (p.has_imperium ? '<div class="hasimperium"></div>' : '') +
+                                   (p.has_rebel ? '<div class="hasrebel"></div>' : ''));
+      }
       if (p.action >= 0) txt += makeactionicon(p.action, true, false);
       else txt += makeicon();
       if (advanced && p.second_action >= 0) txt += makeactionicon(p.second_action, true, false);
@@ -1773,6 +1822,9 @@ var GUI = (function() {
             total_vp: array[i++],
             hand_size: array[i++],
             military: array[i++],
+            military_vsrebel: array[i++],
+            has_imperium: (array[i] & 2) !== 0,
+            has_rebel: (array[i++] & 1) !== 0,
             prestige: (t = array[i++]) >> 3,
             prestige_leader: (t & 4) !== 0,
             prestige_turn: (t & 2) !== 0,
