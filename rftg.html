@@ -1410,6 +1410,7 @@ var GUI = (function() {
     var bottom = window.innerHeight + (document.documentElement.scrollTop || document.body.scrollTop);
     for (var i = 1; i < num_players; i++) {
       var visible = bottom - document.getElementById('player' + i).offsetTop;
+      visible -= document.getElementById('board').offsetTop;
       var pos = (num_players - i) * 58;
       document.getElementById('player_over' + i).classList[visible > pos ? 'add' : 'remove']('hidden');
     }
