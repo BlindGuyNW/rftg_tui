@@ -1543,13 +1543,13 @@ var GUI = (function() {
 
     function makeicon(id, content, diff, et) {
       var bg = id !== undefined ? ' style="background-image: url(' + image_from_data(3000 + id) + ')"' : '';
-      var modified = true || diff && animate && content ? ' class="modified"' : '';
+      var modified = diff && animate && content ? ' class="modified"' : '';
       et = et ? ' ' + et.join(' ') : '';
       return '<td class="icon' + et + '"' + bg + '><div' + modified + '>' + (content || '&nbsp;') + '</div></td>';
     }
     function makemilitaryicon(value, diff, et) {
       if (!value) return makeicon();
-      var modified = true || diff && animate && content ? ' class="modified"' : '';
+      var modified = diff && animate && content ? ' class="modified"' : '';
       if (value > 0) value = '+' + value;
       et = et ? ' ' + et : '';
       return '<td class="icon"><div class="military' + et + '"><div><div' + modified + '>' + value + '</div></div></div></td>';
