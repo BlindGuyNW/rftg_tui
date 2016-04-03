@@ -583,7 +583,7 @@ Start world choice <select id="setting_revstart">
 </select>
 <h2><button data-accel="13" onclick="GUI.save_settings();GUI.set_screen('gamescreen')">Return</button></h2>
 </div></div>
-<div hidden class="popup screen centeredscreen_o" id="cardpopup"><div class="centeredscreen_i">
+<div hidden class="popup screen centeredscreen_o" id="cardpopup" onclick="GUI.set_screen('gamescreen')" oncontextmenu="event.preventDefault()"><div class="centeredscreen_i">
 <img id="cardpopupimg" data-accel="27" onclick="GUI.set_screen('gamescreen')">
 </div></div>
 <div hidden class="popup screen centeredscreen_o" id="gameoverpopup"><div class="centeredscreen_i">
