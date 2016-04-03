@@ -236,7 +236,7 @@ td.icon, th.icon {
     text-align:center;
     border: 2px solid rgba(0,0,0,0);
 }
-.icon div.military div, .icon div.military {
+.icon div.military > div, .icon div.military {
     position: absolute;
     top: 50%;
     left: 50%;
@@ -307,14 +307,31 @@ td.goal1 {
     filter: grayscale(1) brightness(2.5);
     -webkit-filter: grayscale(1) brightness(2.5);
 }
-.icon.p_leader.p_turn div {
+.prestige {
+  width:100%;
+  height:100%;
+}
+.prestige div {
+  position: absolute;
+  font-weight: bold;
+  font-size: 25px;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%,-50%);
+  -webkit-transform: translate(-50%,-50%);
+}
+.icon.p_leader.p_turn .modified {
+  width:100%;
+  height:100%;
+}
+.icon.p_leader.p_turn .prestige {
     position: absolute;
     top: 0;
     left: 0;
-    border: 2px solid white;
+    border: 2.5px solid white;
     border-radius: 50%;
-    width: 47px;
-    height: 47px;
+    width: 46px;
+    height: 46px;
 }
 span.modalopt {
 display: inline-block;
@@ -1526,16 +1543,16 @@ var GUI = (function() {
 
     function makeicon(id, content, diff, et) {
       var bg = id !== undefined ? ' style="background-image: url(' + image_from_data(3000 + id) + ')"' : '';
+      var modified = true || diff && animate && content ? ' class="modified"' : '';
       et = et ? ' ' + et.join(' ') : '';
-      if (diff && animate && content) content = '<div class="modified">' + content + '</div>';
-      return '<td class="icon' + et + '"' + bg + '>' + (content || '&nbsp;') + '</td>';
+      return '<td class="icon' + et + '"' + bg + '><div' + modified + '>' + (content || '&nbsp;') + '</div></td>';
     }
     function makemilitaryicon(value, diff, et) {
       if (!value) return makeicon();
-      var modified = diff && animate && content ? ' class="modified"' : '';
+      var modified = true || diff && animate && content ? ' class="modified"' : '';
       if (value > 0) value = '+' + value;
       et = et ? ' ' + et : '';
-      return '<td class="icon"><div class="military' + et + '"><div' + modified + '>' + value + '</div></div></td>';
+      return '<td class="icon"><div class="military' + et + '"><div><div' + modified + '>' + value + '</div></div></div></td>';
     }
     function makegoal(id, et) {
       if (id >= 12) et += ' goalbig';
@@ -1683,7 +1700,7 @@ var GUI = (function() {
         if (p.prestige_leader) et.push('p_leader');
         if (p.prestige_used) et.push('p_used');
         if (p.prestige_turn) et.push('p_turn');
-        txt += makeicon(ICON.PRESTIGE, '<div></div><b style="font-size:25px">' + p.prestige + '</b></div>', pdiff('prestige'), et);
+        txt += makeicon(ICON.PRESTIGE, '<div class="prestige"><div>' + p.prestige + '</div></div>', pdiff('prestige'), et);
       }
       txt += makeicon(ICON.DRAW, '<b style="font-size:25px">' + p.table_size + '</b>', pdiff('table_size'));
       txt += makeicon(ICON.HANDSIZE, '<b style="font-size:25px">' + p.hand_size + '</b>', pdiff('hand_size'));
