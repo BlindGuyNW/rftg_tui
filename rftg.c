@@ -1382,6 +1382,8 @@ void get_player_state(game *g, int who)
 	add_data(end_vp);
 	add_data(hand_size);
 	add_data(military.base);
+        add_data(military.rebel);
+        add_data(military.imperium * 2 + military.military_rebel);
 	add_data(prestige);
 	get_vp(g, who);
 	/* Loop over goals */
