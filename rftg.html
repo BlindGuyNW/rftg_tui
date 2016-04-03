@@ -1665,7 +1665,7 @@ var GUI = (function() {
     var goal_maximum = game_status.goals.map(function(e){return e.min;});
     txt = '<table><tr>';
     txt += game_status.goals.map(function(e,i){
-      var claimed = i < 4 && game_status.player.some(function (p) {return p.goals_claimed[i] > 0;});
+      var claimed = game_status.player.some(function (p) {return p.goals_claimed[i] > 0;});
       var et = claimed ? ' class="claimed"' : '';
       goal_claimed[i] = claimed;
       game_status.player.forEach(function(e){
@@ -1682,7 +1682,7 @@ var GUI = (function() {
       txt += game_status.goals.map(function(e,i){
         var p_nr = goal_progress[i][j];
         var p = game_status.player[p_nr];
-        if (p.goals_progress[i] <= 0 || goal_claimed[i]) return '<td></td>';
+        if (p.goals_progress[i] <= 0 || (i < 4 && goal_claimed[i])) return '<td></td>';
         var perc = p.goals_progress[i] / goal_maximum[i] * 100;
         return '<td><span style="width:'+perc+'%" class="player'+p_nr+'">'+p.goals_progress[i]+'&nbsp;</span></td>';
       }).join('');
@@ -1690,7 +1690,7 @@ var GUI = (function() {
     txt += '</table>';
     document.getElementById('goals').innerHTML = txt;
     document.getElementById('goalsbutton').innerHTML = '<table><tr>' + game_status.goals.map(function(e,i){
-      return goal_claimed[i] ? '' : makegoal(e.idx, false);
+      return i < 4 && goal_claimed[i] ? '' : makegoal(e.idx, goal_claimed[i] ? 1 : 0);
     }).join('') + '</table>';
     for (var j = 0; j < num_players; j++) {
       var p = game_status.player[j];
