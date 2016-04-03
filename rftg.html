@@ -395,9 +395,12 @@ border-radius: 10px;
 background-color: #44a;
 color: #fff;
 }
-.player {
+#board {
 overflow: hidden;
 position: relative;
+width: 100%;
+}
+.player {
 width: 100%;
 }
 #status_over {
@@ -464,7 +467,7 @@ width: 100px;
   <table><tr id="action_status"></table>
  </td><td>
   <span onclick="var m=document.getElementById('goals');m.hidden=!m.hidden;m.scrollTop=m.scrollHeight" style="position:relative;display:inline-block">
-  <span id="goalsbutton" hidden>Goals</span><div id="goals" hidden></div></span>
+  <span id="goalsbutton"></span><div id="goals" hidden></div></span>
  </td></table>
 </td><td style="text-align:right">
  <button id="restart_undo" data-accel="ctrl-90" onclick="GUI.do_undo(GUI.RESTART.UNDO)">Undo</button>
@@ -620,7 +623,7 @@ var GUI = (function() {
     eb.selectedIndex = num_players - 2;
     if (advanced) ec.classList.add('selected');
     if (goals) ed.classList.add('selected');
-    if (goals) document.getElementById('goalsbutton').hidden = false;
+    if (takeovers) ee.classList.add('selected');
     update_menu();
   }
 
@@ -636,7 +639,8 @@ var GUI = (function() {
     var menu_seed = document.getElementById('menu_seedset').classList.contains('selected') ?
       document.getElementById('menu_seed').value : undefined;
     if (menu_exp_level == exp_level && menu_num_players == num_players &&
-      menu_advanced == advanced && menu_goals == goals && menu_seed === undefined) {
+      menu_advanced == advanced && menu_goals == goals &&
+      menu_takeovers == takeovers && menu_seed === undefined) {
       set_screen('gamescreen');
       do_undo(RESTART.NEW);
       return;
@@ -677,12 +681,13 @@ var GUI = (function() {
   }
   function set_save_params(s) {
     if (!s) return false;
-    var m = s.match(/^RFTG Save\n0.9.4\n\d+\n(\d+) (\d+)\n(\d+) (\d+)/);
+    var m = s.match(/^RFTG Save\n0.9.4\n\d+\n(\d+) (\d+)\n(\d+) (\d+) (\d+)/);
     if (!m) return false;
     num_players = parseInt(m[1]);
     exp_level = parseInt(m[2]);
     advanced = m[3] === '1';
     goals = exp_level >= 1 && exp_level <= 3 && m[4] !== '1';
+    takeovers = exp_level >= 2 && exp_level <= 3 && m[5] !== '1';
     return true;
   }
   GUI.do_importsave = function (file) {
@@ -763,6 +768,7 @@ var GUI = (function() {
   var exp_level = 0;
   var advanced = false;
   var goals = false;
+  var takeovers = false;
   var images = [];
   var images_data;
   var game_over = false;
@@ -795,7 +801,12 @@ var GUI = (function() {
     } else {
       goals = exp_level >= 1 && exp_level <= 3;
     }
-    if (true || ('notakeovers' in url_params)) params.push('-not');
+    if ('notakeovers' in url_params) {
+      takeovers = false;
+      params.push('-not');
+    } else {
+      takeovers = exp_level >= 2 && exp_level <= 3;
+    }
     if ('seed' in url_params) {
       params.push('-r', url_params.seed);
     }
@@ -1318,6 +1329,72 @@ var GUI = (function() {
         return {
           result: parseInt(document.getElementById('oortselect').value)
         };
+      }
+    } else if (select.type === CHOICE.TAKEOVER) {
+      set_prompt("Choose world to takeover and power to use");
+      make_selectable(select.list);
+      make_selectable(select.special);
+      make_inactive('hand');
+      for (var i = 0; i < num_players; i++) make_inactive('table' + i);
+      action_restrict = function () {
+        var list = [];
+        var special = get_cards_selected('table0');
+        for (var i = 1; i < num_players; i++)
+          list = list.concat(get_cards_selected('table' + i));
+        var n = list.length;
+        var ns = special.length;
+        if (!n && !ns) return true;
+        if (n !== 1 || ns !== 1) return false;
+        return Module._action_check_takeover(list[0], special[0]) !== 0;
+      };
+      select_result = function () {
+        for (var i = 1; i < num_players; i++) {
+          var sel = get_cards_selected('table' + i);
+          if (sel.length) return { special: get_cards_selected('table0'), result: sel[0] };
+        }
+        return { result: -1 };
+      }
+    } else if (select.type === CHOICE.DEFEND) {
+      var which = select.arg1;
+      var deficit = select.arg3 + 1;
+      set_prompt("Choose defense for " + card_info[which].name + " (need " + deficit + " extra military)");
+      make_selectable(select.list, 'discard');
+      make_selectable(select.special);
+      make_inactive('hand');
+      make_inactive('table0');
+      action_restrict = function () {
+        var list = get_cards_selected('hand');
+        var special = get_cards_selected('table0');
+        var buf = Module._get_callbuffer();
+        list.forEach(function(e, i) {
+          Module.setValue(buf + 4 * i, e, 'i32');
+        });
+        special.forEach(function(e, i) {
+          Module.setValue(buf + 4 * (i + list.length), e, 'i32');
+        });
+        return Module._action_check_defend(list.length, special.length) !== 0;
+      };
+      select_result = function () {
+        return {
+          list: get_cards_selected('hand'),
+          special: get_cards_selected('table0'),
+        }
+      }
+    } else if (select.type === CHOICE.TAKEOVER_PREVENT) {
+      var opts = select.list.map(function (e, i) {
+        return card_info[e].name + ' using ' + card_info[select.special[i]].name;
+      });
+      opts.push("None (allow all takeovers)");
+      opts = opts.map(function (e, i) {
+        return '<option value="' + i + '">' + e + '</option>';
+      });
+      set_prompt('Choose takeover to prevent: <select id="preventselect">' + opts + '</select>');
+      select_result = function () {
+        var i = document.getElementById('preventselect').value;
+        return {
+          list: select.list.slice(i, i + 1),
+          special: select.special.slice(i, i + 1),
+        }
       }
     } else {
       set_prompt('Unknown select type: ' + select.type);
