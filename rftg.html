@@ -1549,7 +1549,7 @@ var GUI = (function() {
     }
     function makemilitaryicon(value, diff, et) {
       if (!value) return makeicon();
-      var modified = diff && animate && content ? ' class="modified"' : '';
+      var modified = diff && animate ? ' class="modified"' : '';
       if (value > 0) value = '+' + value;
       et = et ? ' ' + et : '';
       return '<td class="icon"><div class="military' + et + '"><div><div' + modified + '>' + value + '</div></div></div></td>';
