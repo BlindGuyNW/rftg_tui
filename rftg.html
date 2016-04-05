@@ -567,6 +567,7 @@ width: 100px;
     <div id="player5" class="player player5"><table><tr id="player_status5"></tr></table><div class="deck" id="table5"></div></div>
 </div>
 <div id="status_over">
+    <div id="player_over0" class="player0"><table><tr id="player_status_over0"></tr></table></div>
     <div id="player_over1" class="player1"><table><tr id="player_status_over1"></tr></table></div>
     <div id="player_over2" class="player2"><table><tr id="player_status_over2"></tr></table></div>
     <div id="player_over3" class="player3"><table><tr id="player_status_over3"></tr></table></div>
@@ -1461,11 +1462,15 @@ var GUI = (function() {
       console.log(select);
     }
   }
+  function totalOffsetTop(a) {
+    a = document.getElementById(a);
+    for (var r = 0; a; a = a.offsetParent) r += a.offsetTop;
+    return r;
+  }
   function update_scroll() {
     var bottom = window.innerHeight + (document.documentElement.scrollTop || document.body.scrollTop);
-    for (var i = 1; i < num_players; i++) {
-      var visible = bottom - document.getElementById('player' + i).offsetTop;
-      visible -= document.getElementById('board').offsetTop;
+    for (var i = 0; i < num_players; i++) {
+      var visible = bottom - totalOffsetTop('player_status' + i);
       var pos = (num_players - i) * 58;
       document.getElementById('player_over' + i).classList[visible > pos ? 'add' : 'remove']('hidden');
     }
@@ -1718,7 +1723,7 @@ var GUI = (function() {
         if (p.goals_claimed[i])
           txt += makegoal(game_status.goals[i].idx, p.goals_claimed[i]);
       document.getElementById('player_status' + j).innerHTML = txt;
-      if (j) document.getElementById('player_status_over' + j).innerHTML = txt;
+      document.getElementById('player_status_over' + j).innerHTML = txt;
     }
     fill_game_summary();
     update_action_sensitivity(true);
