@@ -1674,7 +1674,7 @@ var GUI = (function() {
     var scav_pos = decks.saved.length ? decks.table0.map(is_scavengers).indexOf(true) : -1;
     for (var j in decks) {
       var cardelem = document.getElementById(j);
-      var cardspacing = decks[j].length > 1 ? (cardelem.offsetWidth - 210) / (decks[j].length - 1) : 0;
+      var cardspacing = decks[j].length > 1 ? (cardelem.offsetWidth - 210) / (decks[j].length - 1) : 210;
       if (cardspacing > 210) cardspacing = 210;
       if (j === 'saved') {
         if (scav_pos < 0) {
