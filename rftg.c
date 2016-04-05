@@ -1433,27 +1433,30 @@ static void get_state(game *g, int get_trade_values) {
 		if (c_ptr->where == WHERE_DISCARD) display_discard++;
 
 		/* Skip unowned cards */
-		if (!(c_ptr->where == WHERE_ACTIVE) && !(c_ptr->where == WHERE_HAND && c_ptr->owner == player_us)) continue;
+		if (!(c_ptr->where == WHERE_ACTIVE) && !(c_ptr->where == WHERE_HAND && c_ptr->owner == player_us) && !(c_ptr->where == WHERE_SAVED)) continue;
 
 		add_data(i);
 		add_data(c_ptr->d_ptr->index);
-		add_data(c_ptr->where == WHERE_HAND ? -1 : (c_ptr->owner + g->num_players - player_us) % g->num_players);
-		add_data(c_ptr->where == WHERE_HAND ? (c_ptr->start_where != WHERE_HAND ||
-				    c_ptr->start_owner != c_ptr->owner ? 200000 : 0) + (c_ptr->d_ptr->type == TYPE_DEVELOPMENT ? 100000 : 0) + c_ptr->d_ptr->cost * 10000 + i : c_ptr->order * 10000 + i);
-                good = c_ptr->num_goods;
-                if (good && c_ptr->owner == player_us && get_trade_values)
-			good |= get_trade_value(g, c_ptr, get_trade_values > 1) << 16;
-                add_data(good);
-                /* Check for VP bonuses */
-                if (c_ptr->where == WHERE_ACTIVE && c_ptr->d_ptr->num_vp_bonus)
-                {
-                        /* Count VPs from this card */
-                        add_data(get_score_bonus(g, c_ptr->owner, i));
-                }
-                else
-                {
-                        add_data(-1);
-                }
+		if (c_ptr->where == WHERE_HAND) {
+			add_data(-1);
+			add_data((c_ptr->start_where != WHERE_HAND ||
+					c_ptr->start_owner != c_ptr->owner ? 200000 : 0) + (c_ptr->d_ptr->type == TYPE_DEVELOPMENT ? 100000 : 0) + c_ptr->d_ptr->cost * 10000 + i);
+			add_data(0);
+			add_data(-1);
+		} else if (c_ptr->where == WHERE_SAVED) {
+			add_data(-2);
+			add_data(c_ptr->order * 10000 + i);
+			add_data(0);
+			add_data(-1);
+		} else {
+			add_data((c_ptr->owner + g->num_players - player_us) % g->num_players);
+			add_data(c_ptr->order * 10000 + i);
+			good = c_ptr->num_goods;
+			if (good && c_ptr->owner == player_us && get_trade_values)
+				good |= get_trade_value(g, c_ptr, get_trade_values > 1) << 16;
+			add_data(good);
+			add_data(c_ptr->d_ptr->num_vp_bonus ? get_score_bonus(g, c_ptr->owner, i) : -1);
+		}
 
 	}
 

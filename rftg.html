@@ -76,6 +76,19 @@ div.tradevalue {
     text-align: center;
     font-size: 18px;
 }
+div#savednum {
+    position: absolute;
+    width:24px;
+    height:34px;
+    top:18px;
+    left:156px;
+    border: 1px solid #666;
+    border-radius: 4px;
+    background-size: 100% 100%;
+    color: #ddd;
+    font-size: 25px;
+    text-align: center;
+}
 img.good {
     width:150px;
     position:absolute;
@@ -108,7 +121,7 @@ div.card.selected div.frame {
     display: block;
 }
 div.card {
-    margin: 2px;
+    margin: 5px;
     box-shadow: 0 0 2px 2px #444;
     position: absolute;
     display: block;
@@ -225,6 +238,17 @@ div.card.disabled {
 .deck {
     height: 290px;
     position: relative;
+}
+#saved.deck {
+    height: 0;
+}
+#table0.deck.showsaved {
+    z-index: -1;
+    height: 0;
+}
+#saved.deck.showsaved {
+    height: 290px;
+    background-color: #444;
 }
 td.icon, th.icon {
     position:relative;
@@ -558,6 +582,7 @@ width: 100px;
      <div class="deck" id="hand"></div>
      <table><tr id="player_status0"></tr></table>
      <div id="player_status0"></div>
+     <div class="deck" id="saved"></div>
      <div class="deck" id="table0"></div>
     </div>
     <div id="player1" class="player player1"><table><tr id="player_status1"></tr></table><div class="deck" id="table1"></div></div>
@@ -820,7 +845,8 @@ var GUI = (function() {
     SEARCH_TYPE: 22,
     SEARCH_KEEP: 23,
     OORT_KIND: 24,
-  }
+  };
+  var SCAVENGERS = 157;
 
   var card_info = [];
   var decks;
@@ -897,8 +923,18 @@ var GUI = (function() {
     if (c.id && c.id.match(/^card\d+$/)) return c;
     return undefined;
   }
+  function toggle_showsaved(ev) {
+    document.getElementById('table0').classList.toggle('showsaved');
+    document.getElementById('saved').classList.toggle('showsaved');
+    display(false);
+    ev.stopPropagation();
+  }
   var do_click = GUI.do_click = function(ev) {
     var c, t;
+    if (ev.target.id === 'shownum' || document.getElementById('table0').classList.contains('showsaved')) {
+      toggle_showsaved(ev);
+      return;
+    }
     if (!(c = target_card(ev.target))) return;
     if (!(t = selectable_cards[card_id(c)])) return;
     if (t === 'good') {
@@ -1564,6 +1600,7 @@ var GUI = (function() {
       return '<td class="goal goal' + et + '"><div><img src="' + image_from_data(2000 + id) + '"></div></td>';
     }
 
+    function is_scavengers(c) { return card_info[c.index].image === SCAVENGERS; }
     function makecard(c, i) {
       var pos = i * cardspacing, top = 0, num_goods = c.num_goods;
       new_pos[c.index] = {
@@ -1587,6 +1624,10 @@ var GUI = (function() {
         var gpos = 70 + i * 15;
         if (i >= num_goods) gpos += 280 - 72;
         txt += '<img class="good" style="top:' + gpos + 'px" src="' + image_from_data(1000) + '">';
+      }
+      if (is_scavengers(c) && decks.saved.length) {
+        var spos = Math.min(cardspacing - 34, 156);
+	txt += '<div id="savednum" style="left:'+ spos +'px;background-image: url(' + image_from_data(1000) + ')">' + decks.saved.length + '</div>';
       }
       if (selectable_cards[c.index] === 'discard')
         txt += '<img class="discard" src="' + image_from_data(3000 + ICON.DISCARD) + '">';
@@ -1630,13 +1671,23 @@ var GUI = (function() {
       document.getElementById('gamesummary').innerHTML = t;
     }
     lastWidth = window.innerWidth;
+    var scav_pos = decks.saved.length ? decks.table0.map(is_scavengers).indexOf(true) : -1;
     for (var j in decks) {
       var cardelem = document.getElementById(j);
       var cardspacing = decks[j].length > 1 ? (cardelem.offsetWidth - 210) / (decks[j].length - 1) : 0;
       if (cardspacing > 210) cardspacing = 210;
+      if (j === 'saved') {
+        if (scav_pos < 0) {
+          cardelem.innerHTML = '';
+          continue;
+        }
+        if (!cardelem.classList.contains('showsaved')) cardspacing = 0;
+      }
       decks[j] = decks[j].sort(function(a, b) { return a.sortkey - b.sortkey; });
       cardelem.innerHTML = decks[j].map(makecard).join('');
     }
+    if (scav_pos >= 0)
+      document.getElementById('savednum').addEventListener('click', toggle_showsaved, false);
     if (animate) {
       for (var j in new_pos) {
         var card = document.getElementById('card' + j);
@@ -1798,11 +1849,11 @@ var GUI = (function() {
       } else if (msgtype == MSG.GAMEOVER) {
         game_over = true;
       } else if (msgtype == MSG.GAMESTATE) {
-        decks = { hand: [] };
+        decks = { hand: [], saved: [] };
         for (var j = 0; j < num_players; j++) decks['table' + j] = [];
         while (array[i] >= 0) {
           var where = array[i + 2];
-          where = where < 0 ? 'hand' : 'table' + where;
+          where = where === -2 ? 'saved' : where === -1 ? 'hand' : 'table' + where;
           var card = {
             index: array[i],
             image: array[i + 1],
