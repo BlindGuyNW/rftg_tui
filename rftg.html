@@ -152,7 +152,7 @@ div.card.disabled {
     font-size: 30px;
     text-align: center;
 }
-#settingsscreen {
+#settingsscreen, #campaignscreen {
     font-size: 30px;
     text-align: center;
 }
@@ -640,7 +640,8 @@ goal images has been granted by Rio Grande Games.
 <input hidden type="number" id="menu_seed">
 <h1>
 <button data-accel="27" onclick="GUI.set_screen('gamescreen')">Return</button>
-<button data-accel="13" onclick="GUI.do_stargame()">Start Game</button>
+<button onclick="GUI.set_screen('campaignscreen')">Scenarios</button>
+<button data-accel="13" onclick="GUI.do_startgame()">Start Game</button>
 </h1>
 </div></div>
 <div hidden class="screen centeredscreen_o" id="settingsscreen"><div class="centeredscreen_i">
@@ -663,6 +664,14 @@ Start world choice <select id="setting_revstart">
 <option value="1">Discard</option>
 </select>
 <h2><button data-accel="13" onclick="GUI.save_settings();GUI.set_screen('gamescreen')">Return</button></h2>
+</div></div>
+<div hidden class="screen centeredscreen_o" id="campaignscreen"><div class="centeredscreen_i">
+<h2>Scenarios</h2>
+<select id="campaign_name"></select><p id="campaign_info"></p>
+<h1>
+<button data-accel="27" onclick="GUI.set_screen('menuscreen')">Return</button>
+<button data-accel="13" onclick="GUI.do_startcampaign()">Start Game</button>
+</h1>
 </div></div>
 <div hidden class="popup screen centeredscreen_o" id="cardpopup" onclick="GUI.set_screen('gamescreen')" oncontextmenu="event.preventDefault()"><div class="centeredscreen_i">
 <img id="cardpopupimg" data-accel="27" onclick="GUI.set_screen('gamescreen')">
@@ -713,7 +722,7 @@ var GUI = (function() {
     update_menu();
   }
 
-  var do_stargame = GUI.do_stargame = function() {
+  var do_startgame = GUI.do_startgame = function() {
     var ec = document.getElementById('menu_advanced');
     var ed = document.getElementById('menu_goals');
     var ee = document.getElementById('menu_takeovers');
@@ -726,7 +735,7 @@ var GUI = (function() {
       document.getElementById('menu_seed').value : undefined;
     if (menu_exp_level == exp_level && menu_num_players == num_players &&
       menu_advanced == advanced && menu_goals == goals &&
-      menu_takeovers == takeovers && menu_seed === undefined) {
+      menu_takeovers == takeovers && menu_seed === undefined && campaign === undefined) {
       set_screen('gamescreen');
       do_undo(RESTART.NEW);
       return;
@@ -736,6 +745,23 @@ var GUI = (function() {
     if (!menu_goals) loc += '&nogoals';
     if (!menu_takeovers) loc += '&notakeovers';
     if (menu_seed !== undefined) loc += '&seed=' + menu_seed;
+    location = loc;
+    location.reload();
+  }
+  var do_startcampaign = GUI.do_startcampaign = function() {
+    var e = document.getElementById('campaign_name');
+    if (e.value === "") return;
+    var c = campaigns[e.value];
+    if (c.name === campaign) {
+      set_screen('gamescreen');
+      do_undo(RESTART.NEW);
+      return;
+    }
+    var loc = "#num_players=" + c.options[1] + '&exp_level=' + c.options[0];
+    if (c.options[2]) loc += '&advanced';
+    if (c.options[3]) loc += '&nogoals';
+    if (c.options[4]) loc += '&notakeovers';
+    loc += "&campaign=" + encodeURIComponent(c.name);
     location = loc;
     location.reload();
   }
@@ -767,13 +793,14 @@ var GUI = (function() {
   }
   function set_save_params(s) {
     if (!s) return false;
-    var m = s.match(/^RFTG Save\n0.9.4\n\d+\n(\d+) (\d+)\n(\d+) (\d+) (\d+)/);
+    var m = s.match(/^RFTG Save\n0.9.4\n\d+\n(\d+) (\d+)\n(\d+) (\d+) (\d+)\n(.*?)\n/);
     if (!m) return false;
     num_players = parseInt(m[1]);
     exp_level = parseInt(m[2]);
     advanced = m[3] === '1';
     goals = exp_level >= 1 && exp_level <= 3 && m[4] !== '1';
     takeovers = exp_level >= 2 && exp_level <= 3 && m[5] !== '1';
+    campaign = m[6] === 'none' ? undefined : m[6];
     return true;
   }
   GUI.do_importsave = function (file) {
@@ -858,6 +885,8 @@ var GUI = (function() {
   var takeovers = false;
   var images = [];
   var images_data;
+  var campaigns = [];
+  var campaign = undefined;
   var game_over = false;
   var select;
   var selectable_cards;
@@ -896,6 +925,10 @@ var GUI = (function() {
     }
     if ('seed' in url_params) {
       params.push('-r', url_params.seed);
+    }
+    if ('campaign' in url_params) {
+      var campaign = decodeURIComponent(url_params.campaign);
+      params.push('-c', campaign);
     }
     history.replaceState({}, document.title, window.location.pathname);
   } else {
@@ -1977,6 +2010,32 @@ var GUI = (function() {
       pos += len;
     }
   }
+  function update_campaign() {
+    var sel = document.getElementById('campaign_name').value;
+    document.getElementById('campaign_info').innerHTML = sel === '' ? '' : campaigns[sel].desc.join(' ');
+  }
+  function read_campaigns(content) {
+    var cur;
+    content.split('\n').forEach(function (e) {
+      var r = e.match(/^([A-Z]):(.*)/);
+      if (!r) return;
+      if (r[1] === 'N') {
+        cur = { name: r[2], desc: [] };
+        campaigns.push(cur);
+      } else if (r[1] === 'D' && cur) {
+	cur.desc.push(r[2]);
+      } else if (r[1] === 'O' && cur) {
+	cur.options = r[2].split(':').map(function (e) { return parseInt(e); });
+      }
+    });
+    var campaign_name = document.getElementById('campaign_name');
+    campaign_name.innerHTML = campaigns.map(function (e, i) {
+      var selected = campaign === e.name ? ' selected' : '';
+      return '<option value="' + i + '"' + selected + '>' + e.name + '</option>';
+    }).join('');
+    campaign_name.addEventListener('change', update_campaign);
+    update_campaign();
+  }
 
   GUI.print = function(text) {
     if (arguments.length > 1) text = Array.prototype.slice.call(arguments).join(' ');
@@ -2003,6 +2062,7 @@ var GUI = (function() {
   }
   GUI.firstRun = function() {
     read_images(images_data = FS.readFile('images.data'));
+    read_campaigns(FS.readFile('campaign.txt', { encoding: 'utf8' }));
     set_screen('gamescreen');
     get_status();
     display();
