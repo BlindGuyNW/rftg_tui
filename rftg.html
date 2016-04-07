@@ -419,6 +419,19 @@ bottom:0;
 .modalopt.selected_1 img.buttonicon_prestige {
 display:inline-block;
 }
+.modalopt .kind {
+    display: inline-block;
+    width:32px;
+    height:32px;
+    border-radius: 50%;
+    border: 2.5px solid #000;
+    vertical-align:text-bottom;
+    margin: 5px -3px;
+}
+.modalopt .kind2 { background-color: #80d6f7; }
+.modalopt .kind3 { background-color: #daa566; }
+.modalopt .kind4 { background-color: #80cc28; }
+.modalopt .kind5 { background-color: #fff200; }
 .gamelog {
 text-align: left;
 border: 2px solid #333; background: rgba(100,100,100,0.95);
@@ -1114,7 +1127,7 @@ var GUI = (function() {
     var html = '';
     options.forEach(function(e, i) {
       modalvalues[i] = e.value instanceof Array ? e.value : [e.value];
-      html += '<span id="modalopt' + i + '" onclick="GUI.onclick_modal(' + i + ')" class="modalopt" data-accel="' + (e.accel || KEYACCELS(0)) + '">' + e.name + '</span>';
+      html += '<span id="modalopt' + i + '" onclick="GUI.onclick_modal(' + i + ')" class="modalopt" data-accel="' + (e.accel || KEYACCELS(0)[i]) + '">' + e.name + '</span>';
     });
     return html;
   }
@@ -1474,19 +1487,23 @@ var GUI = (function() {
       }
     } else if (select.type === CHOICE.SEARCH_KEEP) {
       var which = select.arg1;
-      var opts = [ { name: 'Discard (keep searching)' }, { name: 'Keep card' } ];
-      set_prompt('Choose to keep/discard ' + card_info[which].name + ' ' + gen_select(opts));
+      var opts = [ { name: 'Discard (keep searching)', value: 0 }, { name: 'Keep card', value: 1 } ];
+      set_prompt('Choose to keep/discard ' + card_info[which].name + ' ' + gen_modal(opts));
       decks.hand.push({ index: which, sortkey: 90000000 });
+      select_autoconfirm = true;
+      action_restrict = function() { return modalresult.length === 1 };
       select_result = function() {
-        return { result: select_value() };
+        return { result: modalresult[0] };
       }
     } else if (select.type === CHOICE.OORT_KIND) {
-      var opts = ['Novelty', 'Rare', 'Genes', 'Alien'].map(function(e, i) {
-        return { name: e, value: i + 1 };
+      var opts = [2, 3, 4, 5].map(function(e) {
+        return { name: '<div class="kind kind' + e + '"></div>', value: e };
       });
-      set_prompt('Choose Alien Oort Cloud Refinery kind ' + gen_select(opts));
+      set_prompt('Choose Alien Oort Cloud Refinery kind ' + gen_modal(opts));
+      select_autoconfirm = true;
+      action_restrict = function() { return modalresult.length === 1 };
       select_result = function() {
-        return { result: select_value() };
+        return { result: modalresult[0] };
       }
     } else if (select.type === CHOICE.TAKEOVER) {
       set_prompt("Choose world to takeover and power to use");
