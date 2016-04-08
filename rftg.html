@@ -1849,7 +1849,7 @@ var GUI = (function() {
         if (game_status.goals.length) cells.push(p.goal_vp);
         if (exp_level === 3) cells.push(p.prestige);
         cells.push(p.total_vp);
-        return '<tr class="' + player_class(p) + '">' + cells.map(function(e) { return '<td>' + e + '</td>'; }).join('');
+        return '<tr class="' + player_class(e) + '">' + cells.map(function(e) { return '<td>' + e + '</td>'; }).join('');
       }).join('');
       document.getElementById('gamesummary').innerHTML = t;
     }
