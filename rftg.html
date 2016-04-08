@@ -144,12 +144,12 @@ div.card.disabled {
     filter: grayscale(1) brightness(.4);
     -webkit-filter: grayscale(1) brightness(.4);
 }
-.player0 { background-color: #88a; }
-.player1 { background-color: #a88; }
-.player2 { background-color: #8a8; }
-.player3 { background-color: #aa8; }
-.player4 { background-color: #8aa; }
-.player5 { background-color: #a8a; }
+.player_color0 { background-color: #88a; }
+.player_color1 { background-color: #a88; }
+.player_color2 { background-color: #8a8; }
+.player_color3 { background-color: #aa8; }
+.player_color4 { background-color: #8aa; }
+.player_color5 { background-color: #a8a; }
 #loadingscreen {
     font-size: 50px;
     text-align: center;
@@ -497,10 +497,12 @@ display: inline-block;
 text-align: right;
 border-radius: 10px;
 }
-#goals span.player0 {
-background-color: #44a;
-color: #fff;
-}
+#goals span.player0.player_color0 { background-color: #44a; color: #fff; }
+#goals span.player0.player_color1 { background-color: #e02; color: #fff; }
+#goals span.player0.player_color2 { background-color: #080; color: #fff; }
+#goals span.player0.player_color3 { background-color: #ee0; }
+#goals span.player0.player_color4 { background-color: #088; color: #fff; }
+#goals span.player0.player_color5 { background-color: #808; color: #fff; }
 #board {
 overflow: hidden;
 position: relative;
@@ -689,6 +691,14 @@ Start world choice <select id="setting_revstart">
 Shortcut keys <select id="setting_accels">
 <option value="0">F1 - F12, 1 - 0</option>
 <option value="1">1 - 0, Q - P</option>
+</select><br>
+First player color <select id="setting_color">
+<option value="0">Blue</option>
+<option value="1">Red</option>
+<option value="2">Green</option>
+<option value="3">Yellow</option>
+<option value="4">Cyan</option>
+<option value="5">Purple</option>
 </select>
 <h2><button data-accel="13" onclick="GUI.save_settings();GUI.set_screen('gamescreen')">Return</button></h2>
 </div></div>
@@ -798,6 +808,7 @@ var GUI = (function() {
     pullup: true,
     revstart: true,
     accels: 0,
+    color: 0,
   };
   var save_settings = GUI.save_settings = function() {
     settings = {
@@ -806,20 +817,26 @@ var GUI = (function() {
       pullup: document.getElementById('setting_pullup').value === "1",
       revstart: document.getElementById('setting_revstart').value === "1",
       accels: parseInt(document.getElementById('setting_accels').value),
+      color: parseInt(document.getElementById('setting_color').value),
     }
     if (localStorage)
       localStorage.setItem('rftg.conf', JSON.stringify(settings));
+    update_player_classes();
   }
 
   function load_settings() {
     var saved_settings = localStorage && localStorage.getItem('rftg.conf');
-    if (saved_settings)
+    if (saved_settings) {
       settings = JSON.parse(saved_settings);
+      if (!('accels' in settings)) settings.accels = 0;
+      if (!('color' in settings)) settings.color = 0;
+    }
     document.getElementById('setting_anim').selectedIndex = settings.animate;
     document.getElementById('setting_autoconfirm').selectedIndex = settings.autoconfirm ? 1 : 0;
     document.getElementById('setting_pullup').selectedIndex = settings.pullup ? 1 : 0;
     document.getElementById('setting_revstart').selectedIndex = settings.revstart ? 1 : 0;
     document.getElementById('setting_accels').selectedIndex = settings.accels;
+    document.getElementById('setting_color').selectedIndex = settings.color;
   }
   function set_save_params(s) {
     if (!s) return false;
@@ -967,6 +984,7 @@ var GUI = (function() {
   }
   init_menu();
   load_settings();
+  update_player_classes();
   for (var i = num_players; i < 6; i++) {
     document.getElementById('player' + i).hidden = true;
     document.getElementById('player_over' + i).classList.add('hidden');
@@ -1649,6 +1667,16 @@ var GUI = (function() {
     ev.preventDefault();
   });
 
+  var COLOR_NAMES = ["Blue", "Red", "Green", "Yellow", "Cyan", "Purple" ];
+  function player_name(p) { return COLOR_NAMES[(p + settings.color) % 6]; }
+  function player_class(p) { return 'player' + p + ' player_color' + (p + settings.color) % 6; }
+  function update_player_classes() {
+    for (var i = 0; i < 6; i++) {
+      var e = document.querySelectorAll('.player' + i);
+      for (var j = 0; j < e.length; j++) e[j].className = player_class(i);
+    }
+  }
+
   var old_pos = {};
   var old_goods = {};
   var prev_game_status;
@@ -1772,7 +1800,7 @@ var GUI = (function() {
         if (game_status.goals.length) cells.push(p.goal_vp);
         if (exp_level === 3) cells.push(p.prestige);
         cells.push(p.total_vp);
-        return '<tr class="player' + e + '">' + cells.map(function(e) { return '<td>' + e + '</td>'; }).join('');
+        return '<tr class="' + player_class(p) + '">' + cells.map(function(e) { return '<td>' + e + '</td>'; }).join('');
       }).join('');
       document.getElementById('gamesummary').innerHTML = t;
     }
@@ -1846,7 +1874,7 @@ var GUI = (function() {
         var p = game_status.player[p_nr];
         if (p.goals_progress[i] <= 0 || (i < 4 && goal_claimed[i])) return '<td></td>';
         var perc = p.goals_progress[i] / goal_maximum[i] * 100;
-        return '<td><span style="width:'+perc+'%" class="player'+p_nr+'">'+p.goals_progress[i]+'&nbsp;</span></td>';
+        return '<td><span style="width:'+perc+'%" class="'+player_class(p_nr)+'">'+p.goals_progress[i]+'&nbsp;</span></td>';
       }).join('');
     }
     txt += '</table>';
@@ -2061,7 +2089,7 @@ var GUI = (function() {
     var cell = table.insertRow(-1).insertCell(0);
     cell.classList.add('logline');
     if (line.tag) cell.classList.add(line.tag);
-    cell.innerHTML = line.msg;
+    cell.innerHTML = line.msg.replace(/\[P(\d)\]/, function(m, p) { return player_name(parseInt(p)); });
     var logdiv = document.getElementById('gamelog');
     logdiv.scrollTop = logdiv.scrollHeight;
   }

@@ -214,16 +214,7 @@ static char *goal_description[MAX_GOAL] =
 /*
  * Player names.
  */
-static char *player_names[MAX_PLAYER] =
-{
-	"Blue",
-	"Red",
-	"Green",
-	"Yellow",
-	"Cyan",
-	"Purple",
-};
-
+static char *player_names[MAX_PLAYER] = { "[P0]", "[P1]", "[P2]", "[P3]", "[P4]", "[P5]" };
 
 typedef struct discounts
 {
