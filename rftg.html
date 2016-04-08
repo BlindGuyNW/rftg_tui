@@ -168,6 +168,18 @@ div.card.disabled {
     font-size: 30px;
     text-align: center;
 }
+#settingsscreen td:nth-child(odd) {
+    text-align: right;
+}
+#settingsscreen td:nth-child(even) {
+    text-align: left;
+}
+#settingsscreen .centeredscreen_i {
+    width: 80%;
+}
+#settingsscreen table {
+    margin: auto;
+}
 #cardpopup {
     text-align: center;
 }
@@ -435,6 +447,12 @@ display:inline-block;
 .modalopt .kind3 { background-color: #daa566; }
 .modalopt .kind4 { background-color: #80cc28; }
 .modalopt .kind5 { background-color: #fff200; }
+#menu {
+ position:absolute;
+ right:0;
+ z-index:1;
+ width:160px;
+}
 .gamelog {
 text-align: left;
 border: 2px solid #333; background: rgba(100,100,100,0.95);
@@ -526,6 +544,17 @@ height: 0px;
 h1 {
 text-align: center;
 }
+#menu_button {
+    width: 52px;
+}
+.big input#menu_seed, .big button, .big select, .big .menu, .big span.modalopt { font-size: 50px; }
+.big #menu { width:260px; }
+.big img.buttonicon { height:66px; }
+.big #promptcontainer { height:80px; }
+.big #goalsbutton td.goal div { height:75px; }
+.big #goalsbutton td.goal div img { width: 67px; }
+.big #menu_button { width: 66px; }
+.big .gamelog { width: 600px; font-size: 24px; }
 #cachecontainer {
 position: fixed;
 top: 0;
@@ -551,7 +580,7 @@ width: 100px;
 }
     </style>
   </head>
-  <body>
+  <body class="big">
 <div class="screen centeredscreen_o" id="loadingscreen">
    <div class="centeredscreen_i">
 <svg xmlns:svg="http://www.w3.org/2000/svg" xmlns="http://www.w3.org/2000/svg" width="200" height="200" viewBox="0 0 1000 1000">
@@ -587,12 +616,12 @@ width: 100px;
  <table id="gamelogtext"></table>
  </div></span>
  <span style="position:relative;display:inline-block">
- <button id="menu_button" onclick="var e = document.getElementById('menu');e.hidden=!e.hidden"><svg version="1.1" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="2 2 20 20">
+ <button id="menu_button" onclick="var e = document.getElementById('menu');e.hidden=!e.hidden"><svg version="1.1" xmlns="http://www.w3.org/2000/svg" viewBox="2 2 20 20">
  <path style="fill:#ccc" d="M6,15h12c0.553,0,1,0.447,1,1v1c0,0.553-0.447,1-1,1H6c-0.553,0-1-0.447-1-1v-1C5,15.447,5.447,15,6,15z M5,11v1
     c0,0.553,0.447,1,1,1h12c0.553,0,1-0.447,1-1v-1c0-0.553-0.447-1-1-1H6C5.447,10,5,10.447,5,11z M5,6v1c0,0.553,0.447,1,1,1h12
     c0.553,0,1-0.447,1-1V6c0-0.553-0.447-1-1-1H6C5.447,5,5,5.447,5,6z"/>
  </svg>
- </button><div class="menu" id="menu" hidden style="position:absolute;right:0;z-index:1;width:160px" onclick="document.getElementById('menu').hidden=true">
+ </button><div class="menu" id="menu" hidden onclick="document.getElementById('menu').hidden=true">
  <div data-accel="ctrl-shift-90" onclick="GUI.do_undo(GUI.RESTART.UNDO_ROUND)">Undo Round</div>
  <div onclick="GUI.do_undo(GUI.RESTART.UNDO_GAME)">Restart Game</div>
  <div data-accel="ctrl-78" onclick="GUI.do_undo(GUI.RESTART.NEW)">New Game</div>
@@ -675,39 +704,43 @@ goal images has been granted by Rio Grande Games.
 </div></div>
 <div hidden class="screen centeredscreen_o" id="settingsscreen"><div class="centeredscreen_i">
 <h2>Settings</h2>
-Card animations
-<select id="setting_anim">
+<table><tr><td>
+Card animations</td><td><select id="setting_anim">
 <option value="0">No</option>
 <option value="1">Yes</option>
-</select><br>
-Auto confirm actions <select id="setting_autoconfirm">
+</select></td><td>
+Auto confirm actions</td><td><select id="setting_autoconfirm">
 <option value="0">No</option>
 <option value="1">Yes</option>
-</select><br>
-Keep status bars on screen <select id="setting_pullup">
+</select></td><tr><td>
+Keep status bars on screen</td><td><select id="setting_pullup">
 <option value="0">No</option>
 <option value="1">Yes</option>
-</select><br>
-Start world choice <select id="setting_revstart">
+</select></td><td>
+Start world choice</td><td><select id="setting_revstart">
 <option value="0">Select</option>
 <option value="1">Discard</option>
-</select><br>
-Shortcut keys <select id="setting_accels">
+</select></td><tr><td>
+Shortcut keys</td><td><select id="setting_accels">
 <option value="0">F1 - F12, 1 - 0</option>
 <option value="1">1 - 0, Q - P</option>
-</select><br>
-First player color <select id="setting_color">
+</select></td><td>
+First player color</td><td><select id="setting_color">
 <option value="0">Blue</option>
 <option value="1">Red</option>
 <option value="2">Green</option>
 <option value="3">Yellow</option>
 <option value="4">Cyan</option>
 <option value="5">Purple</option>
-</select><br>
-Use action cards <select id="setting_actioncards">
+</select></td><tr><td>
+Use action cards</td><td><select id="setting_actioncards">
 <option value="0">No</option>
 <option value="1">Yes</option>
-</select>
+</select></td><td>
+Big buttons</td><td><select id="setting_bigbody">
+<option value="0">No</option>
+<option value="1">Yes</option>
+</select></td></table>
 <h2><button data-accel="13" onclick="GUI.save_settings();GUI.set_screen('gamescreen')">Return</button></h2>
 </div></div>
 <div hidden class="screen centeredscreen_o" id="campaignscreen"><div class="centeredscreen_i">
@@ -818,6 +851,7 @@ var GUI = (function() {
     accels: 0,
     color: 0,
     actioncards: false,
+    bigbody: false,
   };
   var save_settings = GUI.save_settings = function() {
     settings = {
@@ -827,7 +861,8 @@ var GUI = (function() {
       revstart: document.getElementById('setting_revstart').value === "1",
       accels: parseInt(document.getElementById('setting_accels').value),
       color: parseInt(document.getElementById('setting_color').value),
-      actioncards: parseInt(document.getElementById('setting_actioncards').value),
+      actioncards: document.getElementById('setting_actioncards').value === "1",
+      bigbody: document.getElementById('setting_bigbody').value === "1",
     }
     if (localStorage)
       localStorage.setItem('rftg.conf', JSON.stringify(settings));
@@ -848,6 +883,7 @@ var GUI = (function() {
     document.getElementById('setting_accels').selectedIndex = settings.accels;
     document.getElementById('setting_color').selectedIndex = settings.color;
     document.getElementById('setting_actioncards').selectedIndex = settings.actioncards ? 1 : 0;
+    document.getElementById('setting_bigbody').selectedIndex = settings.bigbody ? 1 : 0;
   }
   function set_save_params(s) {
     if (!s) return false;
@@ -1714,6 +1750,7 @@ var GUI = (function() {
       var e = document.querySelectorAll('.player' + i);
       for (var j = 0; j < e.length; j++) e[j].className = player_class(i);
     }
+    document.body.classList[settings.bigbody ? 'add' : 'remove']('big');
   }
 
   var old_pos = {};
