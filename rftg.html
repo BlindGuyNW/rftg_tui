@@ -1842,7 +1842,7 @@ var GUI = (function() {
       if (selectable_cards[c.index] === 'discard')
         txt += '<img class="discard" src="' + image_from_data(3000 + ICON.DISCARD) + '">';
       if (c.vp !== undefined) txt += '<div class="vptooltip">'+c.vp+'</div>';
-      if (c.trade_value) txt += '<div class="tradevalue">$'+c.trade_value+'</div>';
+      if (c.trade_value && selectable_cards[c.index]) txt += '<div class="tradevalue">$'+c.trade_value+'</div>';
       txt += '<div class="frame"></div></div>';
       return txt;
     }
