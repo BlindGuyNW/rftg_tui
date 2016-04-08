@@ -10661,6 +10661,9 @@ void phase_produce(game *g)
 	{
 		/* Handle player's produce phase */
 		produce_player(g, i);
+
+		/* Check for aborted game */
+		if (g->game_over) return;
 	}
 
 	/* Handle end of phase powers */
