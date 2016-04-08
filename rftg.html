@@ -89,7 +89,7 @@ div#savednum {
     font-size: 25px;
     text-align: center;
 }
-img.good {
+img.good, img.prestigeaction {
     width:150px;
     position:absolute;
     left:50px;
@@ -97,6 +97,9 @@ img.good {
     box-shadow: 0 0 1px 1px #666;
     border-radius: 7px;
     transition: top .5s linear;
+}
+img.prestigeaction {
+    display: none;
 }
 img.good.selected {
     box-shadow: 0 0 2px 2px gold;
@@ -248,7 +251,7 @@ div.card.disabled {
     height: 290px;
     position: relative;
 }
-#saved.deck {
+#saved.deck, #actionhand.deck {
     height: 0;
 }
 #table0.deck.showsaved {
@@ -416,7 +419,7 @@ height:24px;
 right:0;
 bottom:0;
 }
-.modalopt.selected_1 img.buttonicon_prestige {
+.modalopt.selected_1 img.buttonicon_prestige, .modalopt.selected_1 img.prestigeaction {
 display:inline-block;
 }
 .modalopt .kind {
@@ -603,6 +606,7 @@ width: 100px;
 <table><tr><td><table><tr id="game_status"></tr></table></td><td id="promptcontainer"><span id="actionprompt"></span> <button data-accel="13" id="actionbutton" onclick="GUI.do_send()">Done</button></td></tr></table>
 <div id="board" onclick="GUI.do_click(event)">
     <div id="player0" class="player player0">
+     <div class="deck" id="actionhand"></div>
      <div class="deck" id="hand"></div>
      <table><tr id="player_status0"></tr></table>
      <div id="player_status0"></div>
@@ -699,6 +703,10 @@ First player color <select id="setting_color">
 <option value="3">Yellow</option>
 <option value="4">Cyan</option>
 <option value="5">Purple</option>
+</select><br>
+Use action cards <select id="setting_actioncards">
+<option value="0">No</option>
+<option value="1">Yes</option>
 </select>
 <h2><button data-accel="13" onclick="GUI.save_settings();GUI.set_screen('gamescreen')">Return</button></h2>
 </div></div>
@@ -809,6 +817,7 @@ var GUI = (function() {
     revstart: true,
     accels: 0,
     color: 0,
+    actioncards: false,
   };
   var save_settings = GUI.save_settings = function() {
     settings = {
@@ -818,6 +827,7 @@ var GUI = (function() {
       revstart: document.getElementById('setting_revstart').value === "1",
       accels: parseInt(document.getElementById('setting_accels').value),
       color: parseInt(document.getElementById('setting_color').value),
+      actioncards: parseInt(document.getElementById('setting_actioncards').value),
     }
     if (localStorage)
       localStorage.setItem('rftg.conf', JSON.stringify(settings));
@@ -837,6 +847,7 @@ var GUI = (function() {
     document.getElementById('setting_revstart').selectedIndex = settings.revstart ? 1 : 0;
     document.getElementById('setting_accels').selectedIndex = settings.accels;
     document.getElementById('setting_color').selectedIndex = settings.color;
+    document.getElementById('setting_actioncards').selectedIndex = settings.actioncards ? 1 : 0;
   }
   function set_save_params(s) {
     if (!s) return false;
@@ -938,6 +949,7 @@ var GUI = (function() {
   var select;
   var selectable_cards;
   var select_autoconfirm;
+  var action_cards;
   var save;
   var params = [];
   if (location.hash) {
@@ -1004,6 +1016,11 @@ var GUI = (function() {
     if (c.id && c.id.match(/^card\d+$/)) return c;
     return undefined;
   }
+  function target_action(c) {
+    while (!c.id && c.parentNode) c = c.parentNode;
+    if (c.id && c.id.match(/^modalopt\d+$/)) return c;
+    return undefined;
+  }
   function toggle_showsaved(ev) {
     document.getElementById('table0').classList.toggle('showsaved');
     document.getElementById('saved').classList.toggle('showsaved');
@@ -1014,6 +1031,10 @@ var GUI = (function() {
     var c, t;
     if (ev.target.id === 'shownum' || document.getElementById('table0').classList.contains('showsaved')) {
       toggle_showsaved(ev);
+      return;
+    }
+    if (c = target_action(ev.target)) {
+      onclick_modal(parseInt(c.id.substring(8)));
       return;
     }
     if (!(c = target_card(ev.target))) return;
@@ -1115,10 +1136,12 @@ var GUI = (function() {
     for (i = 0; i < opts.length; i++) {
       var ci = parseInt(opts[i].id.substring(8));
       var s = modalvalues[ci];
-      opts[i].className = 'modalopt';
+      opts[i].classList.remove('selected');
       for (j = 0; j < modalvalues[ci].length; j++) {
         if (modalresult.indexOf(modalvalues[ci][j]) >= 0) {
           opts[i].classList.add('selected', 'selected_' + j);
+        } else {
+          opts[i].classList.remove('selected_' + j);
         }
       }
     }
@@ -1165,9 +1188,16 @@ var GUI = (function() {
     if (has_prestige) txt = '<span class="buttonicon_container">' + txt + '<img class="buttonicon_prestige" src="' + image_from_data(3014) + '"></span>';
     return txt;
   }
+  GUI.toggle_hand = function () {
+    var h1 = document.getElementById('hand');
+    var h2 = document.getElementById('actionhand');
+    h1.style.zIndex = -1 - h1.style.zIndex;
+    h2.style.zIndex = -1 - h2.style.zIndex;
+  }
 
   function no_select() {
     selectable_cards = {};
+    action_cards = undefined;
     card_classes = {};
     select_autoconfirm = true;
     action_restrict = function() {
@@ -1177,6 +1207,7 @@ var GUI = (function() {
   }
   function do_select() {
     selectable_cards = {};
+    action_cards = undefined;
 
     function make_selectable(list, type) {
       list.forEach(function(e) {
@@ -1241,7 +1272,14 @@ var GUI = (function() {
       });
       select_autoconfirm = !advanced && exp_level !== 3;
       var name = advanced ? ['actions', 'first action', 'second action'][one] : 'action';
-      set_prompt('Choose ' + name + ': ' + gen_modal(opts, to_select));
+      var modal = gen_modal(opts, to_select);
+      if (settings.actioncards) {
+        action_cards = opts;
+        name += ' <button data-accel="32" onclick="GUI.toggle_hand()">Show hand</button>';
+      } else {
+        name += ': ' + modal;
+      }
+      set_prompt('Choose ' + name);
       action_restrict = function() {
         var r = modalresult;
         var prestige_action = r.filter(function(e) {
@@ -1640,6 +1678,7 @@ var GUI = (function() {
   }
   var keycode_name = function(c) {
     var mod = '';
+    if (c.substring(0, 6) === 'shift-') c = c.substring(6), mod = 'Shift ';
     if (c >= 112 && c <= 123) return mod + 'F' + (c - 111);
     if (c >= 48 && c <= 90) return mod + String.fromCharCode(c);
     return mod + 'Unknown';
@@ -1770,6 +1809,16 @@ var GUI = (function() {
       txt += '<div class="frame"></div></div>';
       return txt;
     }
+    function makeactioncard(c, i) {
+      var pos = i * cardspacing;
+      var id = c.value instanceof Array ? c.value[0] : (c.value || 10);
+      var key = 'data-accel="' + c.accel + '"';
+      if (id === 4 || id === 6) id--;
+      var txt = '<div class="card modalopt" style="left:' + pos + 'px;" id="modalopt' + i + '"' + key + '><img class="cardface" src="' + image_from_data(id + 4000) + '">';
+      txt += '<img class="prestigeaction" src="' + image_from_data(4010) + '">';
+      txt += '<div class="frame"></div></div>';
+      return txt;
+    }
 
     function fill_game_summary() {
       function makesumicon(id, content) {
@@ -1804,12 +1853,17 @@ var GUI = (function() {
       }).join('');
       document.getElementById('gamesummary').innerHTML = t;
     }
+    var cardspacing;
+    var cardelem;
+    function set_spacing(a) {
+      cardspacing = a.length > 1 ? (cardelem.offsetWidth - 210) / (a.length - 1) : 210;
+      if (cardspacing > 210) cardspacing = 210;
+    }
     lastWidth = window.innerWidth;
     var scav_pos = decks.saved.length ? decks.table0.map(is_scavengers).indexOf(true) : -1;
     for (var j in decks) {
-      var cardelem = document.getElementById(j);
-      var cardspacing = decks[j].length > 1 ? (cardelem.offsetWidth - 210) / (decks[j].length - 1) : 210;
-      if (cardspacing > 210) cardspacing = 210;
+      cardelem = document.getElementById(j);
+      set_spacing(decks[j]);
       if (j === 'saved') {
         if (scav_pos < 0) {
           cardelem.innerHTML = '';
@@ -1820,6 +1874,15 @@ var GUI = (function() {
       decks[j] = decks[j].sort(function(a, b) { return a.sortkey - b.sortkey; });
       cardelem.innerHTML = decks[j].map(makecard).join('');
     }
+    cardelem = document.getElementById('actionhand');
+    if (action_cards) {
+      set_spacing(action_cards);
+      cardelem.innerHTML = action_cards.map(makeactioncard).join('');
+    } else {
+      cardelem.innerHTML = '';
+    }
+    cardelem.style.zIndex = action_cards ? 0 : -1;
+    document.getElementById('hand').style.zIndex = action_cards ? -1 : 0;
     if (scav_pos >= 0)
       document.getElementById('savednum').addEventListener('click', toggle_showsaved, false);
     if (animate) {
