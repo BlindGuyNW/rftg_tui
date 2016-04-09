@@ -815,7 +815,7 @@ var GUI = (function() {
     if (menu_exp_level == exp_level && menu_num_players == num_players &&
       menu_advanced == advanced && menu_goals == goals &&
       menu_takeovers == takeovers && menu_seed === undefined && campaign === undefined) {
-      set_screen('gamescreen');
+      set_screen('loadingscreen');
       do_undo(RESTART.NEW);
       return;
     }
@@ -832,7 +832,7 @@ var GUI = (function() {
     if (e.value === "") return;
     var c = campaigns[e.value];
     if (c.name === campaign) {
-      set_screen('gamescreen');
+      set_screen('loadingscreen');
       do_undo(RESTART.NEW);
       return;
     }
@@ -2047,6 +2047,7 @@ var GUI = (function() {
     no_select();
     display();
     setTimeout(function() {
+      set_screen('gamescreen');
       clear_log();
       Module._continue_game(v);
       get_status();
