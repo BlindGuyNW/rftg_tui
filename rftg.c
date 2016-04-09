@@ -1243,6 +1243,7 @@ static int load_auto_save(game *g)
 	opt.expanded = g->expanded;
 	opt.disable_goal = g->goal_disabled;
 	opt.disable_takeover = g->takeover_disabled;
+        opt.campaign_name = g->camp->name;
 
 	/* Game successfully loaded */
 	return TRUE;
