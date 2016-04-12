@@ -1414,10 +1414,11 @@ var GUI = (function() {
           power: select.special[i]
         });
       });
-      list = list.sort(function(a, b) {
-        return card_info[b.card].powers[b.power].score - card_info[a.card].powers[a.power].score;
+      list.forEach(function(e) {
+        e.p = e.card < 0 ? { score: -1000, name: "Prestige Trade bonus" } : card_info[e.card].powers[e.power];
       });
-      var opts = list.map(function(e) { return { name: card_info[e.card].powers[e.power].name }; });
+      list = list.sort(function(a, b) { return b.p.score - a.p.score; });
+      var opts = list.map(function(e) { return { name: e.p.name }; });
       if (optional) opts.push({ name: 'None (done with ' + action_name + ')' });
       set_prompt('Choose ' + action_name + ' power ' + gen_select(opts));
       select_result = function() {
@@ -1430,7 +1431,7 @@ var GUI = (function() {
     } else if (select.type === CHOICE.CONSUME_HAND) {
       var c_idx = select.arg1;
       var o_idx = select.arg2;
-      set_prompt("Choose cards to consume on " + card_info[c_idx].name);
+      set_prompt("Choose cards to consume on " + (c_idx < 0 ? "Prestige Trade bonus" : card_info[c_idx].name));
       make_selectable(select.list, 'discard');
       action_restrict = function() {
         var list = get_cards_selected();
