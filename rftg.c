@@ -1243,6 +1243,7 @@ static int load_auto_save(game *g)
 	opt.expanded = g->expanded;
 	opt.disable_goal = g->goal_disabled;
 	opt.disable_takeover = g->takeover_disabled;
+        opt.campaign_name = g->camp->name;
 
 	/* Game successfully loaded */
 	return TRUE;
@@ -2716,6 +2717,25 @@ int can_prestige(void) {
 	return real_game.p[player_us].prestige > 0 ? 3 : 1;
 }
 
+static int get_discard_powers(int i) {
+	int j, discard = 0;
+	for (j = 0; j < real_game.deck[i].d_ptr->num_power; j++) {
+		/* Get power pointer */
+		power *o_ptr = &real_game.deck[i].d_ptr->powers[j];
+
+		/* Check for discard in develop phase */
+		if (o_ptr->phase == PHASE_DEVELOP &&
+			(o_ptr->code & P2_DISCARD_REDUCE))
+			discard |= 1 << PHASE_DEVELOP;
+
+		/* Check for discard in settle phase */
+		if (o_ptr->phase == PHASE_SETTLE &&
+			(o_ptr->code & P3_DISCARD))
+			discard |= 1 << PHASE_SETTLE;
+	}
+	return discard;
+}
+
 void send_card_infos() {
 	int i, j;
 	add_data(MSG_CARDINFO);
@@ -2723,6 +2743,7 @@ void send_card_infos() {
 	for (i = 0; i < real_game.deck_size; i++) {
 		add_data_str(real_game.deck[i].d_ptr->name);
 		add_data(real_game.deck[i].d_ptr->index);
+		add_data(get_discard_powers(i));
 		add_data(real_game.deck[i].d_ptr->num_power);
 		for (j = 0; j < real_game.deck[i].d_ptr->num_power; j++) {
 			add_data_str(get_card_power_name(i, j));

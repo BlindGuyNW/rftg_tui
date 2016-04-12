@@ -528,6 +528,7 @@ border-radius: 10px;
 overflow: hidden;
 position: relative;
 width: 100%;
+-webkit-tap-highlight-color: rgba(0,0,0,0);
 }
 .player {
 width: 100%;
@@ -814,7 +815,7 @@ var GUI = (function() {
     if (menu_exp_level == exp_level && menu_num_players == num_players &&
       menu_advanced == advanced && menu_goals == goals &&
       menu_takeovers == takeovers && menu_seed === undefined && campaign === undefined) {
-      set_screen('gamescreen');
+      set_screen('loadingscreen');
       do_undo(RESTART.NEW);
       return;
     }
@@ -831,7 +832,7 @@ var GUI = (function() {
     if (e.value === "") return;
     var c = campaigns[e.value];
     if (c.name === campaign) {
-      set_screen('gamescreen');
+      set_screen('loadingscreen');
       do_undo(RESTART.NEW);
       return;
     }
@@ -1250,6 +1251,13 @@ var GUI = (function() {
         selectable_cards[e] = type || 'normal';
       });
     }
+    function make_selectable_power(list, phase) {
+      if (game_status.current_phase === undefined) return;
+      var phase = (advanced ? [1, 2, 2, 3, 3, 4, 5] : [1, 2, 3, 4, 5])[game_status.current_phase];
+      list.forEach(function(e) {
+        selectable_cards[e] = card_info[e].discard & (1 << phase) ? 'discard' : 'normal';
+      });
+    }
 
     function make_inactive(where) {
       decks[where].forEach(function(e) {
@@ -1355,7 +1363,7 @@ var GUI = (function() {
       var mil_bonus = select.arg3;
       set_prompt(Module.ccall('choose_pay_prompt', 'string', ['number', 'number', 'number'], [which, mil_only, mil_bonus]));
       make_selectable(select.list, 'discard');
-      make_selectable(select.special);
+      make_selectable_power(select.special);
       make_inactive('hand');
       make_inactive('table0');
       action_restrict = function() {
@@ -1601,7 +1609,7 @@ var GUI = (function() {
     } else if (select.type === CHOICE.TAKEOVER) {
       set_prompt("Choose world to takeover and power to use");
       make_selectable(select.list);
-      make_selectable(select.special);
+      make_selectable_power(select.special);
       make_inactive('hand');
       for (var i = 0; i < num_players; i++) make_inactive('table' + i);
       action_restrict = function () {
@@ -1627,7 +1635,7 @@ var GUI = (function() {
       var deficit = select.arg3 + 1;
       set_prompt("Choose defense for " + card_info[which].name + " (need " + deficit + " extra military)");
       make_selectable(select.list, 'discard');
-      make_selectable(select.special);
+      make_selectable_power(select.special);
       make_inactive('hand');
       make_inactive('table0');
       action_restrict = function () {
@@ -2047,6 +2055,7 @@ var GUI = (function() {
     no_select();
     display();
     setTimeout(function() {
+      set_screen('gamescreen');
       clear_log();
       Module._continue_game(v);
       get_status();
@@ -2163,6 +2172,7 @@ var GUI = (function() {
         var c = {
           name: Module.UTF8ToString(array[i++]),
           image: array[i++],
+          discard: array[i++],
           powers: []
         };
         var npow = array[i++];
