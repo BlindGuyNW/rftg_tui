@@ -541,12 +541,16 @@ width: 100%;
 #status_over div.hidden {
 overflow: hidden;
 height: 0px;
+display: block;
 }
 h1 {
 text-align: center;
 }
 #menu_button {
     width: 52px;
+}
+.hidden {
+    display: none;
 }
 .big input#menu_seed, .big button, .big select, .big .menu, .big span.modalopt { font-size: 50px; }
 .big #menu { width:260px; }
@@ -602,27 +606,27 @@ width: 100px;
    <div id="loadingmsg">Loading...</div>
    </div>
 </div>
-<div class="screen" id="gamescreen" hidden>
+<div class="screen hidden" id="gamescreen">
 <table style="width:100%"><tr><td>
  <table><tr><td>
   <table><tr id="action_status"></table>
  </td><td>
-  <span data-accel="71" onclick="var m=document.getElementById('goals');m.hidden=!m.hidden;m.scrollTop=m.scrollHeight" style="position:relative;display:inline-block">
-  <span id="goalsbutton"></span><div id="goals" hidden></div></span>
+  <span data-accel="71" onclick="var m=document.getElementById('goals');m.classList.toggle('hidden');m.scrollTop=m.scrollHeight" style="position:relative;display:inline-block">
+  <span id="goalsbutton"></span><div id="goals" class="hidden"></div></span>
  </td></table>
 </td><td style="text-align:right">
  <button id="restart_undo" data-accel="ctrl-90" onclick="GUI.do_undo(GUI.RESTART.UNDO)">Undo</button>
  <span style="position:relative;display:inline-block">
- <button data-accel="76" onclick="var m=document.getElementById('gamelog');m.hidden=!m.hidden;m.scrollTop=m.scrollHeight">Log</button><div class="gamelog" id="gamelog" hidden>
+ <button data-accel="76" onclick="var m=document.getElementById('gamelog');m.classList.toggle('hidden');m.scrollTop=m.scrollHeight">Log</button><div class="gamelog hidden" id="gamelog">
  <table id="gamelogtext"></table>
  </div></span>
  <span style="position:relative;display:inline-block">
- <button id="menu_button" onclick="var e = document.getElementById('menu');e.hidden=!e.hidden"><svg version="1.1" xmlns="http://www.w3.org/2000/svg" viewBox="2 2 20 20">
+ <button id="menu_button" onclick="document.getElementById('menu').classList.toggle('hidden')"><svg version="1.1" xmlns="http://www.w3.org/2000/svg" viewBox="2 2 20 20">
  <path style="fill:#ccc" d="M6,15h12c0.553,0,1,0.447,1,1v1c0,0.553-0.447,1-1,1H6c-0.553,0-1-0.447-1-1v-1C5,15.447,5.447,15,6,15z M5,11v1
     c0,0.553,0.447,1,1,1h12c0.553,0,1-0.447,1-1v-1c0-0.553-0.447-1-1-1H6C5.447,10,5,10.447,5,11z M5,6v1c0,0.553,0.447,1,1,1h12
     c0.553,0,1-0.447,1-1V6c0-0.553-0.447-1-1-1H6C5.447,5,5,5.447,5,6z"/>
  </svg>
- </button><div class="menu" id="menu" hidden onclick="document.getElementById('menu').hidden=true">
+ </button><div class="menu hidden" id="menu" onclick="document.getElementById('menu').classList.add('hidden')">
  <div data-accel="ctrl-shift-90" onclick="GUI.do_undo(GUI.RESTART.UNDO_ROUND)">Undo Round</div>
  <div onclick="GUI.do_undo(GUI.RESTART.UNDO_GAME)">Restart Game</div>
  <div data-accel="ctrl-78" onclick="GUI.do_undo(GUI.RESTART.NEW)">New Game</div>
@@ -659,7 +663,7 @@ width: 100px;
 </div>
 <div data-accel="192" onclick="GUI.toggle_showaccels()"></div>
 </div>
-<div hidden class="screen centeredscreen_o" id="aboutscreen"><div class="centeredscreen_i">
+<div class="hidden screen centeredscreen_o" id="aboutscreen"><div class="centeredscreen_i">
 <p>This is a program to play Race for the Galaxy against AI players.  Rules
 for the game and expansions can be found at:
 <a href="http://riograndegames.com/getFile.php?id=273">Base Game</a>,
@@ -676,7 +680,7 @@ published by Rio Grande Games.  Permission to distribute the card and
 goal images has been granted by Rio Grande Games.
 <h1><button data-accel="27" onclick="GUI.set_screen('gamescreen')">Back</button></h1>
 </div></div>
-<div hidden class="screen centeredscreen_o" id="menuscreen"><div class="centeredscreen_i">
+<div class="hidden screen centeredscreen_o" id="menuscreen"><div class="centeredscreen_i">
 <h1>RACE FOR THE GALAXY AI</h1>
 <select onchange="GUI.update_menu()" id="menu_exp_level">
 <option value="0">Base Game only</option>
@@ -696,14 +700,14 @@ goal images has been granted by Rio Grande Games.
 <button onclick="this.classList.toggle('selected')" id="menu_goals">Goals</button>
 <button onclick="this.classList.toggle('selected')" id="menu_takeovers">Takeovers</button>
 <button onclick="this.classList.toggle('selected');GUI.update_menu()" id="menu_seedset">Custom Seed</button>
-<input hidden type="number" id="menu_seed">
+<input class="hidden" type="number" id="menu_seed">
 <h1>
 <button data-accel="27" onclick="GUI.set_screen('gamescreen')">Return</button>
 <button onclick="GUI.set_screen('campaignscreen')">Scenarios</button>
 <button data-accel="13" onclick="GUI.do_startgame()">Start Game</button>
 </h1>
 </div></div>
-<div hidden class="screen centeredscreen_o" id="settingsscreen"><div class="centeredscreen_i">
+<div class="hidden screen centeredscreen_o" id="settingsscreen"><div class="centeredscreen_i">
 <h2>Settings</h2>
 <table><tr><td>
 Card animations</td><td><select id="setting_anim">
@@ -744,7 +748,7 @@ Big buttons</td><td><select id="setting_bigbody">
 </select></td></table>
 <h2><button data-accel="13" onclick="GUI.save_settings();GUI.set_screen('gamescreen')">Return</button></h2>
 </div></div>
-<div hidden class="screen centeredscreen_o" id="campaignscreen"><div class="centeredscreen_i">
+<div class="hidden screen centeredscreen_o" id="campaignscreen"><div class="centeredscreen_i">
 <h2>Scenarios</h2>
 <select id="campaign_name"></select><p id="campaign_info"></p>
 <h1>
@@ -752,10 +756,10 @@ Big buttons</td><td><select id="setting_bigbody">
 <button data-accel="13" onclick="GUI.do_startcampaign()">Start Game</button>
 </h1>
 </div></div>
-<div hidden class="popup screen centeredscreen_o" id="cardpopup" onclick="GUI.set_screen('gamescreen')" oncontextmenu="event.preventDefault()"><div class="centeredscreen_i">
+<div class="hidden popup screen centeredscreen_o" id="cardpopup" onclick="GUI.set_screen('gamescreen')" oncontextmenu="event.preventDefault()"><div class="centeredscreen_i">
 <img id="cardpopupimg" data-accel="27" onclick="GUI.set_screen('gamescreen')">
 </div></div>
-<div hidden class="popup screen centeredscreen_o" id="gameoverpopup"><div class="centeredscreen_i">
+<div class="hidden popup screen centeredscreen_o" id="gameoverpopup"><div class="centeredscreen_i">
 <table id="gamesummary"></table><br>
 <button data-accel="27" onclick="GUI.set_screen('gamescreen')">Return</button>
 <button data-accel="ctrl-78" onclick="GUI.set_screen('gamescreen');GUI.do_undo(GUI.RESTART.NEW);">New Game</button>
@@ -769,6 +773,13 @@ Big buttons</td><td><select id="setting_bigbody">
 <script type='text/javascript'>
 var GUI = (function() {
   var GUI = {};
+  function hide(el, val) {
+    if (val !== undefined) {
+      if (val) el.classList.add('hidden');
+      else el.classList.remove('hidden');
+    }
+    return el.classList.contains('hidden');
+  }
   var update_menu = GUI.update_menu = function() {
     var ea = document.getElementById('menu_exp_level');
     var eb = document.getElementById('menu_num_players');
@@ -781,10 +792,10 @@ var GUI = (function() {
     for (var i = 0; i < 5; i++)
       eb.options[i].disabled = i + 2 > maxp;
     if (eb.value > maxp) eb.selectedIndex = 0;
-    ec.hidden = eb.value > 2;
-    ed.hidden = [0, 1, 1, 1, 0][ea.value] === 0;
-    ee.hidden = [0, 0, 1, 1, 0][ea.value] === 0;
-    eg.hidden = !ef.classList.contains('selected');
+    hide(ec, eb.value > 2);
+    hide(ed, [0, 1, 1, 1, 0][ea.value] === 0);
+    hide(ee, [0, 0, 1, 1, 0][ea.value] === 0);
+    hide(eg, !ef.classList.contains('selected'));
   }
 
   function init_menu() {
@@ -807,9 +818,9 @@ var GUI = (function() {
     var ee = document.getElementById('menu_takeovers');
     var menu_num_players = document.getElementById('menu_num_players').value;
     var menu_exp_level = document.getElementById('menu_exp_level').value;
-    var menu_advanced = !ec.hidden && ec.classList.contains('selected');
-    var menu_goals = !ed.hidden && ed.classList.contains('selected');
-    var menu_takeovers = !ee.hidden && ee.classList.contains('selected');
+    var menu_advanced = !hide(ec) && ec.classList.contains('selected');
+    var menu_goals = !hide(ed) && ed.classList.contains('selected');
+    var menu_takeovers = !hide(ee) && ee.classList.contains('selected');
     var menu_seed = document.getElementById('menu_seedset').classList.contains('selected') ?
       document.getElementById('menu_seed').value : undefined;
     if (menu_exp_level == exp_level && menu_num_players == num_players &&
@@ -918,13 +929,15 @@ var GUI = (function() {
     update_key_accels(document.getElementById(s));
     var popup = document.getElementById(s).classList.contains('popup');
     if (popup) {
-      document.getElementById(s).hidden = false;
+      document.getElementById(s).classList.remove('hidden');
       return;
     }
     var scrs = document.getElementsByClassName('screen');
     for (var i = 0; i < scrs.length; i++) {
-      scrs[i].hidden = scrs[i].id !== s;
+      scrs[i].classList.add('hidden');
     }
+    document.getElementById(s).classList.remove('hidden');
+    console.log(s);
     set_scroll();
   }
   var RESTART = GUI.RESTART = {
@@ -1035,8 +1048,8 @@ var GUI = (function() {
   load_settings();
   update_player_classes();
   for (var i = num_players; i < 6; i++) {
-    document.getElementById('player' + i).hidden = true;
-    document.getElementById('player_over' + i).classList.add('hidden');
+    hide(document.getElementById('player' + i), true);
+    hide(document.getElementById('player_over' + i), true);
   }
 
   var svg_images = {
@@ -1148,7 +1161,7 @@ var GUI = (function() {
   function update_action_sensitivity(initial) {
     var res = action_restrict();
     var ac = select_autoconfirm && settings.autoconfirm;
-    document.getElementById('actionbutton').hidden = game_over || !res && ac;
+    hide(document.getElementById('actionbutton'), game_over || !res && ac);
     document.getElementById('actionbutton').disabled = !res;
     if (res && ac && !initial) do_send();
   }
@@ -1697,7 +1710,7 @@ var GUI = (function() {
   }
 
   function set_scroll() {
-    document.getElementById('status_over').hidden = !settings.pullup;
+    hide(document.getElementById('status_over'), !settings.pullup);
     if (settings.pullup) {
       window.addEventListener("scroll", update_scroll);
       update_scroll();
@@ -1751,7 +1764,7 @@ var GUI = (function() {
     if (ev.metaKey) prefix += 'meta-';
     var keycode = prefix + ev.keyCode;
     var target = keyAccels[keycode];
-    if (!target || target.disabled || target.hidden) return;
+    if (!target || target.disabled || hide(target)) return;
     if (target.tagName === "OPTION")
       target.selected = 'selected';
     else
