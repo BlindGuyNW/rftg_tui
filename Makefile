@@ -2,7 +2,7 @@ PROGS=rftg learner dumpnet netconv
 CFLAGS=$(shell pkg-config --cflags gtk+-2.0) -march=native -O3
 GTKLIBS=$(shell pkg-config --libs gtk+-2.0)
 LDLIBS=-lm
-EXPORTS="['_main','_selection_result','_continue_game','_get_status_data','_get_status_data_size','_get_callbuffer','_action_check_payment','_choose_pay_prompt','_action_check_goods','_action_check_consume','_action_check_start','_can_prestige','_action_check_upgrade','_action_check_takeover','_action_check_defend']"
+EXPORTS="['_main','_selection_result','_continue_game','_get_status_data','_get_status_data_size','_get_callbuffer','_action_check_payment','_choose_pay_prompt','_action_check_goods','_action_check_consume','_action_check_start','_can_prestige','_action_check_upgrade','_action_check_takeover','_action_check_defend','_compute_forced_choice']"
 ICONS=launcher-icon-2x.png launcher-icon-3x.png launcher-icon-4x.png apple-touch-icon.png
 EXTERNAL=campaign.txt cards.txt images.data
 #CC=clang

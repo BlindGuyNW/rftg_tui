@@ -1390,6 +1390,16 @@ var GUI = (function() {
       make_selectable_power(select.special);
       make_inactive('hand');
       make_inactive('table0');
+      var buf = Module._get_callbuffer();
+      select.list.forEach(function(e, i) {
+        Module.setValue(buf + 4 * i, e, 'i32');
+      });
+      select.special.forEach(function(e, i) {
+        Module.setValue(buf + 4 * (i + select.list.length), e, 'i32');
+      });
+      var auto_select = Module._compute_forced_choice(which, select.list.length, select.special.length, mil_only, mil_bonus);
+      if (auto_select & 1) select.list.forEach(function(e) { card_classes[e] = 'selected'; });
+      select.special.forEach(function(e, i) { if (auto_select & (2 << i)) card_classes[e] = 'selected'; });
       action_restrict = function() {
         var list = get_cards_selected('hand');
         var special = get_cards_selected('table0');

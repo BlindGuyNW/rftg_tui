@@ -296,16 +296,6 @@ typedef struct mil_strength
 
 } mil_strength;
 
-
-/*
- * Restriction on action button.
- */
-static int action_min, action_max, action_payment_which, action_payment_mil;
-static int action_payment_bonus;
-static int action_cidx, action_oidx;
-
-
-
 /*
  * Check whether a log position marks a round boundary.
  */
@@ -662,6 +652,74 @@ int action_check_start(int n, int ns)
 	return start_callback(&sim, player_us, list, n, special, ns);
 }
 
+/*
+ * Find if there are any forced choices for payment.
+ */
+int compute_forced_choice(int which, int num, int num_special, int mil_only, int mil_bonus)
+{
+	int *list = callbuffer, *special = callbuffer + num;
+	game sim;
+	int i, j, num_choice;
+	int special_choice[10];
+	int special_set;
+
+	/* Clear forced variables */
+	int special_mask = ~0;
+	int forced_hand = 1;
+	if (num > 20 || num_special > 10) return 0;
+
+	/* Loop over all reasonable hand payments */
+	for (i = 0; i <= num; ++i)
+	{
+		/* Loop over all sets of special cards */
+		for (special_set = 0; special_set < (1 << num_special); ++special_set)
+		{
+			/* Clear number of special cards used */
+			num_choice = 0;
+
+			/* Loop over special cards */
+			for (j = 0; j < num_special; ++j)
+			{
+				/* Check for this special card selected */
+				if (special_set & (1 << j))
+				{
+					/* Add card */
+					special_choice[num_choice++] = special[j];
+				}
+			}
+
+			/* Copy game */
+			sim = real_game;
+
+			/* Set simulation flag */
+			sim.simulation = 1;
+
+			/* Loop over players */
+			for (j = 0; j < sim.num_players; j++)
+			{
+				/* Have AI make any pending decisions for this player */
+				sim.p[j].control = &ai_func;
+			}
+
+			/* Try to make payment */
+			if (payment_callback(&sim, player_us, which,
+			                     list, i, special_choice, num_choice,
+			                     mil_only, mil_bonus))
+			{
+				/* Check for legal without all hand cards */
+				if (i != num) forced_hand = 0;
+
+				/* Update mask */
+				special_mask &= special_set;
+			}
+
+			/* Optimization */
+			if (!special_mask && !forced_hand) return 0;
+		}
+	}
+	return (special_mask << 1) | forced_hand;
+}
+
 
 
 /*
@@ -917,23 +975,6 @@ static void compute_military(game *g, int who, mil_strength *m_ptr)
 		m_ptr->defense || m_ptr->attack_imperium || m_ptr->imperium ||
 		m_ptr->military_rebel || m_ptr->max_bonus;
 }
-
-
-/*
- * Reset list of displayed cards on the table for the given player.
- */
-
-
-/*
- * Number of action buttons pressed.
- */
-static int actions_chosen;
-
-/*
- * Action which is receiving prestige boost.
- */
-static int prestige_action;
-
 
 /*
  * Return a "score" for sorting consume powers.
