@@ -1789,7 +1789,7 @@ var GUI = (function() {
   function player_name(p) { return COLOR_NAMES[(p + settings.color) % 6]; }
   function player_class(p) { return 'player' + p + ' player_color' + (p + settings.color) % 6; }
   function update_player_classes() {
-    for (var i = 0; i < 6; i++) {
+    for (var i = 0; i < num_players; i++) {
       var e = document.querySelectorAll('.player' + i);
       for (var j = 0; j < e.length; j++) e[j].className = player_class(i);
     }
