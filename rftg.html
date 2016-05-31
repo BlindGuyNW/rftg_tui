@@ -612,7 +612,7 @@ width: 100px;
  </div></span>
  <span style="position:relative;display:inline-block">
  <button id="menu_button" onclick="document.getElementById('menu').classList.toggle('hidden')"><svg xmlns="http://www.w3.org/2000/svg" viewBox="2 2 20 20"><path d="M6 15h12c.553 0 1 .447 1 1v1c0 .553-.447 1-1 1H6c-.553 0-1-.447-1-1v-1c0-.553.447-1 1-1zm-1-4v1c0 .553.447 1 1 1h12c.553 0 1-.447 1-1v-1c0-.553-.447-1-1-1H6c-.553 0-1 .447-1 1zm0-5v1c0 .553.447 1 1 1h12c.553 0 1-.447 1-1V6c0-.553-.447-1-1-1H6c-.553 0-1 .447-1 1z" fill="#ccc"/></svg></button>
- <div class="menu" id="menu" hidden onclick="document.getElementById('menu').classList.add('hidden')">
+ <div class="menu hidden" id="menu" onclick="document.getElementById('menu').classList.add('hidden')">
  <div data-accel="ctrl-shift-90" onclick="GUI.do_undo(GUI.RESTART.UNDO_ROUND)">Undo Round</div>
  <div onclick="GUI.do_undo(GUI.RESTART.UNDO_GAME)">Restart Game</div>
  <div data-accel="ctrl-78" onclick="GUI.do_undo(GUI.RESTART.NEW)">New Game</div>
