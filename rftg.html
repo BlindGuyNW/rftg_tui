@@ -2183,14 +2183,14 @@ var GUI = (function() {
         }
       } else if (msgtype == MSG.LOGLINE) {
         add_log({
-          tag: Module.UTF8ToString(array[i++]),
-          msg: Module.UTF8ToString(array[i++])
+          tag: UTF8ToString(array[i++]),
+          msg: UTF8ToString(array[i++])
         });
       } else if (msgtype == MSG.CARDINFO) {
         var num = array[i++];
         for (var k = 0; k < num; k++) {
         var c = {
-          name: Module.UTF8ToString(array[i++]),
+          name: UTF8ToString(array[i++]),
           image: array[i++],
           discard: array[i++],
           powers: []
@@ -2198,7 +2198,7 @@ var GUI = (function() {
         var npow = array[i++];
         for (var j = 0; j < npow; j++) {
           c.powers[j] = {
-            name: Module.UTF8ToString(array[i++]),
+            name: UTF8ToString(array[i++]),
             score: array[i++]
           };
         }
@@ -2324,6 +2324,7 @@ var Module = {
 
 (function (prefix) {
   var appCache = window.applicationCache;
+  if (!appCache) return;
   var con = document.getElementById(prefix+'container');
   var prog = document.getElementById(prefix+'progress');
   var elem1 = document.getElementById(prefix+'status1');

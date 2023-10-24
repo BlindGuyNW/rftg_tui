@@ -19,9 +19,10 @@ clean:
 	rm -f *.o *.bc $(PROGS) rftg.js rftg.js.mem $(ICONS) rftg.appcache rftg_webapp.zip
 
 %.js: %.bc
-	emcc -O3 $^ -o $@ -s EXPORTED_FUNCTIONS=$(EXPORTS) -s NO_EXIT_RUNTIME=1
+	emcc -O3 $^ -o $@ -s EXPORTED_FUNCTIONS=$(EXPORTS) -s NO_EXIT_RUNTIME=1 -s 'DEFAULT_LIBRARY_FUNCS_TO_INCLUDE=[''$$Browser'']' -s 'EXPORTED_RUNTIME_METHODS=[''ccall'',''setValue'']' -s STACK_SIZE=4MB
+#TOTAL_STACK=128MB -s INITIAL_MEMORY=160MB  -s ASSERTIONS -s ALLOW_MEMORY_GROWTH=1 -s STACK_OVERFLOW_CHECK=2
 %.bc: %.c
-	emcc -O3 $< -o $@
+	emcc -c -O3 $< -o $@
 
 icons: $(ICONS)
 launcher-icon-2x.png: icon.svg
