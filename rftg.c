@@ -38,54 +38,6 @@
 #define RESTART_CURRENT    12
 
 
-/* API for sending game info to JS */
-#define MSG_CARDINFO 0
-#define MSG_GAMESTATE 1
-#define MSG_LOGLINE 2
-#define MSG_CHOICE 3
-#define MSG_GAMEOVER 4
-
-#define STATUS_DATA_SIZE     100000
-#define STATUS_DATA_STR_SIZE 500000
-
-static int *status_data, status_data_ptr, status_data_str_ptr;
-static char *status_data_str;
-static void reset_status_data(void) {
-	status_data_ptr = 0;
-	status_data_str_ptr = 0;
-}
-static void add_data(int v) {
-	status_data[status_data_ptr++] = v;
-}
-static void add_data_str(char *v) {
-	char *dst = status_data_str + status_data_str_ptr;
-	status_data[status_data_ptr++] = (int)dst;
-	status_data_str_ptr += strlen(v) + 1;
-	strcpy(dst, v);
-}
-int *get_status_data(void) {
-	printf("buffers: %d %d\n", status_data_ptr, status_data_str_ptr);
-	return status_data;
-}
-int get_status_data_size(void) {
-	return status_data_ptr;
-}
-int last_message_send = 0, message_count = 0;
-void add_message(char *tag, char *msg) {
-	if (message_count++ < last_message_send) return;
-	last_message_send++;
-	add_data(MSG_LOGLINE);
-	add_data_str(tag);
-	add_data_str(msg);
-}
-
-/* API for getting the user input from JS */
-static int *selection_result_ptr;
-static int *selection_result_len_ptr;
-int *selection_result(int len) {
-	*selection_result_len_ptr += len;
-	return selection_result_ptr;
-}
 
 /*
  * User options.
@@ -317,7 +269,7 @@ int is_round_boundary(int advanced, int *p)
  */
 void message_add(game *g, char *msg)
 {
-	add_message("", msg);
+	printf("%s\n", msg);
 }
 
 /*
@@ -325,7 +277,7 @@ void message_add(game *g, char *msg)
  */
 void message_add_formatted(game *g, char *msg, char *tag)
 {
-	add_message(tag, msg);
+	printf("%s: %s\n", tag, msg);
 }
 /*
  * Add a private message to the message buffer.
@@ -1322,222 +1274,9 @@ static void choice_done(game *g)
 	max_undo = num_undo;
 }
 
-void get_vp(game *g, int who)
-{
-	player *p_ptr = &g->p[who];
-	card *c_ptr;
-	int x, kind, worlds = 0, devs = 0, dev6 = 0;
-
-	/* Remember old kind */
-	kind = g->oort_kind;
-
-	/* Set oort kind to best scoring kind */
-	g->oort_kind = g->best_oort_kind;
-
-	/* Loop over active cards */
-	for (x = p_ptr->head[WHERE_ACTIVE] ; x != -1; x = g->deck[x].next)
-	{
-		c_ptr = &g->deck[x];
-		if (c_ptr->d_ptr->type == TYPE_WORLD)
-			worlds += c_ptr->d_ptr->vp;
-		else if (c_ptr->d_ptr->type == TYPE_DEVELOPMENT)
-			devs += c_ptr->d_ptr->vp;
-
-		if (c_ptr->d_ptr->num_vp_bonus) {
-			if (c_ptr->d_ptr->type == TYPE_WORLD)
-				worlds += get_score_bonus(g, who, x);
-			else if (c_ptr->d_ptr->type == TYPE_DEVELOPMENT)
-				dev6 += get_score_bonus(g, who, x);
-		}
-	}
-	add_data(p_ptr->goal_vp);
-	add_data(worlds);
-	add_data(devs);
-	add_data(dev6);
-
-	/* Reset oort kind */
-	g->oort_kind = kind;
-}
-
-void get_player_state(game *g, int who)
-{
-	int i;
-	int act1 = -1, act2 = -1, vp, end_vp, prestige;
-	/* Settle discount */
-	discounts discount;
-	/* Military strength */
-	mil_strength military;
-	int goal_display[MAX_GOAL];
-	int goal_gray[MAX_GOAL];
-	int hand_size = 0;
-
-	for (i = 0; i < g->deck_size; i++)
-		if (g->deck[i].where == WHERE_HAND && g->deck[i].owner == who) hand_size++;
-
-	/* Check for actions known */
-	if (g->advanced && g->cur_action < ACT_SEARCH && who == player_us &&
-	    count_active_flags(g, player_us, FLAG_SELECT_LAST))
-	{
-		/* Copy first action only */
-		act1 = g->p[who].action[0];
-	}
-	else if (g->cur_action >= ACT_SEARCH ||
-	         count_active_flags(g, player_us, FLAG_SELECT_LAST))
-	{
-		/* Copy actions */
-		act1 = g->p[who].action[0];
-		act2 = g->p[who].action[1];
-	}
-
-	/* Copy VP chips */
-	vp = g->p[who].vp;
-	end_vp = g->p[who].end_vp;
-
-	/* Copy prestige */
-	prestige = g->p[who].prestige;
-        for (i = 0; i < g->num_players; i++)
-            if (i != who && g->p[i].prestige > prestige) break;
-        prestige <<= 3;
-        if (i == g->num_players) prestige += 4;
-        if (g->p[who].prestige_turn) prestige += 2;
-        if (g->p[who].prestige_action_used) prestige += 1;
-
-	/* Count general discount */
-	compute_discounts(g, who, &discount);
-
-	/* Count military strength */
-	compute_military(g, who, &military);
-
-//	printf("Player %d: actions %d/%d, vp %d/%d, prestige %d, goals ",who,act1,act2,vp,end_vp,prestige);
-	add_data(act1);
-	add_data(act2);
-	add_data(vp);
-	add_data(end_vp);
-	add_data(hand_size);
-	add_data(military.base);
-        add_data(military.rebel);
-        add_data(military.imperium * 2 + military.military_rebel);
-	add_data(prestige);
-	get_vp(g, who);
-	/* Loop over goals */
-	for (i = 0; i < MAX_GOAL; i++)
-	{
-		/* Skip inactive goals */
-		if (!g->goal_active[i]) continue;
-		add_data(g->p[who].goal_claimed[i] ? 2 : i > GOAL_FIRST_4_MILITARY &&
-		         g->p[who].goal_progress[i] == g->goal_most[i] && g->goal_most[i] >= goal_minimum(i));
-		add_data(g->p[who].goal_progress[i]);
-	}
-}
-
-static int get_trade_value(game *g, card *c_ptr, int no_bonus)
-{
-	/* Check for "any" kind */
-	if (c_ptr->d_ptr->good_type == GOOD_ANY)
-	{
-		int v1 = trade_value(g, player_us, c_ptr, GOOD_NOVELTY, no_bonus);
-		int v2 = trade_value(g, player_us, c_ptr, GOOD_RARE, no_bonus);
-		int v3 = trade_value(g, player_us, c_ptr, GOOD_GENE, no_bonus);
-		int v4 = trade_value(g, player_us, c_ptr, GOOD_ALIEN, no_bonus);
-		if (v2 > v1) v1 = v2;
-		if (v4 > v3) v3 = v4;
-		return v1 > v3 ? v1 : v3;
-	}
-	return trade_value(g, player_us, c_ptr, c_ptr->d_ptr->good_type, no_bonus);
-}
-
-static void get_state(game *g, int get_trade_values) {
-	card *c_ptr;
-	int i, display_deck = 0, display_discard = 0, display_pool, good;
-	add_data(MSG_GAMESTATE);
-
-	/* Get chips in VP pool */
-	display_pool = g->vp_pool;
-
-	/* Loop over cards in deck */
-	for (i = 0; i < g->deck_size; i++)
-	{
-		/* Get card pointer */
-		c_ptr = &g->deck[i];
-
-		if (c_ptr->where == WHERE_DECK) display_deck++;
-
-		/* Check for card in discard pile */
-		if (c_ptr->where == WHERE_DISCARD) display_discard++;
-
-		/* Skip unowned cards */
-		if (!(c_ptr->where == WHERE_ACTIVE) && !(c_ptr->where == WHERE_HAND && c_ptr->owner == player_us) && !(c_ptr->where == WHERE_SAVED)) continue;
-
-		add_data(i);
-		add_data(c_ptr->d_ptr->index);
-		if (c_ptr->where == WHERE_HAND) {
-			add_data(-1);
-			add_data((c_ptr->start_where != WHERE_HAND ||
-					c_ptr->start_owner != c_ptr->owner ? 200000 : 0) + (c_ptr->d_ptr->type == TYPE_DEVELOPMENT ? 100000 : 0) + c_ptr->d_ptr->cost * 10000 + i);
-			add_data(0);
-			add_data(-1);
-		} else if (c_ptr->where == WHERE_SAVED) {
-			add_data(-2);
-			add_data(c_ptr->order * 10000 + i);
-			add_data(0);
-			add_data(-1);
-		} else {
-			add_data((c_ptr->owner + g->num_players - player_us) % g->num_players);
-			add_data(c_ptr->order * 10000 + i);
-			good = c_ptr->num_goods;
-			if (good && c_ptr->owner == player_us && get_trade_values)
-				good |= get_trade_value(g, c_ptr, get_trade_values > 1) << 16;
-			add_data(good);
-			add_data(c_ptr->d_ptr->num_vp_bonus ? get_score_bonus(g, c_ptr->owner, i) : -1);
-		}
-
-	}
-
-	add_data(-1);
-	add_data(display_deck);
-	add_data(display_discard);
-	add_data(display_pool);
-	for (i = ACT_EXPLORE_5_0; i <= ACT_PRODUCE; i++)
-	{
-		int c;
-		/* Skip second explore/consume actions */
-		if (i == ACT_EXPLORE_1_1 || i == ACT_CONSUME_X2) continue;
-
-		/* Check for basic game and advanced actions */
-		if (!g->advanced &&
-		    (i == ACT_DEVELOP2 || i == ACT_SETTLE2))
-		{
-			/* Skip action */
-			continue;
-		}
-
-		/* Check for inactive phase */
-		if (!g->action_selected[i])
-		{
-			/* Desaturate */
-			c = 0;
-		} else {
-			c = g->cur_action == i ? 2 : 1;
-		}
-		add_data(c);
-
-	}
-	for (i = 0; i < MAX_GOAL; i++)
-	{
-		/* Skip inactive goals */
-		if (!g->goal_active[i]) continue;
-		add_data(i);
-		add_data(goal_minimum(i));
-	}
-	add_data(-1);
-
-	score_game(g);
-	/* Loop over players */
-	for (i = 0; i < g->num_players; i++)
-	{
-		get_player_state(g, (i + player_us) % g->num_players);
-	}
-}
+/*
+* Note that many functions for the web implementation were removed at this point.
+*/
 
 /*
  * Make a choice of the given type.
@@ -1545,28 +1284,10 @@ static void get_state(game *g, int get_trade_values) {
 static void gui_make_choice(game *g, int who, int type, int list[], int *nl,
                            int special[], int *ns, int arg1, int arg2, int arg3)
 {
-	int i;
-        int get_trade_values = type == CHOICE_TRADE ? arg1 ? 2 : 1 : 0;
 
 	/* Auto save */
 	auto_save(g, who);
-	get_state(g, get_trade_values);
-
-	add_data(MSG_CHOICE);
-	add_data(type);
-	add_data(nl ? *nl : 0);
-	add_data(ns ? *ns : 0);
-	add_data(arg1);
-	add_data(arg2);
-	add_data(arg3);
-	if (nl) for (i = 0; i < *nl; i++) add_data(list[i]);
-	if (ns) for (i = 0; i < *ns; i++) add_data(special[i]);
-
-	selection_result_len_ptr = &g->p[who].choice_size;
-	selection_result_ptr = &g->p[who].choice_log[g->p[who].choice_size];
-
-	g->game_over = 1;
-        restart_loop = RESTART_REDO_GAME;
+/* Will return to this. */
 }
 
 /*
@@ -2057,15 +1778,10 @@ static void run_game(void)
 
 		/* Auto save */
 		auto_save(&real_game, player_us);
-
-		add_data(MSG_GAMEOVER);
-		get_state(&real_game, 0);
-
 	}
 }
 
 
-void send_card_infos(void);
 
 /*
  * Setup windows, callbacks, etc, then let GTK take over.
@@ -2263,26 +1979,20 @@ int main(int argc, char *argv[])
 			restart_loop = RESTART_LOAD;
 		}
 	}
-	status_data = calloc(sizeof(*status_data), STATUS_DATA_SIZE);
-	status_data_str = calloc(sizeof(*status_data_str), STATUS_DATA_STR_SIZE);
+
 	
 	/* Run games */
 	run_game();
-
-	send_card_infos();
 
 	/* Exit */
 	return 0;
 }
 
 void continue_game(int loop) {
-	reset_status_data();
-	message_count = 0;
         if (loop < 0) {
                 choice_done(&real_game);
         } else {
                 restart_loop = loop;
-		last_message_send = 0;
         }
 	run_game();
 }
@@ -2777,18 +2487,3 @@ static int get_discard_powers(int i) {
 	return discard;
 }
 
-void send_card_infos() {
-	int i, j;
-	add_data(MSG_CARDINFO);
-	add_data(real_game.deck_size);
-	for (i = 0; i < real_game.deck_size; i++) {
-		add_data_str(real_game.deck[i].d_ptr->name);
-		add_data(real_game.deck[i].d_ptr->index);
-		add_data(get_discard_powers(i));
-		add_data(real_game.deck[i].d_ptr->num_power);
-		for (j = 0; j < real_game.deck[i].d_ptr->num_power; j++) {
-			add_data_str(get_card_power_name(i, j));
-			add_data(get_card_power_score(i, j));
-		}
-	}
-}
