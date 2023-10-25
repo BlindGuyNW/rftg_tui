@@ -271,7 +271,7 @@ int is_round_boundary(int advanced, int *p)
  */
 void message_add(game *g, char *msg)
 {
-	printf("%s\n", msg);
+	printf("%s", msg);
 }
 
 /*
@@ -279,7 +279,7 @@ void message_add(game *g, char *msg)
  */
 void message_add_formatted(game *g, char *msg, char *tag)
 {
-	printf("%s: %s\n", tag, msg);
+	printf("%s: %s", tag, msg);
 }
 /*
  * Add a private message to the message buffer.
