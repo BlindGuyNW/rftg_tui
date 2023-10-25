@@ -28,5 +28,5 @@ int get_card_choice(game *g, int list[], int num, const char *prompt);
 void display_cards(game *g, int list[], int num, const char *message);
 	void display_card_info(game *g, int card_index);
 	void gui_choose_discard(game *g, int who, int list[], int *num, int discard);
-
+extern char *get_card_power_name(int i, int p);
 #endif

@@ -42,15 +42,31 @@ void display_cards(game *g, int list[], int num, const char *message) {
 // Dummy function to display card details
 void display_card_info(game *g, int card_index) {
     card *c_ptr = &g->deck[card_index];
+    design *d_ptr = c_ptr->d_ptr;
+
+    // Display details about the card
+    printf("---- Details about %s ----\n", d_ptr->name);
     
-    // Display mock details about the card
-    printf("---- Details about %s ----\n", c_ptr->d_ptr->name);
-    printf("Type: Planet\n");
-    printf("Cost: 3\n");
-    printf("VP: 2\n");
-    printf("Special Ability: None\n");
+    // Display card type
+    if (d_ptr->type == TYPE_WORLD)
+        printf("Type: World\n");
+    else if (d_ptr->type == TYPE_DEVELOPMENT)
+        printf("Type: Development\n");
+    else
+        printf("Type: Unknown\n");
+    
+    printf("Cost: %d\n", d_ptr->cost);
+    printf("VP: %d\n", d_ptr->vp);
+
+    // Display card powers
+    for (int i = 0; i < d_ptr->num_power; i++) {
+        char *power_name = get_card_power_name(card_index, i);
+        printf("Power %d: %s\n", i + 1, power_name);
+    }
+    
     printf("----------------------------\n\n");
 }
+
 int get_card_choice(game *g, int list[], int num, const char *prompt) {
     char action[10];
     int selected_card;
