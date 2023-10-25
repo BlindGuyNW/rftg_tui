@@ -23,6 +23,8 @@
 /*
  * Standard headers.
  */
+#ifndef RFTG_H
+#define RFTG_H
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif
@@ -1169,3 +1171,4 @@ extern int export_game(game *g, char *filename, char *style_sheet,
                        int num_special, card** special_cards,
                        void (*export_log)(FILE *fff, int gid),
                        void (*export_callback)(FILE *fff, int gid), int gid);
+#endif /* RFTG_H */

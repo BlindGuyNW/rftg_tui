@@ -21,6 +21,8 @@
  */
 
 #include "rftg.h"
+#include "tui.h"
+
 /*
  * Reasons to restart main loop.
  */
@@ -1231,13 +1233,6 @@ static int load_auto_save(game *g)
 	/* Force current game over */
 	g->game_over = 1;
 
-	opt.num_players = g->num_players;
-	opt.advanced = g->advanced;
-	opt.expanded = g->expanded;
-	opt.disable_goal = g->goal_disabled;
-	opt.disable_takeover = g->takeover_disabled;
-        opt.campaign_name = g->camp->name;
-
 	/* Game successfully loaded */
 	return TRUE;
 }
@@ -1284,10 +1279,84 @@ static void choice_done(game *g)
 static void gui_make_choice(game *g, int who, int type, int list[], int *nl,
                            int special[], int *ns, int arg1, int arg2, int arg3)
 {
+	player *p_ptr;
+	int i, rv;
+	int *l_ptr;
 
 	/* Auto save */
 	auto_save(g, who);
-/* Will return to this. */
+/* Switch to different functions based on the type of choice. */
+switch (type) {
+		case CHOICE_DISCARD:
+
+			/* Choose discards */
+			gui_choose_discard(g, who, list, nl, arg1);
+			rv = 0;
+			break;
+		/* Error */
+		default:
+			display_error("Unimplemented choice type!\n");
+			exit(1);
+	}
+	/* Check for aborted game */
+	if (g->game_over) return;
+
+	/* Get player pointer */
+	p_ptr = &g->p[who];
+
+	/* Get pointer to end of choice log */
+	l_ptr = &p_ptr->choice_log[p_ptr->choice_size];
+
+	/* Add choice type to log */
+	*l_ptr++ = type;
+
+	/* Add return value to log */
+	*l_ptr++ = rv;
+
+	/* Check for number of list items available */
+	if (nl)
+	{
+		/* Add number of returned list items */
+		*l_ptr++ = *nl;
+
+		/* Copy list items */
+		for (i = 0; i < *nl; i++)
+		{
+			/* Copy list item */
+			*l_ptr++ = list[i];
+		}
+	}
+	else
+	{
+		/* Add no list items */
+		*l_ptr++ = 0;
+	}
+
+	/* Check for number of special items available */
+	if (ns)
+	{
+		/* Add number of returned special items */
+		*l_ptr++ = *ns;
+
+		/* Copy special items */
+		for (i = 0; i < *ns; i++)
+		{
+			/* Copy special item */
+			*l_ptr++ = special[i];
+		}
+	}
+	else
+	{
+		/* Add no special items */
+		*l_ptr++ = 0;
+	}
+
+	/* Mark new size of choice log */
+	p_ptr->choice_size = l_ptr - p_ptr->choice_log;
+
+	/* Mark one choice is done */
+	choice_done(g);
+
 }
 
 /*
