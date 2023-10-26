@@ -1293,6 +1293,15 @@ switch (type) {
 			gui_choose_discard(g, who, list, nl, arg1);
 			rv = 0;
 			break;
+			case CHOICE_ACTION:
+
+			/* Choose actions */
+			gui_choose_action(g, who, list, arg1);
+
+			/* Save Psi-Crystal info for redo/undo */
+			rv = arg1;
+			break;
+
 		/* Error */
 		default:
 			display_error("Unimplemented choice type!\n");

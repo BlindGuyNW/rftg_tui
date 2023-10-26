@@ -150,3 +150,71 @@ void gui_choose_discard(game *g, int who, int list[], int *num, int discard) {
     *num = discard_count;
 }
 
+void gui_choose_action(game *g, int who, int action[2], int one) {
+    int selected_action;
+    int num_actions = ACT_ROUND_END + 1;  // Based on your constants, ACT_ROUND_END is the last action.
+    int available_actions[num_actions];   // To store indices of actions that are available.
+    int num_available_actions = 0;       // Count of available actions.
+
+    // Check for advanced game
+    if (g->advanced) {
+        // Call advanced function (to be implemented later)
+        // return tui_choose_action_advanced(g, who, action, one);
+    }
+
+    // Populate the available actions list and display them.
+    for (int i = 0; i < num_actions; i++) {
+        // Skip the ACT_SEARCH action under certain conditions
+        if (i == ACT_SEARCH && (g->expanded != 3 || g->p[who].prestige_action_used)) {
+            continue;
+        }
+
+        // Skip ACT_DEVELOP2 and ACT_SETTLE2
+        if (i == ACT_DEVELOP2 || i == ACT_SETTLE2) {
+            continue;
+        }
+
+        available_actions[num_available_actions++] = i;
+        printf("%d. %s\n", num_available_actions, action_name(i));
+    }
+
+    while (1) {
+        printf("Enter action number (or 'i' followed by number for info, 'q' to quit, 'h' for help, 'r' to redisplay list): ");
+        char input[10];
+        scanf("%s", input);
+
+        if (input[0] == 'i') {
+            if (sscanf(input + 1, "%d", &selected_action) == 1) {
+                if (selected_action >= 1 && selected_action <= num_available_actions) {
+                    // Display action info - this function needs to be implemented based on your game's requirements.
+                    // display_action_info(g, available_actions[selected_action - 1]);
+                } else {
+                    printf("Invalid action number. Please try again.\n");
+                }
+            } else {
+                printf("Invalid format. Please try again.\n");
+            }
+        } else if (input[0] == 'q') {
+            printf("Quitting...\n");
+            exit(0);
+        } else if (input[0] == 'h') {
+            printf("Help: Enter an action number to choose, 'i' followed by number for info, 'q' to quit, 'r' to redisplay list.\n");
+        } else if (input[0] == 'r') {
+            // Redisplay available actions
+            for (int i = 0; i < num_available_actions; i++) {
+                printf("%d. %s\n", i + 1, action_name(available_actions[i]));
+            }
+        } else if (sscanf(input, "%d", &selected_action) == 1) {
+            if (selected_action >= 1 && selected_action <= num_available_actions) {
+                action[0] = available_actions[selected_action - 1];
+                action[1] = -1;
+                return; // Exit the function once the action is selected.
+            } else {
+                printf("Invalid selection. Please try again.\n");
+            }
+        } else {
+            printf("Invalid input. Please try again or enter 'h' for help.\n");
+        }
+    }
+}
+
