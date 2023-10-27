@@ -1301,7 +1301,10 @@ switch (type) {
 			/* Save Psi-Crystal info for redo/undo */
 			rv = arg1;
 			break;
-
+/* Choose card to place*/
+case CHOICE_PLACE:
+rv = tui_choose_place(g, who, list, *nl, arg1, arg2);
+break;
 		/* Error */
 		default:
 			display_error("Unimplemented choice type!\n");
