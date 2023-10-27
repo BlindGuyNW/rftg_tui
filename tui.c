@@ -218,3 +218,17 @@ void gui_choose_action(game *g, int who, int action[2], int one) {
     }
 }
 
+int tui_choose_place(game *g, int who, int list[], int num, int phase, int special) {
+    int choice;
+
+    // Display the list of cards using the display_cards function
+    display_cards(g, list, num, "Choose a card to play:");
+
+    // Get user choice
+    do {
+        printf("Enter the number of the card you want to play (1-%d): ", num);
+        scanf("%d", &choice);
+    } while (choice < 1 || choice > num); // Ensure valid choice
+
+    return list[choice - 1]; // Return the card index from the list
+}
