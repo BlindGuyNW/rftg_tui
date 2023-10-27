@@ -218,6 +218,7 @@ void gui_choose_action(game *g, int who, int action[2], int one) {
     }
 }
 
+
 int tui_choose_place(game *g, int who, int list[], int num, int phase, int special) {
     int choice;
 
@@ -226,8 +227,14 @@ int tui_choose_place(game *g, int who, int list[], int num, int phase, int speci
 
     // Get user choice
     do {
-        printf("Enter the number of the card you want to play (1-%d): ", num);
+        printf("Enter the number of the card you want to play (1-%d) or 0 to pass: ", num);
         scanf("%d", &choice);
+
+        // If the user chooses to pass
+        if (choice == 0) {
+            return -1;
+        }
+
     } while (choice < 1 || choice > num); // Ensure valid choice
 
     return list[choice - 1]; // Return the card index from the list
