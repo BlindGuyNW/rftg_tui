@@ -2076,6 +2076,9 @@ void continue_game(int loop) {
 }
 
 static char *name_consume(power *o_ptr, char *buf) {
+	/* Clear the buffer. */
+	strncpy(buf, "", sizeof(buf));
+
                 char *name, buf2[1024];
 		/* Check for simple powers */
 		if (o_ptr->code == P4_DRAW)
@@ -2151,7 +2154,7 @@ static char *name_consume(power *o_ptr, char *buf) {
 			else
 			{
 				/* Any good */
-				name = "";
+				name = "any";
 			}
 
 			/* Start consume string */
@@ -2263,7 +2266,7 @@ static char *name_consume(power *o_ptr, char *buf) {
 
 static char *name_produce(design *d_ptr, power *o_ptr, char *buf) {
 		/* Clear string describing power */
-		strcpy(buf, "");
+		strncpy(buf, "", sizeof(buf));
 
 		/* Check for simple powers */
 		if (o_ptr->code & P5_DRAW_EACH_NOVELTY)
@@ -2380,6 +2383,8 @@ char *name_settle(power *o_ptr, char *buf) {
 
 char *get_card_power_name(int i, int p) {
 	char buf[1024];
+/* Clear the buffer. */
+	memset(buf, 0, sizeof(buf));
         design *d_ptr = real_game.deck[i].d_ptr;
         power *o_ptr = &real_game.deck[i].d_ptr->powers[p];
         if (o_ptr->phase == PHASE_CONSUME) return name_consume(o_ptr, buf);
