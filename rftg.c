@@ -279,7 +279,8 @@ void message_add(game *g, char *msg)
  */
 void message_add_formatted(game *g, char *msg, char *tag)
 {
-	printf("%s: %s", tag, msg);
+	/* Just dump the message into the log without formatting. */
+	printf("%s", msg);
 }
 /*
  * Add a private message to the message buffer.
