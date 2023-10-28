@@ -170,48 +170,7 @@ static char *goal_description[MAX_GOAL] =
  */
 static char *player_names[MAX_PLAYER] = { "[P0]", "[P1]", "[P2]", "[P3]", "[P4]", "[P5]" };
 
-typedef struct discounts
-{
-	/* The base discount */
-	int base;
 
-	/* The current temporary discount */
-	int bonus;
-
-	/* Additional specific discount */
-	int specific[6];
-
-	/* May discard to place at zero count */
-	int zero;
-
-	/* Additional discount when paying for military */
-	int pay_discount;
-
-	/* May pay for military with 0 discount (Rebel Cantina) */
-	int non_alien_mil_0;
-
-	/* May pay for military with 1 discount (Contact Specialist) */
-	int non_alien_mil_1;
-
-	/* May pay for rebel worlds with 2 discount (Rebel Alliance) */
-	int rebel_mil_2;
-
-	/* May pay for chromosome worlds (Ravaged Uplift World) */
-	int chromo_mil;
-
-	/* May pay for alien worlds (Alien Research Team) */
-	int alien_mil;
-
-	/* May discard to conquer with 0 discount (Imperium Invasion Fleet) */
-	int conquer_settle_0;
-
-	/* May discard to conquer with 2 discount (Imperium Cloaking Tech) */
-	int conquer_settle_2;
-
-	/* Any value is set */
-	int has_data;
-
-} discounts;
 
 typedef struct mil_strength
 {
@@ -314,7 +273,7 @@ int game_rand(game *g)
 /*
  * Compute the military/cost needed for a military world.
  */
-static void military_world_payment(game *g, int who, int which,
+ void military_world_payment(game *g, int who, int which,
                                    int mil_only, int mil_bonus, discounts *d_ptr,
                                    int *military, int *cost, char **cost_card)
 {
@@ -408,7 +367,7 @@ static void military_world_payment(game *g, int who, int which,
 /*
  * Compute the cost/military needed for a non-military world.
  */
-static void peaceful_world_payment(game *g, int who, int which,
+void peaceful_world_payment(game *g, int who, int which,
                                    int mil_only, discounts *d_ptr,
                                    int *cost, int *ict_mil, int *iif_mil)
 {
@@ -680,7 +639,7 @@ int compute_forced_choice(int which, int num, int num_special, int mil_only, int
 /*
  * Compute settle discounts for a player.
  */
-static void compute_discounts(game *g, int who, discounts *d_ptr)
+ void compute_discounts(game *g, int who, discounts *d_ptr)
 {
 	power_where w_list[100];
 	power *o_ptr;
@@ -1291,13 +1250,13 @@ switch (type) {
 		case CHOICE_DISCARD:
 
 			/* Choose discards */
-			gui_choose_discard(g, who, list, nl, arg1);
+			tui_choose_discard(g, who, list, nl, arg1);
 			rv = 0;
 			break;
 			case CHOICE_ACTION:
 
 			/* Choose actions */
-			gui_choose_action(g, who, list, arg1);
+			tui_choose_action(g, who, list, arg1);
 
 			/* Save Psi-Crystal info for redo/undo */
 			rv = arg1;
@@ -1306,6 +1265,11 @@ switch (type) {
 case CHOICE_PLACE:
 rv = tui_choose_place(g, who, list, *nl, arg1, arg2);
 break;
+case CHOICE_PAYMENT:
+ tui_choose_pay(g, who, arg1, list, nl, special, ns,
+			               arg2, arg3);
+						   rv = 0;
+ break;
 		/* Error */
 		default:
 			display_error("Unimplemented choice type!\n");
