@@ -2315,6 +2315,8 @@ static char *name_produce(design *d_ptr, power *o_ptr, char *buf) {
 }
 
 char *name_settle(power *o_ptr, char *buf) {
+		char buf2[256];
+		memset(buf2, 0, sizeof(buf2));
 		/* Check for simple powers */
 		if (o_ptr->code & P3_PLACE_TWO)
 		{
@@ -2345,6 +2347,28 @@ char *name_settle(power *o_ptr, char *buf) {
 		{
 			/* Make string */
 			sprintf(buf, "Flip to place non-military world");
+		}
+		else if (o_ptr->code & P3_EXTRA_MILITARY)
+		{
+			/* Make string */
+			sprintf(buf, "Add extra military");
+		}
+		else if (o_ptr->code & P3_REDUCE)
+		{
+			sprintf(buf, "Reduce cost of settling ");
+			if (o_ptr->code & P3_RARE) {
+				strcat(buf, "Rare ");
+			} else if (o_ptr->code & P3_NOVELTY) {
+				strcat(buf, "Novelty ");
+			} else if (o_ptr->code & P3_GENE) {
+				strcat(buf, "Gene ");
+			} else if (o_ptr->code & P3_ALIEN) {
+				strcat(buf, "Alien ");
+			} else {
+				strcat(buf, "any ");
+			}
+			sprintf(buf2, "by %d", o_ptr->value);
+			strcat(buf, buf2);
 		}
                 return buf;
 }

@@ -23,6 +23,39 @@
 #include "rftg.h"
 #include "tui.h"
 
+// Define a struct to hold flag and its description
+typedef struct {
+    unsigned int flag;
+    const char *description;
+} FlagDescriptor;
+
+// Create a static array of flag descriptors
+static FlagDescriptor flag_descriptions[] = {
+    {FLAG_MILITARY, "Military"},
+    {FLAG_WINDFALL, "Windfall"},
+    {FLAG_START, "Start"},
+    {FLAG_START_RED, "Start Red"},
+    {FLAG_START_BLUE, "Start Blue"},
+    {FLAG_PROMO, "Promo"},
+    {FLAG_REBEL, "Rebel"},
+  {FLAG_IMPERIUM, "Imperium"},
+    {FLAG_ALIEN, "Alien"},
+    {FLAG_UPLIFT, "Uplift"},
+    // ... add other flags as needed
+};
+
+// Function to display card flags
+void display_card_flags(unsigned int flags) {
+    printf("Flags: ");
+    for (size_t i = 0; i < sizeof(flag_descriptions) / sizeof(flag_descriptions[0]); i++) {
+        if (flags & flag_descriptions[i].flag) {
+            printf("%s ", flag_descriptions[i].description);
+        }
+    }
+    printf("\n");
+}
+
+
 
 /* 
 * Discard cards, partially inspired by ChatGPT.
@@ -39,7 +72,7 @@ void display_cards(game *g, int list[], int num, const char *message) {
     }
 }
 
-// Dummy function to display card details
+// Display card details
 void display_card_info(game *g, int card_index) {
     card *c_ptr = &g->deck[card_index];
     design *d_ptr = c_ptr->d_ptr;
@@ -54,9 +87,25 @@ void display_card_info(game *g, int card_index) {
         printf("Type: Development\n");
     else
         printf("Type: Unknown\n");
-    
+    if (d_ptr)
     printf("Cost: %d\n", d_ptr->cost);
     printf("VP: %d\n", d_ptr->vp);
+switch (d_ptr->good_type)
+{
+case GOOD_ALIEN:
+    printf("Good Type: Alien\n");
+    break;
+case GOOD_NOVELTY:
+    printf("Good Type: Novelty\n");
+    break;
+    case GOOD_RARE:
+    printf("Good Type: Rare\n");
+    break;
+    case GOOD_GENE:
+    printf("Good Type: Genes\n");
+    break;
+}
+display_card_flags(d_ptr->flags);
 
     // Display card powers
     for (int i = 0; i < d_ptr->num_power; i++) {
