@@ -4,6 +4,7 @@
  * Copyright (C) 2009-2011 Keldon Jones
  *
  * Source file modified by B. Nordli, August 2014.
+ * Text Interface by Zachary Kline, 2023.
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -58,7 +59,7 @@ void display_card_flags(unsigned int flags) {
 
 
 /* 
-* Discard cards, partially inspired by ChatGPT.
+* Discard cards, inspired by ChatGPT.
 */
 // Constants for better clarity
 #define MIN_SELECTION 1
