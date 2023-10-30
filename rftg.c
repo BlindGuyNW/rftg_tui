@@ -1270,6 +1270,14 @@ case CHOICE_PAYMENT:
 			               arg2, arg3);
 						   rv = 0;
  break;
+ case CHOICE_CONSUME:
+ tui_choose_consume(g, who, list, special, nl, ns, arg1);
+ break;
+case CHOICE_GOOD:
+tui_choose_good(g, who, special[0], special[1],
+			                list, nl, arg1, arg2);
+			rv = 0;
+                     break;
 		/* Error */
 		default:
 			display_error("Unimplemented choice type!\n");

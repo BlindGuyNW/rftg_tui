@@ -347,3 +347,73 @@ void tui_choose_pay(game *g, int who, int which, int list[], int *num,
     // Set *num to total_paid
     *num = total_paid;
 }
+/*
+* Choose consume powers to use.
+*/
+
+void tui_choose_consume(game *g, int who, int cidx[], int oidx[], int *num,
+                        int *num_special, int optional) {
+    int choice, i;
+
+    // Loop over the cards in cidx and display their powers
+    for (i = 0; i < *num; i++) {
+        printf("%d: %s\n", i + 1, get_card_power_name(cidx[i], oidx[i]));
+    }
+
+    // If optional, allow the user to not choose any power
+    if (optional) {
+        printf("0: Use no powers\n");
+    }
+
+    // Get the user's choice
+    printf("Enter the number of the card/power to use: ");
+    scanf("%d", &choice);
+
+    // Validate user's choice
+    while (choice < 0 || (choice > *num) || (optional && choice == 0)) {
+        printf("Invalid choice. Please enter a valid number: ");
+        scanf("%d", &choice);
+    }
+
+    // Handle the user's choice
+    if (choice == 0 && optional) {
+        *num = *num_special = 0;
+        return;
+    } else {
+        cidx[0] = cidx[choice - 1];
+        oidx[0] = oidx[choice - 1];
+        *num = *num_special = 1;
+    }
+}
+/* Choose goods to consume. */
+void tui_choose_good(game *g, int who, int c_idx, int o_idx, int goods[],
+                     int *num, int min, int max) {
+    int n = 0, selected_index;
+
+    /* Create and display the prompt using the display_cards function */
+    char message[100];
+    sprintf(message, "Choose good%s to consume:", min == 1 && max == 1 ? "" : "s");
+    display_cards(g, goods, *num, message);
+
+    /* Prompt user to choose goods until the required amount is chosen */
+    while (n < min) {
+        selected_index = get_card_choice(g, goods, *num, "Select a good to consume");
+        selected_index--;  // Adjust for 0-based indexing
+        
+        // Move the selected good to the front of the list
+        int temp = goods[0];
+        goods[0] = goods[selected_index];
+        goods[selected_index] = temp;
+
+        n++;
+    }
+
+    /* If not enough goods are selected, add goods up to the minimum */
+    while (n < min) {
+        goods[n] = goods[0];  // Duplicate the first good to fill up to the minimum
+        n++;
+    }
+
+    /* Set number of goods chosen */
+    *num = n;
+}
