@@ -123,7 +123,20 @@ int get_card_choice(game *g, int list[], int num, const char *prompt) {
 
     while (1) {
         printf("%s (or 'i' followed by number for info, e.g., i2, 'q' to quit, 'h' for help, 'r' to redisplay list): ", prompt);
-        scanf("%s", action);
+        fgets(action, sizeof(action), stdin);
+    action[strcspn(action, "\n")] = 0;
+    // Validate input length and check for control characters
+    if (strlen(action) >= sizeof(action) - 1) {
+        printf("Input too long! Please try again.\n");
+        continue;
+    }
+    for (int i = 0; i < strlen(action); i++) {
+        if (iscntrl(action[i])) {
+            printf("Invalid input! Control characters are not allowed.\n");
+            continue;
+        }
+    }
+
 
         // Info command
         if (action[0] == 'i' || strncmp(action, "info", 4) == 0) {
@@ -231,7 +244,8 @@ void tui_choose_action(game *g, int who, int action[2], int one) {
     while (1) {
         printf("Enter action number (or 'i' followed by number for info, 'q' to quit, 'h' for help, 'r' to redisplay list): ");
         char input[10];
-        scanf("%s", input);
+        fgets(input, sizeof(input), stdin);
+    input[strcspn(input, "\n")] = 0;
 
         if (input[0] == 'i') {
             if (sscanf(input + 1, "%d", &selected_action) == 1) {
@@ -368,12 +382,16 @@ void tui_choose_consume(game *g, int who, int cidx[], int oidx[], int *num,
 
     // Get the user's choice
     printf("Enter the number of the card/power to use: ");
-    scanf("%d", &choice);
+    char choice_str[20];
+    fgets(choice_str, sizeof(choice_str), stdin);
+    sscanf(choice_str, "%d", &choice);
 
     // Validate user's choice
-    while (choice < 0 || (choice > *num) || (optional && choice == 0)) {
+    while (choice < 0 || (choice > *num) || (!optional && choice == 0)) {
         printf("Invalid choice. Please enter a valid number: ");
-        scanf("%d", &choice);
+        char choice_str[20];
+    fgets(choice_str, sizeof(choice_str), stdin);
+    sscanf(choice_str, "%d", &choice);
     }
 
     // Handle the user's choice
@@ -389,30 +407,54 @@ void tui_choose_consume(game *g, int who, int cidx[], int oidx[], int *num,
 /* Choose goods to consume. */
 void tui_choose_good(game *g, int who, int c_idx, int o_idx, int goods[],
                      int *num, int min, int max) {
-    int n = 0, selected_index;
+    int n = 0, selected_index, multi = -1;
+    int temp_goods[*num];  // Temporary list to hold indices of goods not yet chosen
 
-    /* Create and display the prompt using the display_cards function */
-    char message[100];
-    sprintf(message, "Choose good%s to consume:", min == 1 && max == 1 ? "" : "s");
-    display_cards(g, goods, *num, message);
-
-    /* Prompt user to choose goods until the required amount is chosen */
-    while (n < min) {
-        selected_index = get_card_choice(g, goods, *num, "Select a good to consume");
-        selected_index--;  // Adjust for 0-based indexing
-        
-        // Move the selected good to the front of the list
-        int temp = goods[0];
-        goods[0] = goods[selected_index];
-        goods[selected_index] = temp;
-
-        n++;
+    // Initially, temp_goods is a copy of the original list
+    for (int i = 0; i < *num; i++) {
+        temp_goods[i] = goods[i];
     }
 
-    /* If not enough goods are selected, add goods up to the minimum */
-    while (n < min) {
-        goods[n] = goods[0];  // Duplicate the first good to fill up to the minimum
+    /* Get pointer to card holding consume power */
+    card *c_ptr = &g->deck[c_idx];
+
+    // Display initial list of goods to choose from
+    char message[1024];
+    sprintf(message, "Choose good%s to consume on %s", min == 1 && max == 1 ? "" : "s", c_ptr->d_ptr->name);
+    display_cards(g, temp_goods, *num, message);
+
+    while (n < max) {
+        selected_index = get_card_choice(g, temp_goods, *num - n, "Select a good to consume");
+        if (selected_index < 0) break; // Assuming get_card_choice returns a negative value when no card is chosen.
+        selected_index--;  // Adjust for 0-based indexing
+
+        /* Check for multiple goods and remember it */
+        card *selected_card = &g->deck[temp_goods[selected_index]];
+        if (selected_card->num_goods > 1) {
+            multi = selected_index;
+        }
+
+        // Move the chosen good to the original goods list
+        goods[n] = temp_goods[selected_index];
+
+        // Remove the chosen good from temp_goods by shifting all subsequent goods
+        for (int i = selected_index; i < *num - n - 1; i++) {
+            temp_goods[i] = temp_goods[i + 1];
+        }
+
         n++;
+
+        if (n < max && n < *num) {
+            sprintf(message, "Remaining good%s to consume on %s", min - n == 1 && max - n == 1 ? "" : "s", c_ptr->d_ptr->name);
+            display_cards(g, temp_goods, *num - n, message);
+        }
+    }
+
+    /* If not enough goods are selected and there's a card with multiple goods, use it */
+    if (multi >= 0) {
+        while (n < min) {
+            goods[n++] = goods[multi];
+        }
     }
 
     /* Set number of goods chosen */
