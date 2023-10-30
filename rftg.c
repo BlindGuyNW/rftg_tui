@@ -1278,6 +1278,10 @@ tui_choose_good(g, who, special[0], special[1],
 			                list, nl, arg1, arg2);
 			rv = 0;
                      break;
+					 case CHOICE_WINDFALL:
+					 tui_choose_windfall(g, who, list, nl);
+					 rv = 0;
+					 break;
 		/* Error */
 		default:
 			display_error("Unimplemented choice type!\n");

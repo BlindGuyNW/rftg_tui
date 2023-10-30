@@ -35,5 +35,6 @@ void display_cards(game *g, int list[], int num, const char *message);
                         int *num_special, int optional);
 						void tui_choose_good(game *g, int who, int c_idx, int o_idx, int goods[],
                      int *num, int min, int max);
+					 void tui_choose_windfall(game *g, int who, int list[], int *num);
 extern char *get_card_power_name(int i, int p);
 #endif

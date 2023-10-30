@@ -369,10 +369,12 @@ void tui_choose_pay(game *g, int who, int which, int list[], int *num,
 void tui_choose_consume(game *g, int who, int cidx[], int oidx[], int *num,
                         int *num_special, int optional) {
     int choice, i;
+card *c_ptr;
 
     // Loop over the cards in cidx and display their powers
     for (i = 0; i < *num; i++) {
-        printf("%d: %s\n", i + 1, get_card_power_name(cidx[i], oidx[i]));
+        c_ptr = &g->deck[cidx[i]];
+        printf("%d: %s, %s\n",i + 1, c_ptr->d_ptr->name, get_card_power_name(cidx[i], oidx[i]));
     }
 
     // If optional, allow the user to not choose any power
@@ -459,4 +461,19 @@ void tui_choose_good(game *g, int who, int c_idx, int o_idx, int goods[],
 
     /* Set number of goods chosen */
     *num = n;
+}
+
+/* Choose a windfall world to produce on. */
+void tui_choose_windfall(game *g, int who, int list[], int *num) {
+    int choice;
+
+    // Display the list of cards using the display_cards function
+    display_cards(g, list, *num, "Choose a windfall world to produce on:");
+
+    // Get user choice
+    choice = get_card_choice(g, list, *num, "Enter the number of the card you want to produce on:");
+
+    // Set *num to 1
+    *num = 1;
+    list[0] = list[choice - 1]; // Return the card index from the list
 }
