@@ -24,7 +24,7 @@
 #define TUI_H
 
 // Function declarations
-int get_card_choice(game *g, int list[], int num, const char *prompt);
+int get_card_choice(game *g, int who, int list[], int num, const char *prompt);
 void display_cards(game *g, int list[], int num, const char *message);
 	void display_card_info(game *g, int card_index);
 	void tui_choose_discard(game *g, int who, int list[], int *num, int discard);
@@ -36,5 +36,7 @@ void display_cards(game *g, int list[], int num, const char *message);
 						void tui_choose_good(game *g, int who, int c_idx, int o_idx, int goods[],
                      int *num, int min, int max);
 					 void tui_choose_windfall(game *g, int who, int list[], int *num);
+					 void display_hand_card(game *g, int who, int position);
+					 void display_hand(game *g, int who);
 extern char *get_card_power_name(int i, int p);
 #endif

@@ -112,68 +112,86 @@ display_card_flags(d_ptr->flags);
     for (int i = 0; i < d_ptr->num_power; i++) {
         char *power_name = get_card_power_name(card_index, i);
         printf("Power %d: %s\n", i + 1, power_name);
+        free(power_name);
     }
     
     printf("----------------------------\n\n");
 }
 
-int get_card_choice(game *g, int list[], int num, const char *prompt) {
+int get_card_choice(game *g, int who, int list[], int num, const char *prompt) {
     char action[10];
     int selected_card;
 
     while (1) {
-        printf("%s (or 'i' followed by number for info, e.g., i2, 'q' to quit, 'h' for help, 'r' to redisplay list): ", prompt);
+        printf("%s (or '?' for help): ", prompt);
         fgets(action, sizeof(action), stdin);
-    action[strcspn(action, "\n")] = 0;
-    // Validate input length and check for control characters
-    if (strlen(action) >= sizeof(action) - 1) {
-        printf("Input too long! Please try again.\n");
-        continue;
-    }
-    for (int i = 0; i < strlen(action); i++) {
-        if (iscntrl(action[i])) {
-            printf("Invalid input! Control characters are not allowed.\n");
+        action[strcspn(action, "\n")] = 0;
+
+        // Validate input length and check for control characters
+        if (strlen(action) >= sizeof(action) - 1) {
+            printf("Input too long! Please try again.\n");
             continue;
         }
-    }
 
+        for (int i = 0; i < strlen(action); i++) {
+            if (iscntrl(action[i])) {
+                printf("Invalid input! Control characters are not allowed.\n");
+                continue;
+            }
+        }
 
-        // Info command
-        if (action[0] == 'i' || strncmp(action, "info", 4) == 0) {
-            if (sscanf(action + 1, "%d", &selected_card) == 1 || sscanf(action + 4, "%d", &selected_card) == 1) {
-                if (selected_card >= 1 && selected_card <= num) {
-                    display_card_info(g, list[selected_card - 1]);
+        switch (action[0]) {
+            case 'i':
+                if (sscanf(action + 1, "%d", &selected_card) == 1) {
+                    if (selected_card >= 1 && selected_card <= num) {
+                        display_card_info(g, list[selected_card - 1]);
+                    } else {
+                        printf("Invalid card number. Please try again.\n");
+                    }
                 } else {
-                    printf("Invalid card number. Please try again.\n");
+                    printf("Invalid format. Please try again.\n");
                 }
-            } else {
-                printf("Invalid format. Please try again.\n");
-            }
+                break;
 
-        // Quit command
-        } else if (action[0] == 'q' || strncmp(action, "quit", 4) == 0) {
-            printf("Quitting...\n");
-            exit(0);
+            case 'q':
+                printf("Quitting...\n");
+                exit(0);
+                break;
 
-        // Help command
-        } else if (action[0] == 'h' || strncmp(action, "help", 4) == 0) {
-            printf("Help: Enter a card number to choose, 'i' followed by number for info, 'q' to quit, 'r' to redisplay list.\n");
+            case '?':
+                printf("Help: Enter a card number to choose, 'i' followed by number for info, 'q' to quit, 'r' to redisplay list, 'h' to show hand, 'h number' to get info on card number from hand.\n");
+                break;
 
-        // Redisplay command
-        } else if (action[0] == 'r' || strncmp(action, "redisplay", 9) == 0) {
-            display_cards(g, list, num, prompt);
+            case 'r':
+                display_cards(g, list, num, prompt);
+                break;
 
-        // Card selection
-        } else if (sscanf(action, "%d", &selected_card) == 1) {
-            if (selected_card >= 0 && selected_card <= num) {
-                return selected_card;
-            } else {
-                printf("Invalid selection. Please try again.\n");
-            }
-
-        // Invalid command
-        } else {
-            printf("Invalid input. Please try again or enter 'h' for help.\n");
+case 'h':
+    if (sscanf(action + 1, "%d", &selected_card) == 1)
+    {
+        display_hand_card(g, who, selected_card - 1);
+    }
+    else if (action[1] == '\0')  // Ensure that only "h" is entered
+    {
+        display_hand(g, who);
+    }
+    else
+    {
+        printf("Invalid format. Type 'h' to view your hand or 'h [number]' to view a specific card.\n");
+    }
+    break;
+            
+            default:
+                if (sscanf(action, "%d", &selected_card) == 1) {
+                    if (selected_card >= 0 && selected_card <= num) {
+                        return selected_card;
+                    } else {
+                        printf("Invalid selection. Please try again.\n");
+                    }
+                } else {
+                    printf("Invalid input. Please try again or enter '?' for help.\n");
+                }
+                break;
         }
     }
 }
@@ -192,7 +210,7 @@ void tui_choose_discard(game *g, int who, int list[], int *num, int discard) {
     display_cards(g, temp_list, *num - discard_count, "You need to discard. Here are your options:");
 
     while (discard_count < discard) {
-        int selected_card = get_card_choice(g, temp_list, *num - discard_count, "Enter card number to discard");
+        int selected_card = get_card_choice(g, who, temp_list, *num - discard_count, "Enter card number to discard");
         
         // Add the selected card to the list of discarded cards
         list[discard_count] = temp_list[selected_card - 1];
@@ -290,7 +308,7 @@ int tui_choose_place(game *g, int who, int list[], int num, int phase, int speci
     display_cards(g, list, num, "Choose a card to play:");
 
     // Get user choice
-    choice = get_card_choice(g, list, num, "Enter the number of the card you want to play, or 0 to pass:");
+    choice = get_card_choice(g, who, list, num, "Enter the number of the card you want to play, or 0 to pass:");
 
     // If the user chooses to pass
     if (choice == 0) {
@@ -342,7 +360,7 @@ void tui_choose_pay(game *g, int who, int which, int list[], int *num,
 
     int total_paid = 0;
     while (total_paid < cost) {
-        int selected_card = get_card_choice(g, temp_list, *num - total_paid, "Enter card number to use for payment");
+        int selected_card = get_card_choice(g, who, temp_list, *num - total_paid, "Enter card number to use for payment");
         
         // Add the selected card to the list of paid cards
         list[total_paid] = temp_list[selected_card - 1];
@@ -426,7 +444,7 @@ void tui_choose_good(game *g, int who, int c_idx, int o_idx, int goods[],
     display_cards(g, temp_goods, *num, message);
 
     while (n < max) {
-        selected_index = get_card_choice(g, temp_goods, *num - n, "Select a good to consume");
+        selected_index = get_card_choice(g, who, temp_goods, *num - n, "Select a good to consume");
         if (selected_index < 0) break; // Assuming get_card_choice returns a negative value when no card is chosen.
         selected_index--;  // Adjust for 0-based indexing
 
@@ -471,9 +489,49 @@ void tui_choose_windfall(game *g, int who, int list[], int *num) {
     display_cards(g, list, *num, "Choose a windfall world to produce on:");
 
     // Get user choice
-    choice = get_card_choice(g, list, *num, "Enter the number of the card you want to produce on:");
+    choice = get_card_choice(g, who, list, *num, "Enter the number of the card you want to produce on:");
 
     // Set *num to 1
     *num = 1;
     list[0] = list[choice - 1]; // Return the card index from the list
+}
+
+/* Display the player's hand. */
+void display_hand(game *g, int who)
+{
+    int x, count = 0;
+
+    /* Display the cards in the player's hand in a numbered list */
+    x = g->p[who].head[WHERE_HAND];
+    printf("Cards in Hand:\n");
+    while (x != -1)
+    {
+        count++;
+        printf("%d. %s\n", count, g->deck[x].d_ptr->name);
+        x = g->deck[x].next;
+    }
+}
+
+/* Display specific card from hand. */
+void display_hand_card(game *g, int who, int position)
+{
+    int x, count = 0;
+
+    /* Navigate to the card at the specified position in the player's hand */
+    x = g->p[who].head[WHERE_HAND];
+    while (x != -1 && count < position)
+    {
+        count++;
+        x = g->deck[x].next;
+    }
+
+    /* If the card exists, display its details */
+    if (x != -1)
+    {
+        display_card_info(g, x);
+    }
+    else
+    {
+        printf("Invalid card position. Please try again.\n");
+    }
 }

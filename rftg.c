@@ -1240,7 +1240,7 @@ static void gui_make_choice(game *g, int who, int type, int list[], int *nl,
                            int special[], int *ns, int arg1, int arg2, int arg3)
 {
 	player *p_ptr;
-	int i, rv;
+	int i, rv = 0;
 	int *l_ptr;
 
 	/* Auto save */
@@ -2386,7 +2386,11 @@ char *name_settle(power *o_ptr, char *buf) {
 }
 
 char *get_card_power_name(int i, int p) {
-	char buf[1024];
+	char *buf = malloc(sizeof(char) * 1024);
+	if (buf == NULL) {
+		fprintf(stderr, "Out of memory!\n");
+		exit(1);
+	}
 /* Clear the buffer. */
 	memset(buf, 0, sizeof(buf));
         design *d_ptr = real_game.deck[i].d_ptr;
