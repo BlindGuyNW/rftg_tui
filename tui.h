@@ -22,7 +22,7 @@
 
 #ifndef TUI_H
 #define TUI_H
-
+#define TEMP_MAX_VAL 100
 // Function declarations
 int get_card_choice(game *g, int who, int list[], int num, const char *prompt);
 void display_cards(game *g, int list[], int num, const char *message);
