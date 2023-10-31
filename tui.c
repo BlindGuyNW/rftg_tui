@@ -216,7 +216,9 @@ case 'h':
 
 void tui_choose_discard(game *g, int who, int list[], int *num, int discard) {
     int discard_count = 0;
-    int temp_list[*num];  // Temporary list to hold indices of cards not yet discarded
+    /* MSVC doesn't support use of variable length arrays, so... */
+    #define TEMP_MAX_VAL 100
+    int temp_list[TEMP_MAX_VAL];  // Temporary list to hold indices of cards not yet discarded
 
     // Initially, temp_list is a copy of the original list
     for (int i = 0; i < *num; i++) {
