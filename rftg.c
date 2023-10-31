@@ -2328,7 +2328,7 @@ static char *name_produce(design *d_ptr, power *o_ptr, char *buf) {
 
 char *name_settle(power *o_ptr, char *buf) {
 		char buf2[256];
-		memset(buf2, 0, sizeof(buf2));
+		memset(buf2, 0, 256);
 		/* Check for simple powers */
 		if (o_ptr->code & P3_PLACE_TWO)
 		{
@@ -2392,7 +2392,7 @@ char *get_card_power_name(int i, int p) {
 		exit(1);
 	}
 /* Clear the buffer. */
-	memset(buf, 0, sizeof(buf));
+	memset(buf, 0, 1024);
         design *d_ptr = real_game.deck[i].d_ptr;
         power *o_ptr = &real_game.deck[i].d_ptr->powers[p];
         if (o_ptr->phase == PHASE_CONSUME) return name_consume(o_ptr, buf);

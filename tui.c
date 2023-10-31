@@ -159,7 +159,7 @@ int get_card_choice(game *g, int who, int list[], int num, const char *prompt) {
                 break;
 
             case '?':
-                printf("Help: Enter a card number to choose, 'i' followed by number for info, 'q' to quit, 'r' to redisplay list, 'h' to show hand, 'h number' to get info on card number from hand.\n");
+                printf("Help: Enter a card number to choose, 'i' followed by a number for info on that card, 'q' to quit, 'r' to redisplay list, 'h' to show hand, 'h number' to get info on card number from hand, 't number' for the tableau.\n");
                 break;
 
             case 'r':
@@ -180,7 +180,23 @@ case 'h':
         printf("Invalid format. Type 'h' to view your hand or 'h [number]' to view a specific card.\n");
     }
     break;
-            
+    case 't':
+            if (sscanf(action + 1, "%d", &selected_card) == 1)
+            {
+                display_tableau_card(g, who, selected_card - 1);
+            }
+            else if (action[1] == '\0')  // Ensure that only "t" is entered
+            {
+                display_tableau(g, who);
+            }
+            else
+            {
+                printf("Invalid format. Type 't' to view your tableau or 't [number]' to view a specific card.\n");
+            }
+            break;
+            case 'v':
+                display_vp(g);
+                break;
             default:
                 if (sscanf(action, "%d", &selected_card) == 1) {
                     if (selected_card >= 0 && selected_card <= num) {
@@ -533,5 +549,55 @@ void display_hand_card(game *g, int who, int position)
     else
     {
         printf("Invalid card position. Please try again.\n");
+    }
+}
+/* Display the cards on the table. */
+void display_tableau(game *g, int who)
+{
+    int x, count = 0;
+
+    /* Display the cards on the table in a numbered list */
+    x = g->p[who].head[WHERE_ACTIVE];
+    printf("Cards on Table:\n");
+    while (x != -1)
+    {
+        count++;
+        printf("%d. %s\n", count, g->deck[x].d_ptr->name);
+        x = g->deck[x].next;
+    }
+}
+/* Display a specific card from the tableau. */
+void display_tableau_card(game *g, int who, int position)
+{
+    int x, count = 0;
+
+    /* Navigate to the card at the specified position in the player's tableau */
+    x = g->p[who].head[WHERE_ACTIVE];
+    while (x != -1 && count < position)
+    {
+        count++;
+        x = g->deck[x].next;
+    }
+
+    /* If the card exists, display its details */
+    if (x != -1)
+    {
+        display_card_info(g, x);
+    }
+    else
+    {
+        printf("Invalid card position. Please try again.\n");
+    }
+}
+
+/* Display victory points for all players. */
+void display_vp(game *g)
+{
+    int i;
+
+    /* Display the victory points for each player */
+    for (i = 0; i < g->num_players; i++)
+    {
+        printf("Player %d: %s, %d\n", i + 1, g->p[i].name, g->p[i].end_vp);
     }
 }

@@ -37,6 +37,9 @@ void display_cards(game *g, int list[], int num, const char *message);
                      int *num, int min, int max);
 					 void tui_choose_windfall(game *g, int who, int list[], int *num);
 					 void display_hand_card(game *g, int who, int position);
-					 void display_hand(game *g, int who);
-extern char *get_card_power_name(int i, int p);
+                     void display_tableau(game *g, int who);
+                     void display_tableau_card(game *g, int who, int position);
+                     void display_vp(game *g);
+                     void display_hand(game *g, int who);
+                     extern char *get_card_power_name(int i, int p);
 #endif
