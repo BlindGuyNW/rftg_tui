@@ -20,3 +20,7 @@ add_executable(${PROJECT_NAME} ${SOURCES})
 if(UNIX AND NOT APPLE)
     target_link_libraries(${PROJECT_NAME} m)
 endif()
+# Copy cards and campaigns into the directory. into 
+file(COPY ${CMAKE_SOURCE_DIR}/cards.txt DESTINATION ${CMAKE_BINARY_DIR})
+file(COPY ${CMAKE_SOURCE_DIR}/campaign.txt DESTINATION ${CMAKE_BINARY_DIR})
+file(COPY ${CMAKE_SOURCE_DIR}/network/ DESTINATION ${CMAKE_BINARY_DIR}/network)
