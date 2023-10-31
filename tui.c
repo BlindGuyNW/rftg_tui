@@ -251,7 +251,7 @@ void tui_choose_discard(game *g, int who, int list[], int *num, int discard) {
 void tui_choose_action(game *g, int who, int action[2], int one) {
     int selected_action;
     int num_actions = ACT_ROUND_END + 1;  // Based on your constants, ACT_ROUND_END is the last action.
-    int available_actions[num_actions];   // To store indices of actions that are available.
+    int available_actions[TEMP_MAX_VAL];   // To store indices of actions that are available.
     int num_available_actions = 0;       // Count of available actions.
 
     // Check for advanced game
@@ -445,7 +445,7 @@ card *c_ptr;
 void tui_choose_good(game *g, int who, int c_idx, int o_idx, int goods[],
                      int *num, int min, int max) {
     int n = 0, selected_index, multi = -1;
-    int temp_goods[*num];  // Temporary list to hold indices of goods not yet chosen
+    int temp_goods[TEMP_MAX_VAL];  // Temporary list to hold indices of goods not yet chosen
 
     // Initially, temp_goods is a copy of the original list
     for (int i = 0; i < *num; i++) {
