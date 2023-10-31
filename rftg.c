@@ -2054,10 +2054,39 @@ void continue_game(int loop) {
         }
 	run_game();
 }
+static char *name_explore(power *o_ptr, char *buf) {
+	/* Clear the buffer. */
+	strncpy(buf, "", 1024);
+/* Simple powers */
+if (o_ptr->code == P1_DRAW) {
+	sprintf(buf, "Draw %d extra after explore", o_ptr->value);
+} else if (o_ptr->code == P1_KEEP) {
+	sprintf(buf, "Keep %d extra after explore", o_ptr->value);
+} else {
+	sprintf(buf, "Unknown explore power");
+}
+return buf;
+}
 
+static char *name_Develop(power *o_ptr, char *buf) {
+/* Clear the buffer. */
+	strncpy(buf, "", 1024);
+/* Simple powers */
+if (o_ptr->code == P2_DRAW) {
+/* Make string */
+sprintf(buf, "Draw %d in develop phase", o_ptr->value);
+} else if (o_ptr->code == P2_REDUCE) {
+	sprintf(buf, "Reduce cost to  play developments by %d", o_ptr->value);
+} else if (o_ptr ->code== P2_DRAW_AFTER) {
+	sprintf(buf, "Draw %d after playing a development", o_ptr->value);
+} else {
+	sprintf(buf, "Unknown develop power");
+}
+return buf;
+}
 static char *name_consume(power *o_ptr, char *buf) {
 	/* Clear the buffer. */
-	strncpy(buf, "", sizeof(buf));
+	strncpy(buf, "", 1024);
 
                 char *name, buf2[1024];
 		/* Check for simple powers */
@@ -2395,10 +2424,13 @@ char *get_card_power_name(int i, int p) {
 	memset(buf, 0, 1024);
         design *d_ptr = real_game.deck[i].d_ptr;
         power *o_ptr = &real_game.deck[i].d_ptr->powers[p];
+	if (o_ptr->phase == PHASE_EXPLORE) return name_explore(o_ptr, buf);
+		if (o_ptr->phase == PHASE_DEVELOP) return name_Develop(o_ptr, buf);
         if (o_ptr->phase == PHASE_CONSUME) return name_consume(o_ptr, buf);
         if (o_ptr->phase == PHASE_PRODUCE) return name_produce(d_ptr, o_ptr, buf);
 	if (o_ptr->phase == PHASE_SETTLE) return name_settle(o_ptr, buf);
-        return "";
+        strncpy(buf, "Unknown power", 1024);
+		return buf;
 }
 
 int get_card_power_score(int i, int p) {
