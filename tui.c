@@ -217,7 +217,6 @@ case 'h':
 void tui_choose_discard(game *g, int who, int list[], int *num, int discard) {
     int discard_count = 0;
     /* MSVC doesn't support use of variable length arrays, so... */
-    #define TEMP_MAX_VAL 100
     int temp_list[TEMP_MAX_VAL];  // Temporary list to hold indices of cards not yet discarded
 
     // Initially, temp_list is a copy of the original list
@@ -369,7 +368,7 @@ void tui_choose_pay(game *g, int who, int which, int list[], int *num,
     char display_message[512];
     sprintf(display_message, "Choose payment for %s (%d card%s). Here are your options:", c_ptr->d_ptr->name, cost, cost > 1 ? "s" : "");
 
-    int temp_list[*num];
+    int temp_list[TEMP_MAX_VAL];
     for (int i = 0; i < *num; i++) {
         temp_list[i] = list[i];
     }
