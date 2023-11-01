@@ -215,6 +215,10 @@ case 'h':
 
 
 void tui_choose_discard(game *g, int who, int list[], int *num, int discard) {
+    char buf[1024];
+    	/* Create prompt */
+	sprintf(buf, "Choose %d card%s to discard", discard, PLURAL(discard));
+
     int discard_count = 0;
     /* MSVC doesn't support use of variable length arrays, so... */
     int temp_list[TEMP_MAX_VAL];  // Temporary list to hold indices of cards not yet discarded
@@ -224,7 +228,7 @@ void tui_choose_discard(game *g, int who, int list[], int *num, int discard) {
         temp_list[i] = list[i];
     }
 
-    display_cards(g, temp_list, *num - discard_count, "You need to discard. Here are your options:");
+    display_cards(g, temp_list, *num - discard_count, buf);
 
     while (discard_count < discard) {
         int selected_card = get_card_choice(g, who, temp_list, *num - discard_count, "Enter card number to discard");
@@ -250,10 +254,9 @@ void tui_choose_discard(game *g, int who, int list[], int *num, int discard) {
 
 void tui_choose_action(game *g, int who, int action[2], int one) {
     int selected_action;
-    int num_actions = ACT_ROUND_END + 1;  // Based on your constants, ACT_ROUND_END is the last action.
     int available_actions[TEMP_MAX_VAL];   // To store indices of actions that are available.
     int num_available_actions = 0;       // Count of available actions.
-
+printf("Choose action\n");
     // Check for advanced game
     if (g->advanced) {
         // Call advanced function (to be implemented later)
@@ -261,7 +264,7 @@ void tui_choose_action(game *g, int who, int action[2], int one) {
     }
 
     // Populate the available actions list and display them.
-    for (int i = 0; i < num_actions; i++) {
+    for (int i = 0; i < MAX_ACTION; i++) {
         // Skip the ACT_SEARCH action under certain conditions
         if (i == ACT_SEARCH && (g->expanded != 3 || g->p[who].prestige_action_used)) {
             continue;
