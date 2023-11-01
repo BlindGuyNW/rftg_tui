@@ -29,8 +29,9 @@ void display_cards(game *g, int list[], int num, const char *message);
 	void display_card_info(game *g, int card_index);
 	void tui_choose_discard(game *g, int who, int list[], int *num, int discard);
 	void tui_choose_action(game *g, int who, int action[2], int one);
-	int tui_choose_place(game *g, int who, int list[], int num, int phase, int special);
-	void tui_choose_pay(game *g, int who, int which, int list[], int *num, int special[], int *num_special, int mil_only, int mil_bonus);
+    int tui_choose_lucky(game *g, int who);
+    int tui_choose_place(game *g, int who, int list[], int num, int phase, int special);
+    void tui_choose_pay(game *g, int who, int which, int list[], int *num, int special[], int *num_special, int mil_only, int mil_bonus);
 	void tui_choose_consume(game *g, int who, int cidx[], int oidx[], int *num,
                         int *num_special, int optional);
 						void tui_choose_good(game *g, int who, int c_idx, int o_idx, int goods[],

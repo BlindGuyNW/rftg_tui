@@ -1254,10 +1254,8 @@ switch (type) {
 			rv = 0;
 			break;
 			case CHOICE_ACTION:
-
 			/* Choose actions */
 			tui_choose_action(g, who, list, arg1);
-
 			/* Save Psi-Crystal info for redo/undo */
 			rv = arg1;
 			break;
@@ -1272,6 +1270,7 @@ case CHOICE_PAYMENT:
  break;
  case CHOICE_CONSUME:
  tui_choose_consume(g, who, list, special, nl, ns, arg1);
+ rv = 0;
  break;
 case CHOICE_GOOD:
 tui_choose_good(g, who, special[0], special[1],
@@ -1285,6 +1284,9 @@ tui_choose_good(g, who, special[0], special[1],
 					 case CHOICE_TRADE:
 tui_choose_trade(g, who, list, nl, arg1);
 rv = 0;
+break;
+case CHOICE_LUCKY:
+rv = tui_choose_lucky(g, who);
 break;
 		/* Error */
 		default:

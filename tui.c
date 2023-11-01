@@ -320,12 +320,90 @@ printf("Choose action\n");
     }
 }
 
+/* Choose a number, for Gambling World etc. */
+int tui_choose_lucky(game *g, int who) {
+char input[10];
+while (1) {
+    printf("Choose a number between 1 and 7, '?' for help, 'q' to quit: ");
+    fgets(input, sizeof(input), stdin);
+input[strcspn(input, "\n")] = 0;
 
+    if (input[0] == 'q') {
+        printf("Quitting...\n");
+        exit(0);
+    } else if (input[0] == '?') {
+        printf("Help: Enter a number between 1 and 7, 'q' to quit.\n");
+    } else {
+        int choice;
+        if (sscanf(input, "%d", &choice) == 1) {
+            if (choice >= 1 && choice <= 7) {
+                return choice;
+            } else {
+                printf("Invalid selection. Please try again.\n");
+            }
+        } else {
+            printf("Invalid input. Please try again or enter '?' for help.\n");
+        }
+    }
+}
+}
+/* Place worlds and developments. */
 int tui_choose_place(game *g, int who, int list[], int num, int phase, int special) {
     int choice;
+char buf[1024];
+int i, n, allow_takeover = (phase == PHASE_SETTLE);
+power_where w_list[100];
+power *o_ptr;
+/* Create prompt */
+	sprintf(buf, "Choose card to %s",
+	        phase == PHASE_DEVELOP ? "develop" : "settle");
 
+	/* Check for special card used to provide power */
+	if (special != -1)
+	{
+		/* Append name to prompt */
+		strcat(buf, " using ");
+		strcat(buf, g->deck[special].d_ptr->name);
+
+		/* XXX Check for "Rebel Sneak Attack" */
+		if (!strcmp(g->deck[special].d_ptr->name, "Rebel Sneak Attack"))
+		{
+			/* Takeover not allowed */
+			allow_takeover = 0;
+		}
+	}
+
+	/* Check for settle phase and possible takeover */
+	if (allow_takeover && settle_check_takeover(g, who, NULL, 1))
+	{
+		/* Append takeover information */
+		strcat(buf, " (or pass if you want to perform a takeover)");
+	}
+	if (phase == PHASE_SETTLE)
+	{
+		/* Get settle powers */
+		n = get_powers(g, who, PHASE_SETTLE, w_list);
+
+		/* Loop over powers */
+		for (i = 0; i < n; i++)
+		{
+			/* Get power pointer */
+			o_ptr = w_list[i].o_ptr;
+
+			/* Skip powers that aren't "flip for zero" */
+			if (!(o_ptr->code & P3_FLIP_ZERO)) continue;
+
+			/* Append flip information */
+			strcat(buf, " (or pass if you want to flip a card)");
+
+			/* Done */
+			break;
+		}
+	}
+
+	
     // Display the list of cards using the display_cards function
-    display_cards(g, list, num, "Choose a card to play:");
+    display_cards(g, list, num, buf);
 
     // Get user choice
     choice = get_card_choice(g, who, list, num, "Enter the number of the card you want to play, or 0 to pass:");
@@ -615,3 +693,5 @@ void display_vp(game *g)
         printf("Player %d: %s, %d\n", i + 1, g->p[i].name, g->p[i].end_vp);
     }
 }
+
+
