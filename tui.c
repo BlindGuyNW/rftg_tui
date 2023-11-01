@@ -512,7 +512,17 @@ void tui_choose_windfall(game *g, int who, int list[], int *num) {
     *num = 1;
     list[0] = list[choice - 1]; // Return the card index from the list
 }
-
+/* Choose a good to trade. */
+void tui_choose_trade(game *g, int who, int list[], int *num, int no_bonus)
+{
+int choice;
+char message[1024];
+sprintf(message, "Choose good to trade%s", no_bonus ? " (no bonuses)" : "");
+display_cards(g, list, *num, message);
+choice = get_card_choice(g, who, list, *num, "Enter the number of the card you want to trade from:");
+list[0] = list[choice - 1];
+*num = 1;
+}
 /* Display the player's hand. */
 void display_hand(game *g, int who)
 {

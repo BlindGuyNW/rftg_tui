@@ -36,7 +36,8 @@ void display_cards(game *g, int list[], int num, const char *message);
 						void tui_choose_good(game *g, int who, int c_idx, int o_idx, int goods[],
                      int *num, int min, int max);
 					 void tui_choose_windfall(game *g, int who, int list[], int *num);
-					 void display_hand_card(game *g, int who, int position);
+                     void tui_choose_trade(game *g, int who, int list[], int *num, int no_bonus);
+                     void display_hand_card(game *g, int who, int position);
                      void display_tableau(game *g, int who);
                      void display_tableau_card(game *g, int who, int position);
                      void display_vp(game *g);
