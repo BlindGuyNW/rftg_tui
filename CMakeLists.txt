@@ -30,9 +30,3 @@ endif()
 if(UNIX AND NOT APPLE)
     target_link_libraries(${PROJECT_NAME} m)
 endif()
-# Copy cards and campaigns into the directory. into which the final exeuctable is places.
-# Note that the copy command doesn't work in all cases, so we use some slightly weird custom command logic.
-add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
-                   COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_SOURCE_DIR}/cards.txt ${CMAKE_BINARY_DIR}/$<$<BOOL:${CMAKE_CONFIGURATION_TYPES}>:$<CONFIG>>$<$<NOT:$<BOOL:${CMAKE_CONFIGURATION_TYPES}>>:${CMAKE_BUILD_TYPE}>
-                   COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_SOURCE_DIR}/campaign.txt ${CMAKE_BINARY_DIR}/$<$<BOOL:${CMAKE_CONFIGURATION_TYPES}>:$<CONFIG>>$<$<NOT:$<BOOL:${CMAKE_CONFIGURATION_TYPES}>>:${CMAKE_BUILD_TYPE}>
-                   COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_SOURCE_DIR}/network/ ${CMAKE_BINARY_DIR}/$<$<BOOL:${CMAKE_CONFIGURATION_TYPES}>:$<CONFIG>>$<$<NOT:$<BOOL:${CMAKE_CONFIGURATION_TYPES}>>:${CMAKE_BUILD_TYPE}>/network)

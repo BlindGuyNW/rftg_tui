@@ -415,69 +415,84 @@ power *o_ptr;
 
     return list[choice - 1]; // Return the card index from the list
 }
-
 void tui_choose_pay(game *g, int who, int which, int list[], int *num,
                     int special[], int *num_special, int mil_only,
                     int mil_bonus) {
-    
-    // If there are specials, display an error and return
-    if (*num_special > 0) {
-        printf("Error: Handling of specials is not implemented yet.\n");
-        return;
-    }
 
     card *c_ptr = &g->deck[which];
     int cost = 0, military = 0, ict_mil = 0, iif_mil = 0;
     char *cost_card = NULL;
     discounts discount;
 
-    // Compute the cost based on card type
     if (c_ptr->d_ptr->type == TYPE_DEVELOPMENT) {
         cost = devel_cost(g, who, which);
-    }
-    else if (c_ptr->d_ptr->type == TYPE_WORLD) {
+    } else if (c_ptr->d_ptr->type == TYPE_WORLD) {
         compute_discounts(g, who, &discount);
 
         if (c_ptr->d_ptr->flags & FLAG_MILITARY) {
             military_world_payment(g, who, which, mil_only, mil_bonus, &discount, &military, &cost, &cost_card);
-        }
-        else {
+        } else {
             peaceful_world_payment(g, who, which, mil_only, &discount, &cost, &ict_mil, &iif_mil);
         }
     }
 
-    char display_message[512];
-    sprintf(display_message, "Choose payment for %s (%d card%s). Here are your options:", c_ptr->d_ptr->name, cost, cost > 1 ? "s" : "");
+    int forced_choice = compute_forced_choice(which, *num, *num_special, mil_only, mil_bonus);
 
-    int temp_list[TEMP_MAX_VAL];
-    for (int i = 0; i < *num; i++) {
-        temp_list[i] = list[i];
+    int total_regular = 0, total_special = 0;
+    if (forced_choice) {
+        if (forced_choice & 1) {
+            total_regular = *num;
+        }
+
+        if (forced_choice >> 1) {
+            total_special = *num_special;
+        }
+    } else {
+        char display_message[512];
+        sprintf(display_message, "Choose payment for %s (%d card%s). Here are your options:", c_ptr->d_ptr->name, cost, cost > 1 ? "s" : "");
+
+        int temp_list[TEMP_MAX_VAL + *num_special];
+        int idx = 0;
+
+        for (int i = 0; i < *num; i++, idx++) {
+            temp_list[idx] = list[i];
+        }
+
+        for (int i = 0; i < *num_special; i++, idx++) {
+            temp_list[idx] = special[i];
+        }
+
+        int combined_num = *num + *num_special;
+        display_cards(g, temp_list, combined_num, display_message);
+
+        int total_paid = 0;
+        while (total_paid < cost) {
+            int selected_card = get_card_choice(g, who, temp_list, combined_num - total_paid, "Enter card number to use for payment");
+
+            if (selected_card > *num) {
+                special[total_special] = temp_list[selected_card - 1];
+                total_special++;
+            } else {
+                list[total_regular] = temp_list[selected_card - 1];
+                total_regular++;
+                total_paid++;
+            }
+
+            for (int i = selected_card - 1; i < combined_num - total_paid; i++) {
+                temp_list[i] = temp_list[i + 1];
+            }
+
+            if (total_paid < cost) {
+                sprintf(display_message, "You have paid %d out of %d. Remaining options:", total_paid, cost);
+                display_cards(g, temp_list, combined_num - total_paid, display_message);
+            }
+        }
     }
 
-    display_cards(g, temp_list, *num, display_message);
-
-    int total_paid = 0;
-    while (total_paid < cost) {
-        int selected_card = get_card_choice(g, who, temp_list, *num - total_paid, "Enter card number to use for payment");
-        
-        // Add the selected card to the list of paid cards
-        list[total_paid] = temp_list[selected_card - 1];
-        total_paid++;
-        
-        // Remove the selected card from temp_list by shifting all subsequent cards
-        for (int i = selected_card - 1; i < *num - total_paid; i++) {
-            temp_list[i] = temp_list[i + 1];
-        }
-        
-        if (total_paid < cost) {
-            sprintf(display_message, "You have paid %d out of %d. Remaining options:", total_paid, cost);
-            display_cards(g, temp_list, *num - total_paid, display_message);
-        }
-    }
-
-    // Set *num to total_paid
-    *num = total_paid;
+    *num = total_regular;
+    *num_special = total_special;
 }
+
 /*
 * Choose consume powers to use.
 */
