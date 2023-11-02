@@ -2398,7 +2398,7 @@ char *name_settle(power *o_ptr, char *buf) {
 		else if (o_ptr->code & P3_EXTRA_MILITARY)
 		{
 			/* Make string */
-			sprintf(buf, "Add %d extra military, o_ptr->value");
+			sprintf(buf, "Add %d extra military", o_ptr->value);
 			/* Check for against powers. */
 			if (o_ptr->code & P3_AGAINST_REBEL)
 			{
