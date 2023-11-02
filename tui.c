@@ -451,7 +451,7 @@ void tui_choose_pay(game *g, int who, int which, int list[], int *num,
         char display_message[512];
         sprintf(display_message, "Choose payment for %s (%d card%s). Here are your options:", c_ptr->d_ptr->name, cost, cost > 1 ? "s" : "");
 
-        int temp_list[TEMP_MAX_VAL + *num_special];
+        int temp_list[TEMP_MAX_VAL];
         int idx = 0;
 
         for (int i = 0; i < *num; i++, idx++) {
