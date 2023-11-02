@@ -1,4 +1,4 @@
-/*
+		/*
  * Race for the Galaxy AI
  *
  * Copyright (C) 2009-2011 Keldon Jones
@@ -2191,7 +2191,7 @@ static char *name_consume(power *o_ptr, char *buf) {
 			else
 			{
 				/* Start string */
-				sprintf(buf, "Consume %sgood for ", name);
+				sprintf(buf, "Consume %s good for ", name);
 			}
 
 			/* Check for cards */
@@ -2398,7 +2398,22 @@ char *name_settle(power *o_ptr, char *buf) {
 		else if (o_ptr->code & P3_EXTRA_MILITARY)
 		{
 			/* Make string */
-			sprintf(buf, "Add extra military");
+			sprintf(buf, "Add %d extra military, o_ptr->value");
+			/* Check for against powers. */
+			if (o_ptr->code & P3_AGAINST_REBEL)
+			{
+				strcat(buf, " against rebels");
+			} else if (o_ptr->code & P3_ALIEN) {
+				strcat(buf, " against aliens");
+			} else if (o_ptr->code & P3_RARE) {
+		strcat(buf, " against rare goods worlds");
+			} else if (o_ptr->code & P3_NOVELTY) {
+				strcat(buf, " against novelty goods worlds");
+			} else if (o_ptr->code & P3_GENE) {
+				strcat(buf, " against genes worlds");
+			} else if (o_ptr->code & P3_PER_MILITARY) {
+				strcat(buf, " per military world");
+			} 
 		}
 		else if (o_ptr->code & P3_REDUCE)
 		{

@@ -1168,6 +1168,7 @@ typedef struct discounts
 void peaceful_world_payment(game *g, int who, int which,
                                    int mil_only, discounts *d_ptr,
                                    int *cost, int *ict_mil, int *iif_mil);
+int compute_forced_choice(int which, int num, int num_special, int mil_only, int mil_bonus);
 void compute_discounts(game *g, int who, discounts *d_ptr);
 void military_world_payment(game *g, int who, int which,
                                    int mil_only, int mil_bonus, discounts *d_ptr,
