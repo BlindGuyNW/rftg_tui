@@ -2143,6 +2143,25 @@ static char *name_consume(power *o_ptr, char *buf) {
 				strcat(buf, " (no bonus)");
 			}
 		}
+		else if (o_ptr->code & P4_TRADE_ANY) {
+			sprintf(buf, "Trade any good for %d extra", o_ptr->value);
+		}
+		else if (o_ptr->code & P4_TRADE_NOVELTY)
+		{
+			sprintf(buf, "Trade novelty good for %d extra", o_ptr->value);
+		}
+	else if (o_ptr->code & P4_TRADE_GENE)
+		{
+			sprintf(buf, "Trade genes good for %d extra", o_ptr->value);
+		}
+		else if (o_ptr->code & P4_TRADE_RARE)
+		{
+			sprintf(buf, "Trade rare good for %d extra", o_ptr->value);
+		}
+		else if (o_ptr->code & P4_TRADE_ALIEN)
+		{
+			sprintf(buf, "Trade alien good for %d extra", o_ptr->value);
+		}
 		else
 		{
 			/* Get type of good to consume */
@@ -2181,7 +2200,7 @@ static char *name_consume(power *o_ptr, char *buf) {
 			else if (o_ptr->code & P4_CONSUME_TWO)
 			{
 				/* Start string */
-				sprintf(buf, "Consume two %sgoods for ", name);
+				sprintf(buf, "Consume two %s goods for ", name);
 			}
 			else if (o_ptr->code & P4_CONSUME_PRESTIGE)
 			{
@@ -2316,7 +2335,11 @@ static char *name_produce(design *d_ptr, power *o_ptr, char *buf) {
 			/* Start string */
 			sprintf(buf, "Discard to ");
 		}
-
+/*More simple powers */
+else if (o_ptr->code & P5_DRAW) {
+	/* Add to string */
+	sprintf(buf, "Draw %d during produce phase", o_ptr->value);
+}
 		/* Regular production powers */
 		if (o_ptr->code & P5_PRODUCE)
 		{
