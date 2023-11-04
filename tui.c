@@ -180,20 +180,35 @@ case 'h':
         printf("Invalid format. Type 'h' to view your hand or 'h [number]' to view a specific card.\n");
     }
     break;
-    case 't':
-            if (sscanf(action + 1, "%d", &selected_card) == 1)
-            {
-                display_tableau_card(g, who, selected_card - 1);
+// existing case for 't'
+case 't':
+    if (action[1] == 'h') {
+        // Human player's tableau command handling
+        if (sscanf(action + 2, "%d", &selected_card) == 1) {
+            display_tableau_card(g, who, selected_card - 1);
+        } else if (action[2] == '\0') {
+            display_tableau(g, who);
+        } else {
+            printf("Invalid format. Type 'th' to view your tableau or 'th<number>' to view a specific card.\n");
+        }
+    } else if (isdigit(action[1])) {
+        // Opponent's tableau command handling
+        int opponent = action[1] - '1'; // Convert char to int and adjust for 0-indexed array
+        if (opponent >= 0 && opponent < g->num_players) {
+            if (sscanf(action + 2, "%d", &selected_card) == 1) {
+                display_tableau_card(g, opponent, selected_card - 1);
+            } else if (action[2] == '\0') {
+                display_tableau(g, opponent);
+            } else {
+                printf("Invalid format. Type 't<number>' to view an opponent's tableau or 't<number><card number>' to view a specific card.\n");
             }
-            else if (action[1] == '\0')  // Ensure that only "t" is entered
-            {
-                display_tableau(g, who);
-            }
-            else
-            {
-                printf("Invalid format. Type 't' to view your tableau or 't [number]' to view a specific card.\n");
-            }
-            break;
+        } else {
+            printf("Invalid player number. Please try again.\n");
+        }
+    } else {
+        printf("Invalid command. Type 'th' for your tableau, 't<number>' for an opponent's tableau, or 't<number><card number>' for details on a specific card.\n");
+    }
+    break;
             case 'v':
                 display_vp(g);
                 break;
@@ -668,7 +683,7 @@ void display_tableau(game *g, int who)
 
     /* Display the cards on the table in a numbered list */
     x = g->p[who].head[WHERE_ACTIVE];
-    printf("Cards on Table:\n");
+    printf("Cards in play for %s:\n", g->p[who].name);
     while (x != -1)
     {
         count++;
