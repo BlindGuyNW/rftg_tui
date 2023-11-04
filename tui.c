@@ -197,6 +197,9 @@ case 'h':
             case 'v':
                 display_vp(g);
                 break;
+                case 'm':
+                    display_military(g);
+                    break;
             default:
                 if (sscanf(action, "%d", &selected_card) == 1) {
                     if (selected_card >= 0 && selected_card <= num) {
@@ -822,5 +825,114 @@ void display_vp(game *g)
         
         /* Print player number, name, and detailed VP information */
         printf("Player %d: %s\n%s", i + 1, g->p[i].name, vp_details);
+    }
+}
+/* Military strength. */
+/* Generate a detailed breakdown of military strength for a given player. */
+static char *get_military_text(mil_strength *military)
+{
+    static char msg[1024];
+    char text[1024];
+    int i;
+
+    /* Clear text */
+    strcpy(msg, "");
+
+    /* Check for values */
+    if (!military->has_data)
+    {
+        /* Return empty message */
+        return msg;
+    }
+
+    /* Add base strength */
+    sprintf(text, "Base strength: %+d\n", military->base);
+    strcat(msg, text);
+
+    /* Add temporary military */
+    if (military->bonus)
+    {
+        /* Create text */
+        sprintf(text, "Activated temporary military: %+d\n", military->bonus);
+        strcat(msg, text);
+    }
+
+    /* Add rebel strength */
+    if (military->rebel)
+    {
+        /* Create rebel text */
+        sprintf(text, "Additional Rebel strength: %+d\n", military->rebel);
+        strcat(msg, text);
+    }
+
+    /* Add specific strength */
+    for (i = GOOD_NOVELTY; i <= GOOD_ALIEN; ++i)
+    {
+        /* Check for strength */
+        if (military->specific[i])
+        {
+            /* Create text */
+            sprintf(text, "Additional %s strength: %+d\n", good_printable[i], military->specific[i]);
+            strcat(msg, text);
+        }
+    }
+
+    /* Add defense strength */
+    if (military->defense)
+    {
+        /* Create text */
+        sprintf(text, "Additional Takeover defense: %+d\n", military->defense);
+        strcat(msg, text);
+    }
+
+    /* Add attack imperium */
+    if (military->attack_imperium)
+    {
+        /* Create text */
+        sprintf(text, "Additional attack when using %s: %+d\n", military->imp_card, military->attack_imperium);
+        strcat(msg, text);
+    }
+
+    /* Add maximum temporary military */
+    if (military->max_bonus)
+    {
+        /* Create text */
+        sprintf(text, "Additional potential temporary military: %+d\n", military->max_bonus);
+        strcat(msg, text);
+    }
+
+    /* Check for active imperium card */
+    if (military->imperium)
+    {
+        /* Add vulnerability text */
+        strcat(msg, "IMPERIUM card played\n");
+    }
+
+    /* Check for active Rebel military world */
+    if (military->military_rebel)
+    {
+        /* Add vulnerability text */
+        strcat(msg, "REBEL Military world played\n");
+    }
+
+    /* Return text */
+    return msg;
+}
+/* Display military srength for everyone. */
+void display_military(game *g)
+{
+    mil_strength *m_ptr;
+    int i;
+    char *military_details;
+
+    /* Display the military strength for each player */
+    for (i = 0; i < g->num_players; i++)
+    {
+        /* Get detailed military information for player i */
+         compute_military(g, i, m_ptr);
+        military_details = get_military_text(m_ptr);
+        
+        /* Print player number, name, and detailed military information */
+        printf("Player %d: %s\n%s", i + 1, g->p[i].name, military_details);
     }
 }

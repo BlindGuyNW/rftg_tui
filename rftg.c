@@ -172,42 +172,6 @@ static char *player_names[MAX_PLAYER] = { "[P0]", "[P1]", "[P2]", "[P3]", "[P4]"
 
 
 
-typedef struct mil_strength
-{
-	/* Base military */
-	int base;
-
-	/* Current temporary military */
-	int bonus;
-
-	/* Maximum additional temporary military */
-	int max_bonus;
-
-	/* Additional military against rebel worlds */
-	int rebel;
-
-	/* Additional specific military */
-	int specific[6];
-
-	/* Additional extra defense during takeovers */
-	int defense;
-
-	/* Additional military when using attack imperium TO power */
-	int attack_imperium;
-
-	/* Name of attack imperium TO power */
-	char imp_card[64];
-
-	/* Imperium world played */
-	int imperium;
-
-	/* Rebel military world played */
-	int military_rebel;
-
-	/* Any value is set */
-	int has_data;
-
-} mil_strength;
 
 /*
  * Check whether a log position marks a round boundary.
@@ -746,7 +710,7 @@ int compute_forced_choice(int which, int num, int num_special, int mil_only, int
 /*
  * Compute military strength for a player.
  */
-static void compute_military(game *g, int who, mil_strength *m_ptr)
+void compute_military(game *g, int who, mil_strength *m_ptr)
 {
 	card *c_ptr;
 	power *o_ptr;

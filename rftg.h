@@ -868,6 +868,44 @@ typedef struct player
 
 } player;
 
+/* A player's military strength. */
+typedef struct mil_strength
+{
+	/* Base military */
+	int base;
+
+	/* Current temporary military */
+	int bonus;
+
+	/* Maximum additional temporary military */
+	int max_bonus;
+
+	/* Additional military against rebel worlds */
+	int rebel;
+
+	/* Additional specific military */
+	int specific[6];
+
+	/* Additional extra defense during takeovers */
+	int defense;
+
+	/* Additional military when using attack imperium TO power */
+	int attack_imperium;
+
+	/* Name of attack imperium TO power */
+	char imp_card[64];
+
+	/* Imperium world played */
+	int imperium;
+
+	/* Rebel military world played */
+	int military_rebel;
+
+	/* Any value is set */
+	int has_data;
+
+} mil_strength;
+
 /*
  * Information about a game.
  */
@@ -1170,9 +1208,10 @@ void peaceful_world_payment(game *g, int who, int which,
                                    int *cost, int *ict_mil, int *iif_mil);
 int compute_forced_choice(int which, int num, int num_special, int mil_only, int mil_bonus);
 void compute_discounts(game *g, int who, discounts *d_ptr);
+void compute_military(game *g, int who, mil_strength *m_ptr);
 void military_world_payment(game *g, int who, int which,
-                                   int mil_only, int mil_bonus, discounts *d_ptr,
-                                   int *military, int *cost, char **cost_card);
+                            int mil_only, int mil_bonus, discounts *d_ptr,
+                            int *military, int *cost, char **cost_card);
 extern void trade_chosen(game *g, int who, int which, int no_bonus);
 extern void trade_action(game *g, int who, int no_bonus, int phase_bonus);
 extern int good_chosen(game *g, int who, int c_idx, int o_idx, int g_list[],

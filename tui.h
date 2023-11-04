@@ -42,6 +42,7 @@ void display_cards(game *g, int list[], int num, const char *message);
                      void display_tableau(game *g, int who);
                      void display_tableau_card(game *g, int who, int position);
                      void display_vp(game *g);
+                     void display_military(game *g);
                      void display_hand(game *g, int who);
                      extern char *get_card_power_name(int i, int p);
 #endif
