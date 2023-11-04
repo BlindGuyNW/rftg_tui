@@ -698,15 +698,129 @@ void display_tableau_card(game *g, int who, int position)
 }
 
 /* Display victory points for all players. */
+/* Generate a detailed breakdown of victory points for a given player. */
+static char *get_vp_text(game *g, int who)
+{
+    static char msg[1024];
+    player *p_ptr = &g->p[who];
+    card *c_ptr;
+    char text[1024];
+    char bonus[1024];
+    int x, t, kind, worlds, devs;
+
+    /* Initialize counters */
+    worlds = devs = 0;
+
+    /* Start message with an empty string */
+    strcpy(msg, "");
+
+    /* VP from chips */
+    if (p_ptr->vp)
+    {
+        sprintf(text, "VP chips: %d VP%s\n", p_ptr->vp, PLURAL(p_ptr->vp));
+        strcat(msg, text);
+    }
+
+    /* VP from goals */
+    if (p_ptr->goal_vp)
+    {
+        sprintf(text, "Goals: %d VP%s\n", p_ptr->goal_vp, PLURAL(p_ptr->goal_vp));
+        strcat(msg, text);
+    }
+
+    /* VP from prestige */
+    if (p_ptr->prestige)
+    {
+        sprintf(text, "Prestige: %d VP%s\n", p_ptr->prestige, PLURAL(p_ptr->prestige));
+        strcat(msg, text);
+    }
+
+    /* Remember old kind */
+    kind = g->oort_kind;
+
+    /* Set oort kind to best scoring kind */
+    g->oort_kind = g->best_oort_kind;
+
+    /* Start at first active card */
+    x = p_ptr->head[WHERE_ACTIVE];
+
+    /* Loop over active cards */
+    for ( ; x != -1; x = g->deck[x].next)
+    {
+        /* Get card pointer */
+        c_ptr = &g->deck[x];
+
+        /* Check for world */
+        if (c_ptr->d_ptr->type == TYPE_WORLD)
+        {
+            /* Add VP from this world */
+            worlds += c_ptr->d_ptr->vp;
+        }
+
+        /* Check for development */
+        else if (c_ptr->d_ptr->type == TYPE_DEVELOPMENT)
+        {
+            /* Add VP from this development */
+            devs += c_ptr->d_ptr->vp;
+        }
+
+        /* Check for VP bonuses */
+        if (c_ptr->d_ptr->num_vp_bonus)
+        {
+            /* Count VPs from this card */
+            t = get_score_bonus(g, who, x);
+
+            /* Copy previous bonus (to get names in table order) */
+            strcpy(text, bonus);
+
+            /* Format text */
+            sprintf(bonus, "%s: %d VP%s\n", c_ptr->d_ptr->name, t, PLURAL(t));
+
+            /* Add to bonus string */
+            strcat(bonus, text);
+        }
+    }
+
+    /* Reset oort kind */
+    g->oort_kind = kind;
+
+    /* VP from worlds */
+    if (worlds)
+    {
+        sprintf(text, "Worlds: %d VP%s\n", worlds, PLURAL(worlds));
+        strcat(msg, text);
+    }
+
+    /* VP from developments */
+    if (devs)
+    {
+        sprintf(text, "Developments: %d VP%s\n", devs, PLURAL(devs));
+        strcat(msg, text);
+    }
+
+    /* Add bonus VP */
+    strcat(msg, bonus);
+
+    /* Write total */
+    sprintf(text, "Total: %d VP%s\n", p_ptr->end_vp, PLURAL(p_ptr->end_vp));
+    strcat(msg, text);
+
+    /* Return message */
+    return msg;
+}
+/* Display detailed victory points for all players. */
 void display_vp(game *g)
 {
     int i;
+    char *vp_details;
 
     /* Display the victory points for each player */
     for (i = 0; i < g->num_players; i++)
     {
-        printf("Player %d: %s, %d\n", i + 1, g->p[i].name, g->p[i].end_vp);
+        /* Get detailed VP information for player i */
+        vp_details = get_vp_text(g, i);
+        
+        /* Print player number, name, and detailed VP information */
+        printf("Player %d: %s\n%s", i + 1, g->p[i].name, vp_details);
     }
 }
-
-
