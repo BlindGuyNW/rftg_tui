@@ -933,19 +933,20 @@ static char *get_military_text(mil_strength *military)
     /* Return text */
     return msg;
 }
-/* Display military srength for everyone. */
 void display_military(game *g)
 {
-    mil_strength *m_ptr;
     int i;
     char *military_details;
 
     /* Display the military strength for each player */
     for (i = 0; i < g->num_players; i++)
     {
+        mil_strength m; // Stack allocation of mil_strength object
+        memset(&m, 0, sizeof(m)); // Initialize mil_strength object
+
         /* Get detailed military information for player i */
-         compute_military(g, i, m_ptr);
-        military_details = get_military_text(m_ptr);
+        compute_military(g, i, &m);
+        military_details = get_military_text(&m);
         
         /* Print player number, name, and detailed military information */
         printf("Player %d: %s\n%s", i + 1, g->p[i].name, military_details);
