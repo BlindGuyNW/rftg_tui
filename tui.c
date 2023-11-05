@@ -656,6 +656,13 @@ void display_hand(game *g, int who)
         printf("%d. %s\n", count, g->deck[x].d_ptr->name);
         x = g->deck[x].next;
     }
+    /* Display count of cards in other players' hands, but don't list them. */
+    for (size_t i = 0; i < g->num_players; i++) {
+ /* Skip over the human player. */
+ if (!g->p[i].ai)
+ continue;
+ printf("%s: %d cards in hand\n", g->p[i].name, count_player_area(g, i, WHERE_HAND));
+    }
 }
 
 /* Display specific card from hand. */

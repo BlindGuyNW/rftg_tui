@@ -44,7 +44,7 @@ rftg: $(OBJECTS)
 
 # Clean up
 clean:
-	rm -f $(OBJECTS) rftg $(DEPS)
+	rm -f $(OBJECTS) rftg rftg.exe $(DEPS)
 
 # Cross-compile for Windows
 windows:
