@@ -2303,6 +2303,8 @@ static char *name_produce(design *d_ptr, power *o_ptr, char *buf) {
 else if (o_ptr->code & P5_DRAW) {
 	/* Add to string */
 	sprintf(buf, "Draw %d during produce phase", o_ptr->value);
+} else if (o_ptr->code & P5_DRAW_IF) {
+	sprintf(buf, "Draw if produced on %s", d_ptr->name);
 }
 		/* Regular production powers */
 		if (o_ptr->code & P5_PRODUCE)
@@ -2419,6 +2421,16 @@ char *name_settle(power *o_ptr, char *buf) {
 			sprintf(buf2, "by %d", o_ptr->value);
 			strcat(buf, buf2);
 		}
+/* Handle card discard powers. */
+if (o_ptr->code & P3_DISCARD) {
+sprintf(buf, "Discard this card to ");
+if (o_ptr->code & P3_REDUCE_ZERO) {
+sprintf(buf2, "settle non-alien world for zero cost");
+} else if (o_ptr->code & P3_EXTRA_MILITARY) {
+	sprintf(buf2, "add %d extra military", o_ptr->value);
+}
+strcat(buf, buf2);
+}
                 return buf;
 }
 
