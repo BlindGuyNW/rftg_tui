@@ -61,8 +61,6 @@ void display_card_flags(unsigned int flags) {
 /* 
 * Discard cards, inspired by ChatGPT.
 */
-// Constants for better clarity
-#define MIN_SELECTION 1
 
 void display_cards(game *g, int list[], int num, const char *message) {
     card *c_ptr;
@@ -90,7 +88,11 @@ void display_card_info(game *g, int card_index) {
         printf("Type: Unknown\n");
     if (d_ptr)
     printf("Cost: %d\n", d_ptr->cost);
+    if (d_ptr->vp)
     printf("VP: %d\n", d_ptr->vp);
+    else {
+        printf("VP: special\n");
+    }
 switch (d_ptr->good_type)
 {
 case GOOD_ALIEN:
@@ -106,6 +108,8 @@ case GOOD_NOVELTY:
     printf("Good Type: Genes\n");
     break;
 }
+if (c_ptr->num_goods)
+printf("Goods: %d\n", c_ptr->num_goods);
 display_card_flags(d_ptr->flags);
 
     // Display card powers
@@ -124,7 +128,11 @@ int get_card_choice(game *g, int who, int list[], int num, const char *prompt) {
 
     while (1) {
         printf("%s (or '?' for help): ", prompt);
-        fgets(action, sizeof(action), stdin);
+        if (fgets(action, sizeof(action), stdin) == NULL)
+        {
+            printf("Error reading input. Please try again.\n");
+            continue;
+            }
         action[strcspn(action, "\n")] = 0;
 
         // Validate input length and check for control characters
@@ -159,7 +167,7 @@ int get_card_choice(game *g, int who, int list[], int num, const char *prompt) {
                 break;
 
             case '?':
-                printf("Help: Enter a card number to choose, 'i' followed by a number for info on that card, 'q' to quit, 'r' to redisplay list, 'h' to show hand, 'h number' to get info on card number from hand, 't number' for the tableau.\n");
+                printf("Help: Enter a card number to choose, 'i' followed by a number for info on that card, 'q' to quit, 'r' to redisplay list, 'h' to show hand, 'h number' to get info on card number from hand, 't number' for a player\'s tableau.\n");
                 break;
 
             case 'r':
@@ -298,26 +306,19 @@ printf("Choose action\n");
     }
 
     while (1) {
-        printf("Enter action number (or 'i' followed by number for info, 'q' to quit, 'h' for help, 'r' to redisplay list): ");
+        printf("Enter action number ('q' to quit, '?' for help, 'r' to redisplay list): ");
         char input[10];
-        fgets(input, sizeof(input), stdin);
+        if (fgets(input, sizeof(input), stdin) == NULL)
+        {
+            printf("Error reading input. Please try again.\n");
+            continue;
+            }
     input[strcspn(input, "\n")] = 0;
 
-        if (input[0] == 'i') {
-            if (sscanf(input + 1, "%d", &selected_action) == 1) {
-                if (selected_action >= 1 && selected_action <= num_available_actions) {
-                    // Display action info - this function needs to be implemented based on your game's requirements.
-                    // display_action_info(g, available_actions[selected_action - 1]);
-                } else {
-                    printf("Invalid action number. Please try again.\n");
-                }
-            } else {
-                printf("Invalid format. Please try again.\n");
-            }
-        } else if (input[0] == 'q') {
+                if (input[0] == 'q') {
             printf("Quitting...\n");
             exit(0);
-        } else if (input[0] == 'h') {
+        } else if (input[0] == '?') {
             printf("Help: Enter an action number to choose, 'i' followed by number for info, 'q' to quit, 'r' to redisplay list.\n");
         } else if (input[0] == 'r') {
             // Redisplay available actions
@@ -343,7 +344,11 @@ int tui_choose_lucky(game *g, int who) {
 char input[10];
 while (1) {
     printf("Choose a number between 1 and 7, '?' for help, 'q' to quit: ");
-    fgets(input, sizeof(input), stdin);
+    if (fgets(input, sizeof(input), stdin) == NULL)
+    {
+        printf("Error reading input. Please try again.\n");
+        continue;
+        }
 input[strcspn(input, "\n")] = 0;
 
     if (input[0] == 'q') {

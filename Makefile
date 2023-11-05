@@ -1,7 +1,7 @@
 # Compiler setup
 CC := gcc
 LD := gcc
-CFLAGS := -Wall -O2
+CFLAGS := -Wall
 LDFLAGS :=
 LIBS := -lm  # Math library included by default
 
@@ -24,6 +24,7 @@ DEPS := $(OBJECTS:.o=.d)
 all: release
 
 # Release build
+release: CFLAGS += -O2
 release: rftg
 
 # Debug build
