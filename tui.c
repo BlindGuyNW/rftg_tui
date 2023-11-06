@@ -56,6 +56,41 @@ void display_card_flags(unsigned int flags) {
     printf("\n");
 }
 
+/* Common commands handling. */
+typedef enum {
+    CMD_CONTINUE, // Continue the loop
+    CMD_QUIT,     // Quit the game
+    CMD_HANDLED   // Command was handled
+} CommandOutcome;
+
+CommandOutcome handle_common_commands(game *g, char *input, int who) {
+    if (strcmp(input, "q") == 0) {
+        printf("Quitting...\n");
+        return CMD_QUIT;
+    } else if (strcmp(input, "?") == 0) {
+        printf("Help: [common help info]\n");
+        return CMD_HANDLED;
+    } else if (input[0] == 'h' && isdigit(input[1])) {
+        int card;
+        if (sscanf(input + 1, "%d", &card) == 1) {
+            display_hand_card(g, who, card - 1);
+        } else {
+            display_hand(g, who);
+        }
+        return CMD_HANDLED;
+    } else if (strcmp(input, "v") == 0) {
+        display_vp(g);
+        return CMD_HANDLED;
+    } else if (strcmp(input, "m") == 0) {
+        display_military(g);
+        return CMD_HANDLED;
+    } else if (strcmp(input, "r") == 0) {
+        // The calling function should handle redisplaying the relevant information
+        return CMD_HANDLED;
+    }
+    // If none of the common commands were matched, we continue processing
+    return CMD_CONTINUE;
+}
 
 
 /* 
@@ -147,83 +182,12 @@ int get_card_choice(game *g, int who, int list[], int num, const char *prompt) {
                 continue;
             }
         }
-
-        switch (action[0]) {
-            case 'i':
-                if (sscanf(action + 1, "%d", &selected_card) == 1) {
-                    if (selected_card >= 1 && selected_card <= num) {
-                        display_card_info(g, list[selected_card - 1]);
-                    } else {
-                        printf("Invalid card number. Please try again.\n");
-                    }
-                } else {
-                    printf("Invalid format. Please try again.\n");
-                }
-                break;
-
-            case 'q':
-                printf("Quitting...\n");
-                exit(0);
-                break;
-
-            case '?':
-                printf("Help: Enter a card number to choose, 'i' followed by a number for info on that card, 'q' to quit, 'r' to redisplay list, 'h' to show hand, 'h number' to get info on card number from hand, 't number' for a player\'s tableau.\n");
-                break;
-
-            case 'r':
-                display_cards(g, list, num, prompt);
-                break;
-
-case 'h':
-    if (sscanf(action + 1, "%d", &selected_card) == 1)
-    {
-        display_hand_card(g, who, selected_card - 1);
-    }
-    else if (action[1] == '\0')  // Ensure that only "h" is entered
-    {
-        display_hand(g, who);
-    }
-    else
-    {
-        printf("Invalid format. Type 'h' to view your hand or 'h [number]' to view a specific card.\n");
-    }
-    break;
-// existing case for 't'
-case 't':
-    if (action[1] == 'h') {
-        // Human player's tableau command handling
-        if (sscanf(action + 2, "%d", &selected_card) == 1) {
-            display_tableau_card(g, who, selected_card - 1);
-        } else if (action[2] == '\0') {
-            display_tableau(g, who);
-        } else {
-            printf("Invalid format. Type 'th' to view your tableau or 'th<number>' to view a specific card.\n");
+        CommandOutcome outcome = handle_common_commands(g, action, who);
+        if (outcome == CMD_QUIT) {
+            exit(0); // or handle quitting more gracefully if necessary
+        } else if (outcome == CMD_HANDLED) {
+            continue; // The command was handled, continue the loop
         }
-    } else if (isdigit(action[1])) {
-        // Opponent's tableau command handling
-        int opponent = action[1] - '1'; // Convert char to int and adjust for 0-indexed array
-        if (opponent >= 0 && opponent < g->num_players) {
-            if (sscanf(action + 2, "%d", &selected_card) == 1) {
-                display_tableau_card(g, opponent, selected_card - 1);
-            } else if (action[2] == '\0') {
-                display_tableau(g, opponent);
-            } else {
-                printf("Invalid format. Type 't<number>' to view an opponent's tableau or 't<number><card number>' to view a specific card.\n");
-            }
-        } else {
-            printf("Invalid player number. Please try again.\n");
-        }
-    } else {
-        printf("Invalid command. Type 'th' for your tableau, 't<number>' for an opponent's tableau, or 't<number><card number>' for details on a specific card.\n");
-    }
-    break;
-            case 'v':
-                display_vp(g);
-                break;
-                case 'm':
-                    display_military(g);
-                    break;
-            default:
                 if (sscanf(action, "%d", &selected_card) == 1) {
                     if (selected_card >= 0 && selected_card <= num) {
                         return selected_card;
@@ -314,17 +278,14 @@ printf("Choose action\n");
             continue;
             }
     input[strcspn(input, "\n")] = 0;
-
-                if (input[0] == 'q') {
-            printf("Quitting...\n");
-            exit(0);
-        } else if (input[0] == '?') {
-            printf("Help: Enter an action number to choose, 'i' followed by number for info, 'q' to quit, 'r' to redisplay list.\n");
-        } else if (input[0] == 'r') {
-            // Redisplay available actions
-            for (int i = 0; i < num_available_actions; i++) {
-                printf("%d. %s\n", i + 1, action_name(available_actions[i]));
-            }
+        CommandOutcome outcome = handle_common_commands(g, input, who);
+        if (outcome == CMD_QUIT) {
+            return; // or handle quitting more gracefully if necessary
+        } else if (outcome == CMD_HANDLED) {
+            // The command was handled, re-display available actions or other necessary info
+            continue; // The command was handled, continue the loop
+        }
+                
         } else if (sscanf(input, "%d", &selected_action) == 1) {
             if (selected_action >= 1 && selected_action <= num_available_actions) {
                 action[0] = available_actions[selected_action - 1];
