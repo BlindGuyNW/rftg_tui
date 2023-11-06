@@ -2136,7 +2136,10 @@ static char *name_consume(power *o_ptr, char *buf) {
 		else if (o_ptr->code & P4_TRADE_ALIEN)
 		{
 			sprintf(buf, "Trade alien good for %d extra", o_ptr->value);
+		} else if (o_ptr->code & P4_TRADE_THIS) {
+			sprintf(buf, "Trade this good for %d extra", o_ptr->value);
 		}
+
 		else
 		{
 			/* Get type of good to consume */

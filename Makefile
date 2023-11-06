@@ -49,3 +49,6 @@ clean:
 # Cross-compile for Windows
 windows:
 	$(MAKE) CROSS_COMPILE=1
+zip-win: windows
+	zip -ur rftg-win.zip rftg.exe cards.txt campaign.txt network/
+
