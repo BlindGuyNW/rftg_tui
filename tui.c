@@ -515,7 +515,100 @@ void tui_choose_pay(game *g, int who, int which, int list[], int *num,
     *num = total_regular;
     *num_special = total_special;
 }
+/*
+* Choose cards from hand to consume.
+*/
+void tui_choose_consume_hand(game *g, int who, int c_idx, int o_idx, int list[], int *num)
+{
+	card *c_ptr;
+	power *o_ptr, prestige_bonus;
+	char buf[1024], *card_name;
+	/* Check for prestige trade bonus power */
+	if (c_idx < 0)
+	{
+		/* Make fake power */
+		prestige_bonus.phase = PHASE_CONSUME;
+		prestige_bonus.code = P4_DISCARD_HAND | P4_GET_VP;
+		prestige_bonus.value = 1;
+		prestige_bonus.times = 2;
 
+		/* Use fake power */
+		o_ptr = &prestige_bonus;
+
+		/* Use fake card name */
+		card_name = "Prestige Trade bonus";
+	}
+	else
+	{
+		/* Get card pointer */
+		c_ptr = &g->deck[c_idx];
+
+		/* Get power pointer */
+		o_ptr = &c_ptr->d_ptr->powers[o_idx];
+
+		/* Use card name */
+		card_name = c_ptr->d_ptr->name;
+	}
+	/* Check for needing two cards */
+	if (o_ptr->code & P4_CONSUME_TWO)
+	{
+		/* Create prompt */
+		sprintf(buf, "Choose cards to consume on %s", card_name);
+	}
+	else
+	{
+		/* Create prompt */
+		sprintf(buf, "Choose up to %d card%s to consume on %s",
+		        o_ptr->times, PLURAL(o_ptr->times), card_name);
+	}
+/* Create a temporary list to handle the card selection */
+int temp_list[TEMP_MAX_VAL];
+int consume_count = 0;
+for (size_t i = 0; i < *num; i++)
+{
+    temp_list[i] = list[i];
+}
+// Display cards and prompt to the user
+display_cards(g, temp_list, *num, buf);
+
+// Loop until the player has consumed the appropriate number of cards or decides to pass
+while (consume_count < o_ptr->times) {
+    // Get the player's choice
+    int selected_card = get_card_choice(g, who, temp_list, *num, buf);
+    
+    // Check if the player has chosen to pass
+    if (selected_card == 0) {
+        printf("You have chosen to pass.\n");
+        break; // Exit the loop if the player passes
+    }
+
+    // Check if the selected card is valid
+    if (selected_card < 1 || selected_card > *num) {
+        // Handle invalid input
+        printf("Invalid choice. Please select a valid card or enter 0 to pass.\n");
+        continue;
+    }
+
+    // Add the selected card to the list of consumed cards
+    list[consume_count] = temp_list[selected_card - 1];
+    
+    // Remove the consumed card from temp_list by shifting all subsequent cards
+    for (int i = selected_card - 1; i < *num - 1; i++) {
+        temp_list[i] = temp_list[i + 1];
+    }
+
+    // Increment the count of consumed cards
+    consume_count++;
+
+    // If there are more cards to consume, show the remaining options
+    if (consume_count < o_ptr->times) {
+        display_cards(g, temp_list, *num - consume_count, "Remaining options:");
+    }
+}
+
+// Update num to reflect the number of cards consumed
+*num = consume_count;
+}
 /*
 * Choose consume powers to use.
 */

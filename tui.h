@@ -32,17 +32,18 @@ void display_cards(game *g, int list[], int num, const char *message);
     int tui_choose_lucky(game *g, int who);
     int tui_choose_place(game *g, int who, int list[], int num, int phase, int special);
     void tui_choose_pay(game *g, int who, int which, int list[], int *num, int special[], int *num_special, int mil_only, int mil_bonus);
-	void tui_choose_consume(game *g, int who, int cidx[], int oidx[], int *num,
-                        int *num_special, int optional);
-						void tui_choose_good(game *g, int who, int c_idx, int o_idx, int goods[],
-                     int *num, int min, int max);
-					 void tui_choose_windfall(game *g, int who, int list[], int *num);
-                     void tui_choose_trade(game *g, int who, int list[], int *num, int no_bonus);
-                     void display_hand_card(game *g, int who, int position);
-                     void display_tableau(game *g, int who);
-                     void display_tableau_card(game *g, int who, int position);
-                     void display_vp(game *g);
-                     void display_military(game *g);
-                     void display_hand(game *g, int who);
-                     extern char *get_card_power_name(int i, int p);
+    void tui_choose_consume_hand(game *g, int who, int c_idx, int o_idx, int list[], int *num);
+    void tui_choose_consume(game *g, int who, int cidx[], int oidx[], int *num,
+                            int *num_special, int optional);
+    void tui_choose_good(game *g, int who, int c_idx, int o_idx, int goods[],
+                         int *num, int min, int max);
+    void tui_choose_windfall(game *g, int who, int list[], int *num);
+    void tui_choose_trade(game *g, int who, int list[], int *num, int no_bonus);
+    void display_hand_card(game *g, int who, int position);
+    void display_tableau(game *g, int who);
+    void display_tableau_card(game *g, int who, int position);
+    void display_vp(game *g);
+    void display_military(game *g);
+    void display_hand(game *g, int who);
+    extern char *get_card_power_name(int i, int p);
 #endif

@@ -1227,31 +1227,42 @@ switch (type) {
 case CHOICE_PLACE:
 rv = tui_choose_place(g, who, list, *nl, arg1, arg2);
 break;
+/* Choose payment for cards */
 case CHOICE_PAYMENT:
  tui_choose_pay(g, who, arg1, list, nl, special, ns,
 			               arg2, arg3);
 						   rv = 0;
  break;
+ /* Choose consume powers */
  case CHOICE_CONSUME:
  tui_choose_consume(g, who, list, special, nl, ns, arg1);
  rv = 0;
  break;
+/* Choose goods to consume */
 case CHOICE_GOOD:
 tui_choose_good(g, who, special[0], special[1],
 			                list, nl, arg1, arg2);
 			rv = 0;
                      break;
+					 /* Choose windfall world to produce on */
 					 case CHOICE_WINDFALL:
 					 tui_choose_windfall(g, who, list, nl);
 					 rv = 0;
 					 break;
+					 /* Choose good to trade */
 					 case CHOICE_TRADE:
 tui_choose_trade(g, who, list, nl, arg1);
 rv = 0;
 break;
+/* Choose a number to gamble with */
 case CHOICE_LUCKY:
 rv = tui_choose_lucky(g, who);
 break;
+		case CHOICE_CONSUME_HAND:
+	
+			tui_choose_consume_hand(g, who, arg1, arg2, list, nl);
+			rv = 0;
+			break;
 		/* Error */
 		default:
 			display_error("Unimplemented choice type!\n");
