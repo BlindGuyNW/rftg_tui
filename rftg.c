@@ -1,4 +1,4 @@
-		/*
+/*
  * Race for the Galaxy AI
  *
  * Copyright (C) 2009-2011 Keldon Jones
@@ -26,20 +26,18 @@
 /*
  * Reasons to restart main loop.
  */
-#define RESTART_NEW        1
-#define RESTART_NONE       2
-#define RESTART_LOAD       3
-#define RESTART_RESTORE    4
-#define RESTART_UNDO       5
+#define RESTART_NEW 1
+#define RESTART_NONE 2
+#define RESTART_LOAD 3
+#define RESTART_RESTORE 4
+#define RESTART_UNDO 5
 #define RESTART_UNDO_ROUND 6
-#define RESTART_UNDO_GAME  7
-#define RESTART_REDO       8
+#define RESTART_UNDO_GAME 7
+#define RESTART_REDO 8
 #define RESTART_REDO_ROUND 9
-#define RESTART_REDO_GAME  10
-#define RESTART_REPLAY     11
-#define RESTART_CURRENT    12
-
-
+#define RESTART_REDO_GAME 10
+#define RESTART_REPLAY 11
+#define RESTART_CURRENT 12
 
 /*
  * User options.
@@ -89,8 +87,8 @@ extern void reset_status(game *g, int who);
  * Our default options.
  */
 static options opt =
-{
-	2, // num_players
+	{
+		2, // num_players
 };
 
 /*
@@ -139,39 +137,36 @@ static int player_us;
 static int restart_loop;
 
 static char *goal_description[MAX_GOAL] =
-{
-	"First to have five VP chips",
-	"First to have worlds of all four kinds",
-	"First to have three Alien cards",
-	"First to discard at end of round",
-	"First to have powers in all phases, plus Trade",
-	"First to place a 6-cost development giving ? VPs",
-	"First to have three Uplift cards",
-	"First to have four goods",
-	"First to have eight cards",
-	"First to have negative Military and two worlds\n"
-	  " or a takeover attack power and two Military worlds",
-	"First to have two prestige chips and three VP chips",
-	"First to have three Imperium cards\n"
-	  " or four Military worlds",
+	{
+		"First to have five VP chips",
+		"First to have worlds of all four kinds",
+		"First to have three Alien cards",
+		"First to discard at end of round",
+		"First to have powers in all phases, plus Trade",
+		"First to place a 6-cost development giving ? VPs",
+		"First to have three Uplift cards",
+		"First to have four goods",
+		"First to have eight cards",
+		"First to have negative Military and two worlds\n"
+		" or a takeover attack power and two Military worlds",
+		"First to have two prestige chips and three VP chips",
+		"First to have three Imperium cards\n"
+		" or four Military worlds",
 
-	"Most total military",
-	"Most Novelty and/or Rare worlds",
-	"Most developments",
-	"Most production worlds",
-	"Most cards with Explore powers",
-	"Most Rebel Military worlds",
-	"Most prestige chips",
-	"Most cards with Consume powers",
+		"Most total military",
+		"Most Novelty and/or Rare worlds",
+		"Most developments",
+		"Most production worlds",
+		"Most cards with Explore powers",
+		"Most Rebel Military worlds",
+		"Most prestige chips",
+		"Most cards with Consume powers",
 };
 
 /*
  * Player names.
  */
-static char *player_names[MAX_PLAYER] = { "[P0]", "[P1]", "[P2]", "[P3]", "[P4]", "[P5]" };
-
-
-
+static char *player_names[MAX_PLAYER] = {"[P0]", "[P1]", "[P2]", "[P3]", "[P4]", "[P5]"};
 
 /*
  * Check whether a log position marks a round boundary.
@@ -179,11 +174,13 @@ static char *player_names[MAX_PLAYER] = { "[P0]", "[P1]", "[P2]", "[P3]", "[P4]"
 int is_round_boundary(int advanced, int *p)
 {
 	/* Only start and action choices are boundary */
-	if (*p != CHOICE_START && *p != CHOICE_ACTION) return FALSE;
+	if (*p != CHOICE_START && *p != CHOICE_ACTION)
+		return FALSE;
 
 	/* Second choice of Psi-Crystal is not a boundary */
 	/* XXX This only works in newer save games */
-	if (advanced && *(p + 1) == 2) return FALSE;
+	if (advanced && *(p + 1) == 2)
+		return FALSE;
 
 	/* Everything else is */
 	return TRUE;
@@ -223,7 +220,7 @@ void message_add_private(game *g, int who, char *msg, char *tag)
  */
 void display_error(char *msg)
 {
-	fprintf(stderr, "ERROR: %s\n",msg);
+	fprintf(stderr, "ERROR: %s\n", msg);
 }
 /*
  * Use simple random number generator.
@@ -237,9 +234,9 @@ int game_rand(game *g)
 /*
  * Compute the military/cost needed for a military world.
  */
- void military_world_payment(game *g, int who, int which,
-                                   int mil_only, int mil_bonus, discounts *d_ptr,
-                                   int *military, int *cost, char **cost_card)
+void military_world_payment(game *g, int who, int which,
+							int mil_only, int mil_bonus, discounts *d_ptr,
+							int *military, int *cost, char **cost_card)
 {
 	card *c_ptr;
 	int strength, pay_for_mil;
@@ -254,13 +251,15 @@ int game_rand(game *g)
 	*military = c_ptr->d_ptr->cost - strength;
 
 	/* Do not reduce below 0 */
-	if (*military <= 0) *military = 0;
+	if (*military <= 0)
+		*military = 0;
 
 	/* Reset cost and pay-for-military */
 	pay_for_mil = *cost = -1;
 
 	/* Check for no pay-for-military available */
-	if (mil_only) return;
+	if (mil_only)
+		return;
 
 	/* Check for Rebel Alliance */
 	if (d_ptr->rebel_mil_2 && (c_ptr->d_ptr->flags & FLAG_REBEL))
@@ -274,7 +273,7 @@ int game_rand(game *g)
 
 	/* Check for Contact Specialist */
 	else if (d_ptr->non_alien_mil_1 &&
-	         c_ptr->d_ptr->good_type != GOOD_ALIEN)
+			 c_ptr->d_ptr->good_type != GOOD_ALIEN)
 	{
 		/* Set reduction to 1 */
 		pay_for_mil = 1;
@@ -285,7 +284,7 @@ int game_rand(game *g)
 
 	/* Check for Rebel Cantina */
 	else if (d_ptr->non_alien_mil_0 &&
-	         c_ptr->d_ptr->good_type != GOOD_ALIEN)
+			 c_ptr->d_ptr->good_type != GOOD_ALIEN)
 	{
 		/* Set reduction to 0 */
 		pay_for_mil = 0;
@@ -296,7 +295,7 @@ int game_rand(game *g)
 
 	/* Check for Alien Research Team */
 	else if (d_ptr->alien_mil &&
-	         c_ptr->d_ptr->good_type == GOOD_ALIEN)
+			 c_ptr->d_ptr->good_type == GOOD_ALIEN)
 	{
 		/* Set reduction to 0 */
 		pay_for_mil = 0;
@@ -320,11 +319,12 @@ int game_rand(game *g)
 	{
 		/* Compute cost */
 		*cost = c_ptr->d_ptr->cost - d_ptr->base - d_ptr->bonus -
-		        d_ptr->specific[c_ptr->d_ptr->good_type] -
-		        pay_for_mil - d_ptr->pay_discount;
+				d_ptr->specific[c_ptr->d_ptr->good_type] -
+				pay_for_mil - d_ptr->pay_discount;
 
 		/* Do not reduce below 0 */
-		if (*cost < 0) *cost = 0;
+		if (*cost < 0)
+			*cost = 0;
 	}
 }
 
@@ -332,8 +332,8 @@ int game_rand(game *g)
  * Compute the cost/military needed for a non-military world.
  */
 void peaceful_world_payment(game *g, int who, int which,
-                                   int mil_only, discounts *d_ptr,
-                                   int *cost, int *ict_mil, int *iif_mil)
+							int mil_only, discounts *d_ptr,
+							int *cost, int *ict_mil, int *iif_mil)
 {
 	card *c_ptr;
 	int strength;
@@ -354,7 +354,8 @@ void peaceful_world_payment(game *g, int who, int which,
 				d_ptr->specific[c_ptr->d_ptr->good_type];
 
 		/* Do not reduce below 0 */
-		if (*cost < 0) *cost = 0;
+		if (*cost < 0)
+			*cost = 0;
 	}
 
 	/* Compute strength */
@@ -370,7 +371,8 @@ void peaceful_world_payment(game *g, int who, int which,
 		*ict_mil = c_ptr->d_ptr->cost - strength - 2;
 
 		/* Do not reduce below 0 */
-		if (*ict_mil < 0) *ict_mil = 0;
+		if (*ict_mil < 0)
+			*ict_mil = 0;
 	}
 
 	/* Check for Imperium Invasion Fleet */
@@ -380,12 +382,14 @@ void peaceful_world_payment(game *g, int who, int which,
 		*iif_mil = c_ptr->d_ptr->cost - strength;
 
 		/* Do not reduce below 0 */
-		if (*iif_mil < 0) *iif_mil = 0;
+		if (*iif_mil < 0)
+			*iif_mil = 0;
 	}
 }
 
 int callbuffer[4096];
-int *get_callbuffer(void) {
+int *get_callbuffer(void)
+{
 	return callbuffer;
 }
 
@@ -414,8 +418,8 @@ int action_check_payment(int which, int n, int ns, int mil, int bonus)
 
 	/* Try to make payment */
 	return payment_callback(&sim, player_us, which,
-	                        list, n, special, ns, mil,
-	                        bonus);
+							list, n, special, ns, mil,
+							bonus);
 }
 
 /*
@@ -448,7 +452,7 @@ int action_check_takeover(int target, int special)
 
 	/* Set simulation flag */
 	sim.simulation = 1;
-        sim.game_over = 0;
+	sim.game_over = 0;
 
 	/* Check takeover legality */
 	return takeover_callback(&sim, special, target);
@@ -467,7 +471,7 @@ int action_check_defend(int n, int ns)
 
 	/* Set simulation flag */
 	sim.simulation = 1;
-        sim.game_over = 0;
+	sim.game_over = 0;
 
 	/* Try to defend (we don't care about win/lose, just legality */
 	return defend_callback(&sim, player_us, 0, list, n, special, ns);
@@ -485,7 +489,7 @@ int action_check_upgrade(int upgrade, int upgraded)
 
 	/* Set simulation flag */
 	sim.simulation = 1;
-        sim.game_over = 0;
+	sim.game_over = 0;
 
 	/* Try to upgrade */
 	return upgrade_chosen(&sim, player_us, upgrade, upgraded);
@@ -518,7 +522,8 @@ int action_check_start(int n, int ns)
 	int *list = callbuffer, *special = callbuffer + n;
 
 	/* Check for exactly 1 world selected */
-	if (ns != 1) return 0;
+	if (ns != 1)
+		return 0;
 
 	/* Copy game */
 	sim = real_game;
@@ -544,7 +549,8 @@ int compute_forced_choice(int which, int num, int num_special, int mil_only, int
 	/* Clear forced variables */
 	int special_mask = ~0;
 	int forced_hand = 1;
-	if (num > 20 || num_special > 10) return 0;
+	if (num > 20 || num_special > 10)
+		return 0;
 
 	/* Loop over all reasonable hand payments */
 	for (i = 0; i <= num; ++i)
@@ -581,29 +587,29 @@ int compute_forced_choice(int which, int num, int num_special, int mil_only, int
 
 			/* Try to make payment */
 			if (payment_callback(&sim, player_us, which,
-			                     list, i, special_choice, num_choice,
-			                     mil_only, mil_bonus))
+								 list, i, special_choice, num_choice,
+								 mil_only, mil_bonus))
 			{
 				/* Check for legal without all hand cards */
-				if (i != num) forced_hand = 0;
+				if (i != num)
+					forced_hand = 0;
 
 				/* Update mask */
 				special_mask &= special_set;
 			}
 
 			/* Optimization */
-			if (!special_mask && !forced_hand) return 0;
+			if (!special_mask && !forced_hand)
+				return 0;
 		}
 	}
 	return (special_mask << 1) | forced_hand;
 }
 
-
-
 /*
  * Compute settle discounts for a player.
  */
- void compute_discounts(game *g, int who, discounts *d_ptr)
+void compute_discounts(game *g, int who, discounts *d_ptr)
 {
 	power_where w_list[100];
 	power *o_ptr;
@@ -617,7 +623,7 @@ int compute_forced_choice(int which, int num, int num_special, int mil_only, int
 
 	/* Check for prestige settle */
 	if ((g->cur_action == ACT_SETTLE || g->cur_action == ACT_SETTLE2) &&
-	    player_chose(g, who, ACT_PRESTIGE | g->cur_action))
+		player_chose(g, who, ACT_PRESTIGE | g->cur_action))
 	{
 		/* Add prestige bonus */
 		d_ptr->bonus += 3;
@@ -699,12 +705,12 @@ int compute_forced_choice(int which, int num, int num_special, int mil_only, int
 
 	/* Check for any modifiers */
 	d_ptr->has_data = d_ptr->base || d_ptr->bonus ||
-		d_ptr->specific[GOOD_NOVELTY] || d_ptr->specific[GOOD_RARE] ||
-		d_ptr->specific[GOOD_GENE] || d_ptr->specific[GOOD_ALIEN] ||
-		d_ptr->zero || d_ptr->pay_discount ||
-		d_ptr->non_alien_mil_0 || d_ptr->non_alien_mil_1 ||
-		d_ptr->rebel_mil_2 || d_ptr->chromo_mil || d_ptr->alien_mil ||
-		d_ptr->conquer_settle_0 || d_ptr->conquer_settle_2;
+					  d_ptr->specific[GOOD_NOVELTY] || d_ptr->specific[GOOD_RARE] ||
+					  d_ptr->specific[GOOD_GENE] || d_ptr->specific[GOOD_ALIEN] ||
+					  d_ptr->zero || d_ptr->pay_discount ||
+					  d_ptr->non_alien_mil_0 || d_ptr->non_alien_mil_1 ||
+					  d_ptr->rebel_mil_2 || d_ptr->chromo_mil || d_ptr->alien_mil ||
+					  d_ptr->conquer_settle_0 || d_ptr->conquer_settle_2;
 }
 
 /*
@@ -732,7 +738,7 @@ void compute_military(game *g, int who, mil_strength *m_ptr)
 	rare_goods = get_goods(g, who, NULL, GOOD_RARE);
 
 	/* Loop over cards */
-	for ( ; x != -1; x = g->deck[x].start_next)
+	for (; x != -1; x = g->deck[x].start_next)
 	{
 		/* Get card pointer */
 		c_ptr = &g->deck[x];
@@ -744,7 +750,8 @@ void compute_military(game *g, int who, mil_strength *m_ptr)
 			o_ptr = &c_ptr->d_ptr->powers[i];
 
 			/* Skip incorrect phase */
-			if (o_ptr->phase != PHASE_SETTLE) continue;
+			if (o_ptr->phase != PHASE_SETTLE)
+				continue;
 
 			/* Check for discard power */
 			if ((o_ptr->code & P3_DISCARD) && c_ptr->where == WHERE_DISCARD)
@@ -783,14 +790,16 @@ void compute_military(game *g, int who, mil_strength *m_ptr)
 			}
 
 			/* Skip used powers */
-			if (c_ptr->misc & (1 << (MISC_USED_SHIFT + i))) continue;
+			if (c_ptr->misc & (1 << (MISC_USED_SHIFT + i)))
+				continue;
 
 			/* Check for military from hand */
 			if (o_ptr->code & P3_MILITARY_HAND)
 				hand_military += o_ptr->value;
 
 			/* Skip non-military powers */
-			if (!(o_ptr->code & P3_EXTRA_MILITARY)) continue;
+			if (!(o_ptr->code & P3_EXTRA_MILITARY))
+				continue;
 
 			/* Check for discard for military */
 			if (o_ptr->code & P3_DISCARD)
@@ -833,25 +842,26 @@ void compute_military(game *g, int who, mil_strength *m_ptr)
 	hand_size = count_player_area(g, who, WHERE_HAND);
 
 	/* Reduce maximum military from hand */
-	if (hand_size < hand_military) hand_military = hand_size;
+	if (hand_size < hand_military)
+		hand_military = hand_size;
 
 	/* Add military from hand to max temporary military */
 	m_ptr->max_bonus += hand_military;
 
 	/* Check for takeovers enabled and imperium card played */
 	m_ptr->imperium = takeovers_enabled(g) &&
-		count_active_flags(g, who, FLAG_IMPERIUM);
+					  count_active_flags(g, who, FLAG_IMPERIUM);
 
 	/* Check for takeovers enabled and rebel military world played */
 	m_ptr->military_rebel = takeovers_enabled(g) &&
-		count_active_flags(g, who, FLAG_MILITARY | FLAG_REBEL);
+							count_active_flags(g, who, FLAG_MILITARY | FLAG_REBEL);
 
 	/* Check for any modifiers */
 	m_ptr->has_data = m_ptr->base || m_ptr->bonus || m_ptr->rebel ||
-		m_ptr->specific[GOOD_NOVELTY] || m_ptr->specific[GOOD_RARE] ||
-		m_ptr->specific[GOOD_GENE] || m_ptr->specific[GOOD_ALIEN] ||
-		m_ptr->defense || m_ptr->attack_imperium || m_ptr->imperium ||
-		m_ptr->military_rebel || m_ptr->max_bonus;
+					  m_ptr->specific[GOOD_NOVELTY] || m_ptr->specific[GOOD_RARE] ||
+					  m_ptr->specific[GOOD_GENE] || m_ptr->specific[GOOD_ALIEN] ||
+					  m_ptr->defense || m_ptr->attack_imperium || m_ptr->imperium ||
+					  m_ptr->military_rebel || m_ptr->max_bonus;
 }
 
 /*
@@ -869,22 +879,27 @@ static int score_consume(power *o_ptr)
 		score -= 1000;
 
 		/* Check for VP awarded */
-		if (o_ptr->code & P4_GET_VP) vp += o_ptr->value;
+		if (o_ptr->code & P4_GET_VP)
+			vp += o_ptr->value;
 
 		/* Check for card awarded */
-		if (o_ptr->code & P4_GET_CARD) card += o_ptr->value;
+		if (o_ptr->code & P4_GET_CARD)
+			card += o_ptr->value;
 
 		/* Check for prestige awarded */
-		if (o_ptr->code & P4_GET_PRESTIGE) prestige += o_ptr->value;
+		if (o_ptr->code & P4_GET_PRESTIGE)
+			prestige += o_ptr->value;
 
 		/* Check for consuming two cards */
-		if (o_ptr->code & P4_CONSUME_TWO) goods = 2;
+		if (o_ptr->code & P4_CONSUME_TWO)
+			goods = 2;
 
 		/* Compute score */
 		score += (card * 150 + prestige * 100 + vp * 75) / goods;
 
 		/* Use multi-use powers later */
-		if (o_ptr->times > 1) score -= 2 * o_ptr->times;
+		if (o_ptr->times > 1)
+			score -= 2 * o_ptr->times;
 
 		/* Return score */
 		return score;
@@ -897,52 +912,66 @@ static int score_consume(power *o_ptr)
 		score -= 500;
 
 		/* Check for VP awarded */
-		if (o_ptr->code & P4_GET_VP) score += o_ptr->value * 2;
+		if (o_ptr->code & P4_GET_VP)
+			score += o_ptr->value * 2;
 
 		/* Check for cards awarded */
-		if (o_ptr->code & P4_GET_CARD) score += o_ptr->value;
+		if (o_ptr->code & P4_GET_CARD)
+			score += o_ptr->value;
 
 		/* Return score */
 		return score;
 	}
 
 	/* Check for free VP */
-	if (o_ptr->code & P4_VP) return o_ptr->value * 1000;
+	if (o_ptr->code & P4_VP)
+		return o_ptr->value * 1000;
 
 	/* Check for free card draw */
-	if (o_ptr->code & P4_DRAW) return o_ptr->value * 750;
+	if (o_ptr->code & P4_DRAW)
+		return o_ptr->value * 750;
 
 	/* Check for VP awarded */
-	if (o_ptr->code & P4_GET_VP) vp += o_ptr->value;
+	if (o_ptr->code & P4_GET_VP)
+		vp += o_ptr->value;
 
 	/* Check for card awarded */
-	if (o_ptr->code & P4_GET_CARD) card += o_ptr->value;
+	if (o_ptr->code & P4_GET_CARD)
+		card += o_ptr->value;
 
 	/* Check for cards awarded */
-	if (o_ptr->code & P4_GET_2_CARD) card += o_ptr->value * 2;
-	if (o_ptr->code & P4_GET_3_CARD) card += o_ptr->value * 3;
+	if (o_ptr->code & P4_GET_2_CARD)
+		card += o_ptr->value * 2;
+	if (o_ptr->code & P4_GET_3_CARD)
+		card += o_ptr->value * 3;
 
 	/* Check for prestige awarded */
-	if (o_ptr->code & P4_GET_PRESTIGE) prestige += o_ptr->value;
+	if (o_ptr->code & P4_GET_PRESTIGE)
+		prestige += o_ptr->value;
 
 	/* Assume trade will earn 4 cards */
-	if (o_ptr->code & P4_TRADE_ACTION) card += 4;
+	if (o_ptr->code & P4_TRADE_ACTION)
+		card += 4;
 
 	/* Assume trade without bonus will earn fewer cards */
-	if (o_ptr->code & P4_TRADE_NO_BONUS) card--;
+	if (o_ptr->code & P4_TRADE_NO_BONUS)
+		card--;
 
 	/* Check for consuming two goods */
-	if (o_ptr->code & P4_CONSUME_TWO) goods = 2;
+	if (o_ptr->code & P4_CONSUME_TWO)
+		goods = 2;
 
 	/* Check for consuming three goods */
-	if (o_ptr->code & P4_CONSUME_3_DIFF) goods = 3;
+	if (o_ptr->code & P4_CONSUME_3_DIFF)
+		goods = 3;
 
 	/* Check for consuming all goods */
-	if (o_ptr->code & P4_CONSUME_ALL) goods = 4;
+	if (o_ptr->code & P4_CONSUME_ALL)
+		goods = 4;
 
 	/* Check for double VP action */
 	if (player_chose(&real_game, player_us, ACT_CONSUME_X2) ||
-	    player_chose(&real_game, player_us, ACT_CONSUME_TRADE | ACT_PRESTIGE))
+		player_chose(&real_game, player_us, ACT_CONSUME_TRADE | ACT_PRESTIGE))
 	{
 		/* Multiplier is two */
 		vp_mult = 2;
@@ -959,10 +988,12 @@ static int score_consume(power *o_ptr)
 	score = (prestige * 150 + vp * vp_mult * 100 + card * 52) / goods;
 
 	/* Use specific consume powers first */
-	if (!(o_ptr->code & P4_CONSUME_ANY)) score += 10;
+	if (!(o_ptr->code & P4_CONSUME_ANY))
+		score += 10;
 
 	/* Use multi-use powers later */
-	if (o_ptr->times > 1) score -= 2 * o_ptr->times;
+	if (o_ptr->times > 1)
+		score -= 2 * o_ptr->times;
 
 	/* Return score */
 	return score;
@@ -1027,7 +1058,6 @@ static int cmp_consume(const void *l1, const void *l2)
 	return score_consume(o_ptr2) - score_consume(o_ptr1);
 }
 
-
 /*
  * Return a "score" for sorting produce powers.
  */
@@ -1036,23 +1066,34 @@ static int score_produce(power *o_ptr)
 	int score = 0;
 
 	/* List non-discard powers first */
-	if (!(o_ptr->code & P5_DISCARD)) score += 10;
+	if (!(o_ptr->code & P5_DISCARD))
+		score += 10;
 
 	/* Score not this slightly above */
-	if (o_ptr->code & P5_NOT_THIS) score += 1;
+	if (o_ptr->code & P5_NOT_THIS)
+		score += 1;
 
 	/* Score specific powers before generic */
-	if (o_ptr->code & P5_WINDFALL_NOVELTY) score += 8;
-	if (o_ptr->code & P5_WINDFALL_RARE) score += 6;
-	if (o_ptr->code & P5_WINDFALL_GENE) score += 4;
-	if (o_ptr->code & P5_WINDFALL_ALIEN) score += 2;
+	if (o_ptr->code & P5_WINDFALL_NOVELTY)
+		score += 8;
+	if (o_ptr->code & P5_WINDFALL_RARE)
+		score += 6;
+	if (o_ptr->code & P5_WINDFALL_GENE)
+		score += 4;
+	if (o_ptr->code & P5_WINDFALL_ALIEN)
+		score += 2;
 
 	/* List draw powers last */
-	if (o_ptr->code & P5_DRAW_EACH_NOVELTY) score = -2;
-	if (o_ptr->code & P5_DRAW_EACH_RARE) score = -4;
-	if (o_ptr->code & P5_DRAW_EACH_GENE) score = -6;
-	if (o_ptr->code & P5_DRAW_EACH_ALIEN) score = -8;
-	if (o_ptr->code & P5_DRAW_DIFFERENT) score = -10;
+	if (o_ptr->code & P5_DRAW_EACH_NOVELTY)
+		score = -2;
+	if (o_ptr->code & P5_DRAW_EACH_RARE)
+		score = -4;
+	if (o_ptr->code & P5_DRAW_EACH_GENE)
+		score = -6;
+	if (o_ptr->code & P5_DRAW_EACH_ALIEN)
+		score = -8;
+	if (o_ptr->code & P5_DRAW_DIFFERENT)
+		score = -10;
 
 	/* Return score */
 	return score;
@@ -1108,7 +1149,8 @@ static void gui_notify_rotation(game *g, int who)
 	player_us--;
 
 	/* Handle wraparound */
-	if (player_us < 0) player_us = real_game.num_players - 1;
+	if (player_us < 0)
+		player_us = real_game.num_players - 1;
 }
 
 /*
@@ -1117,7 +1159,8 @@ static void gui_notify_rotation(game *g, int who)
 static void auto_save(game *g, int who)
 {
 	/* Check for autosave disabled */
-	if (!opt.auto_save) return;
+	if (!opt.auto_save)
+		return;
 
 	/* Save to file */
 	if (save_game(g, "autosave.rftg", who) < 0)
@@ -1179,7 +1222,7 @@ static void choice_done(game *g)
 		}
 
 		/* Remember new log size */
-		orig_log_size[((i-player_us) + g->num_players) % g->num_players] =
+		orig_log_size[((i - player_us) + g->num_players) % g->num_players] =
 			g->p[i].choice_size;
 	}
 
@@ -1194,14 +1237,14 @@ static void choice_done(game *g)
 }
 
 /*
-* Note that many functions for the web implementation were removed at this point.
-*/
+ * Note that many functions for the web implementation were removed at this point.
+ */
 
 /*
  * Make a choice of the given type.
  */
 static void gui_make_choice(game *g, int who, int type, int list[], int *nl,
-                           int special[], int *ns, int arg1, int arg2, int arg3)
+							int special[], int *ns, int arg1, int arg2, int arg3)
 {
 	player *p_ptr;
 	int i, rv = 0;
@@ -1209,67 +1252,69 @@ static void gui_make_choice(game *g, int who, int type, int list[], int *nl,
 
 	/* Auto save */
 	auto_save(g, who);
-/* Switch to different functions based on the type of choice. */
-switch (type) {
-		case CHOICE_DISCARD:
+	/* Switch to different functions based on the type of choice. */
+	switch (type)
+	{
+	case CHOICE_DISCARD:
 
-			/* Choose discards */
-			tui_choose_discard(g, who, list, nl, arg1);
-			rv = 0;
-			break;
-			case CHOICE_ACTION:
-			/* Choose actions */
-			tui_choose_action(g, who, list, arg1);
-			/* Save Psi-Crystal info for redo/undo */
-			rv = arg1;
-			break;
-/* Choose card to place*/
-case CHOICE_PLACE:
-rv = tui_choose_place(g, who, list, *nl, arg1, arg2);
-break;
-/* Choose payment for cards */
-case CHOICE_PAYMENT:
- tui_choose_pay(g, who, arg1, list, nl, special, ns,
-			               arg2, arg3);
-						   rv = 0;
- break;
- /* Choose consume powers */
- case CHOICE_CONSUME:
- tui_choose_consume(g, who, list, special, nl, ns, arg1);
- rv = 0;
- break;
-/* Choose goods to consume */
-case CHOICE_GOOD:
-tui_choose_good(g, who, special[0], special[1],
-			                list, nl, arg1, arg2);
-			rv = 0;
-                     break;
-					 /* Choose windfall world to produce on */
-					 case CHOICE_WINDFALL:
-					 tui_choose_windfall(g, who, list, nl);
-					 rv = 0;
-					 break;
-					 /* Choose good to trade */
-					 case CHOICE_TRADE:
-tui_choose_trade(g, who, list, nl, arg1);
-rv = 0;
-break;
-/* Choose a number to gamble with */
-case CHOICE_LUCKY:
-rv = tui_choose_lucky(g, who);
-break;
-		case CHOICE_CONSUME_HAND:
-	
-			tui_choose_consume_hand(g, who, arg1, arg2, list, nl);
-			rv = 0;
-			break;
-		/* Error */
-		default:
-			display_error("Unimplemented choice type!\n");
-			exit(1);
+		/* Choose discards */
+		tui_choose_discard(g, who, list, nl, arg1);
+		rv = 0;
+		break;
+	case CHOICE_ACTION:
+		/* Choose actions */
+		tui_choose_action(g, who, list, arg1);
+		/* Save Psi-Crystal info for redo/undo */
+		rv = arg1;
+		break;
+	/* Choose card to place*/
+	case CHOICE_PLACE:
+		rv = tui_choose_place(g, who, list, *nl, arg1, arg2);
+		break;
+	/* Choose payment for cards */
+	case CHOICE_PAYMENT:
+		tui_choose_pay(g, who, arg1, list, nl, special, ns,
+					   arg2, arg3);
+		rv = 0;
+		break;
+	/* Choose consume powers */
+	case CHOICE_CONSUME:
+		tui_choose_consume(g, who, list, special, nl, ns, arg1);
+		rv = 0;
+		break;
+	/* Choose goods to consume */
+	case CHOICE_GOOD:
+		tui_choose_good(g, who, special[0], special[1],
+						list, nl, arg1, arg2);
+		rv = 0;
+		break;
+	/* Choose windfall world to produce on */
+	case CHOICE_WINDFALL:
+		tui_choose_windfall(g, who, list, nl);
+		rv = 0;
+		break;
+	/* Choose good to trade */
+	case CHOICE_TRADE:
+		tui_choose_trade(g, who, list, nl, arg1);
+		rv = 0;
+		break;
+	/* Choose a number to gamble with */
+	case CHOICE_LUCKY:
+		rv = tui_choose_lucky(g, who);
+		break;
+	case CHOICE_CONSUME_HAND:
+
+		tui_choose_consume_hand(g, who, arg1, arg2, list, nl);
+		rv = 0;
+		break;
+	/* Error */
+	default:
+		display_error("Unimplemented choice type!\n");
+		exit(1);
 	}
 	/* Check for aborted game */
-	if (g->game_over) return;
+	if (g->game_over)
+		return;
 
 	/* Get player pointer */
 	p_ptr = &g->p[who];
@@ -1326,23 +1371,22 @@ break;
 
 	/* Mark one choice is done */
 	choice_done(g);
-
 }
 
 /*
  * Interface to GUI decision functions.
  */
 decisions gui_func =
-{
-	NULL,
-	gui_notify_rotation,
-	NULL,
-	gui_make_choice,
-	NULL,
-	NULL,
-	NULL,
-	NULL,
-	message_add_private,
+	{
+		NULL,
+		gui_notify_rotation,
+		NULL,
+		gui_make_choice,
+		NULL,
+		NULL,
+		NULL,
+		NULL,
+		message_add_private,
 };
 
 /*
@@ -1443,7 +1487,7 @@ void reset_gui(void)
 	{
 		/* Check for name already set for human player */
 		if (i == player_us && real_game.human_name &&
-		    strlen(real_game.human_name))
+			strlen(real_game.human_name))
 		{
 			/* Load name */
 			real_game.p[i].name = real_game.human_name;
@@ -1481,9 +1525,7 @@ void reset_gui(void)
 		/* Call initialization function */
 		real_game.p[i].control->init(&real_game, i, 0.0);
 	}
-
 }
-
 
 /*
  * Run games forever.
@@ -1526,7 +1568,6 @@ static void run_game(void)
 
 			/* Unset replaying flag */
 			game_replaying = FALSE;
-
 		}
 
 		/* Check for restoring game */
@@ -1549,7 +1590,6 @@ static void run_game(void)
 			return;
 		}
 
-
 		/* Undo previous choice */
 		else if (restart_loop == RESTART_UNDO)
 		{
@@ -1563,7 +1603,8 @@ static void run_game(void)
 			init_game(&real_game);
 
 			/* Remove one state from undo list */
-			if (num_undo > 0) num_undo--;
+			if (num_undo > 0)
+				num_undo--;
 		}
 
 		/* Undo current round */
@@ -1586,7 +1627,7 @@ static void run_game(void)
 			{
 				/* Check if the current position is a round boundary */
 				if (is_round_boundary(real_game.advanced,
-				                      real_game.p[0].choice_log + pos))
+									  real_game.p[0].choice_log + pos))
 				{
 					/* Save the current choice */
 					saved_choice = choice;
@@ -1666,7 +1707,7 @@ static void run_game(void)
 			{
 				/* Check for round boundary */
 				if (is_round_boundary(real_game.advanced,
-				                      real_game.p[0].choice_log + pos))
+									  real_game.p[0].choice_log + pos))
 				{
 					/* Save the current choice */
 					saved_choice = choice;
@@ -1723,7 +1764,6 @@ static void run_game(void)
 
 			/* Set undo point (will be reduced later) */
 			num_undo = 9999;
-
 		}
 
 		/* Replay a loaded game */
@@ -1794,10 +1834,12 @@ static void run_game(void)
 		begin_game(&real_game);
 
 		/* Check for aborted game */
-		if (real_game.game_over) return;
+		if (real_game.game_over)
+			return;
 
 		/* Play game rounds until finished */
-		while (game_round(&real_game));
+		while (game_round(&real_game))
+			;
 
 		/* Check for restart request */
 		if (restart_loop)
@@ -1820,8 +1862,6 @@ static void run_game(void)
 	}
 }
 
-
-
 /*
  * Setup windows, callbacks, etc, then let GTK take over.
  */
@@ -1831,7 +1871,6 @@ int main(int argc, char *argv[])
 	char *fname = NULL;
 	char msg[1024];
 	int i, err;
-
 
 	/* Load card designs */
 	err = read_cards(NULL);
@@ -1906,7 +1945,7 @@ int main(int argc, char *argv[])
 			opt.customize_seed = TRUE;
 
 			/* Set start seed */
-			opt.seed = (unsigned int) atof(argv[++i]);
+			opt.seed = (unsigned int)atof(argv[++i]);
 
 			/* Start new game */
 			restart_loop = RESTART_NEW;
@@ -1989,7 +2028,6 @@ int main(int argc, char *argv[])
 		real_game.p[i].choice_pos = 0;
 	}
 
-
 	/* Check if loading from file */
 	if (fname)
 	{
@@ -2019,7 +2057,6 @@ int main(int argc, char *argv[])
 		}
 	}
 
-	
 	/* Run games */
 	run_game();
 
@@ -2027,451 +2064,534 @@ int main(int argc, char *argv[])
 	return 0;
 }
 
-void continue_game(int loop) {
-        if (loop < 0) {
-                choice_done(&real_game);
-        } else {
-                restart_loop = loop;
-        }
+void continue_game(int loop)
+{
+	if (loop < 0)
+	{
+		choice_done(&real_game);
+	}
+	else
+	{
+		restart_loop = loop;
+	}
 	run_game();
 }
-static char *name_explore(power *o_ptr, char *buf) {
+static char *name_explore(power *o_ptr, char *buf)
+{
 	/* Clear the buffer. */
 	strncpy(buf, "", 1024);
-/* Simple powers */
-if (o_ptr->code == P1_DRAW) {
-	sprintf(buf, "Draw %d extra after explore", o_ptr->value);
-} else if (o_ptr->code == P1_KEEP) {
-	sprintf(buf, "Keep %d extra after explore", o_ptr->value);
-} else {
-	sprintf(buf, "Unknown explore power");
-}
-return buf;
+	/* Simple powers */
+	if (o_ptr->code == P1_DRAW)
+	{
+		sprintf(buf, "Draw %d extra after explore", o_ptr->value);
+	}
+	else if (o_ptr->code == P1_KEEP)
+	{
+		sprintf(buf, "Keep %d extra after explore", o_ptr->value);
+	}
+	else
+	{
+		sprintf(buf, "Unknown explore power");
+	}
+	return buf;
 }
 
-static char *name_Develop(power *o_ptr, char *buf) {
-/* Clear the buffer. */
+static char *name_Develop(power *o_ptr, char *buf)
+{
+	/* Clear the buffer. */
 	strncpy(buf, "", 1024);
-/* Simple powers */
-if (o_ptr->code == P2_DRAW) {
-/* Make string */
-sprintf(buf, "Draw %d in develop phase", o_ptr->value);
-} else if (o_ptr->code == P2_REDUCE) {
-	sprintf(buf, "Reduce cost to  play developments by %d", o_ptr->value);
-} else if (o_ptr ->code== P2_DRAW_AFTER) {
-	sprintf(buf, "Draw %d after playing a development", o_ptr->value);
-} else {
-	sprintf(buf, "Unknown develop power");
+	/* Simple powers */
+	if (o_ptr->code == P2_DRAW)
+	{
+		/* Make string */
+		sprintf(buf, "Draw %d in develop phase", o_ptr->value);
+	}
+	else if (o_ptr->code == P2_REDUCE)
+	{
+		sprintf(buf, "Reduce cost to  play developments by %d", o_ptr->value);
+	}
+	else if (o_ptr->code == P2_DRAW_AFTER)
+	{
+		sprintf(buf, "Draw %d after playing a development", o_ptr->value);
+	}
+	else
+	{
+		sprintf(buf, "Unknown develop power");
+	}
+	return buf;
 }
-return buf;
-}
-static char *name_consume(power *o_ptr, char *buf) {
+static char *name_consume(power *o_ptr, char *buf)
+{
 	/* Clear the buffer. */
 	strncpy(buf, "", 1024);
 
-                char *name, buf2[1024];
-		/* Check for simple powers */
-		if (o_ptr->code == P4_DRAW)
-		{
-			/* Make string */
-			sprintf(buf, "Draw %d", o_ptr->value);
-		}
-		else if (o_ptr->code == P4_VP)
-		{
-			/* Make string */
-			sprintf(buf, "Take VP");
-		}
-		else if (o_ptr->code == P4_DRAW_LUCKY)
-		{
-			/* Make string */
-			sprintf(buf, "Draw if lucky");
-		}
-		else if (o_ptr->code == P4_ANTE_CARD)
-		{
-			/* Make string */
-			sprintf(buf, "Ante card");
-		}
-		else if (o_ptr->code & P4_CONSUME_3_DIFF)
-		{
-			/* Make string */
-			sprintf(buf, "Consume 3 kinds");
-		}
-		else if (o_ptr->code & P4_CONSUME_N_DIFF)
-		{
-			/* Make string */
-			sprintf(buf, "Consume different kinds");
-		}
-		else if (o_ptr->code & P4_CONSUME_ALL)
-		{
-			/* Make string */
-			sprintf(buf, "Consume all goods");
-		}
-		else if (o_ptr->code & P4_TRADE_ACTION)
-		{
-			/* Make string */
-			sprintf(buf, "Trade good");
+	char *name, buf2[1024];
+	/* Check for simple powers */
+	if (o_ptr->code == P4_DRAW)
+	{
+		/* Make string */
+		sprintf(buf, "Draw %d", o_ptr->value);
+	}
+	else if (o_ptr->code == P4_VP)
+	{
+		/* Make string */
+		sprintf(buf, "Take VP");
+	}
+	else if (o_ptr->code == P4_DRAW_LUCKY)
+	{
+		/* Make string */
+		sprintf(buf, "Draw if lucky");
+	}
+	else if (o_ptr->code == P4_ANTE_CARD)
+	{
+		/* Make string */
+		sprintf(buf, "Ante card");
+	}
+	else if (o_ptr->code & P4_CONSUME_3_DIFF)
+	{
+		/* Make string */
+		sprintf(buf, "Consume 3 kinds");
+	}
+	else if (o_ptr->code & P4_CONSUME_N_DIFF)
+	{
+		/* Make string */
+		sprintf(buf, "Consume different kinds");
+	}
+	else if (o_ptr->code & P4_CONSUME_ALL)
+	{
+		/* Make string */
+		sprintf(buf, "Consume all goods");
+	}
+	else if (o_ptr->code & P4_TRADE_ACTION)
+	{
+		/* Make string */
+		sprintf(buf, "Trade good");
 
-			/* Check for no bonuses */
-			if (o_ptr->code & P4_TRADE_NO_BONUS)
-			{
-				/* Append qualifier */
-				strcat(buf, " (no bonus)");
-			}
-		}
-		else if (o_ptr->code & P4_TRADE_ANY) {
-			sprintf(buf, "Trade any good for %d extra", o_ptr->value);
-		}
-		else if (o_ptr->code & P4_TRADE_NOVELTY)
+		/* Check for no bonuses */
+		if (o_ptr->code & P4_TRADE_NO_BONUS)
 		{
-			sprintf(buf, "Trade novelty good for %d extra", o_ptr->value);
+			/* Append qualifier */
+			strcat(buf, " (no bonus)");
 		}
+	}
+	else if (o_ptr->code & P4_TRADE_ANY)
+	{
+		sprintf(buf, "Trade any good for %d extra", o_ptr->value);
+	}
+	else if (o_ptr->code & P4_TRADE_NOVELTY)
+	{
+		sprintf(buf, "Trade novelty good for %d extra", o_ptr->value);
+	}
 	else if (o_ptr->code & P4_TRADE_GENE)
-		{
-			sprintf(buf, "Trade genes good for %d extra", o_ptr->value);
-		}
-		else if (o_ptr->code & P4_TRADE_RARE)
-		{
-			sprintf(buf, "Trade rare good for %d extra", o_ptr->value);
-		}
-		else if (o_ptr->code & P4_TRADE_ALIEN)
-		{
-			sprintf(buf, "Trade alien good for %d extra", o_ptr->value);
-		} else if (o_ptr->code & P4_TRADE_THIS) {
-			sprintf(buf, "Trade this good for %d extra", o_ptr->value);
-		}
+	{
+		sprintf(buf, "Trade genes good for %d extra", o_ptr->value);
+	}
+	else if (o_ptr->code & P4_TRADE_RARE)
+	{
+		sprintf(buf, "Trade rare good for %d extra", o_ptr->value);
+	}
+	else if (o_ptr->code & P4_TRADE_ALIEN)
+	{
+		sprintf(buf, "Trade alien good for %d extra", o_ptr->value);
+	}
+	else if (o_ptr->code & P4_TRADE_THIS)
+	{
+		sprintf(buf, "Trade this good for %d extra", o_ptr->value);
+	}
 
+	else
+	{
+		/* Get type of good to consume */
+		if (o_ptr->code & P4_CONSUME_NOVELTY)
+		{
+			/* Novelty good */
+			name = "Novelty ";
+		}
+		else if (o_ptr->code & P4_CONSUME_RARE)
+		{
+			/* Rare good */
+			name = "Rare ";
+		}
+		else if (o_ptr->code & P4_CONSUME_GENE)
+		{
+			/* Genes good */
+			name = "Genes ";
+		}
+		else if (o_ptr->code & P4_CONSUME_ALIEN)
+		{
+			/* Alien good */
+			name = "Alien ";
+		}
 		else
 		{
-			/* Get type of good to consume */
-			if (o_ptr->code & P4_CONSUME_NOVELTY)
-			{
-				/* Novelty good */
-				name = "Novelty ";
-			}
-			else if (o_ptr->code & P4_CONSUME_RARE)
-			{
-				/* Rare good */
-				name = "Rare ";
-			}
-			else if (o_ptr->code & P4_CONSUME_GENE)
-			{
-				/* Genes good */
-				name = "Genes ";
-			}
-			else if (o_ptr->code & P4_CONSUME_ALIEN)
-			{
-				/* Alien good */
-				name = "Alien ";
-			}
-			else
-			{
-				/* Any good */
-				name = "any";
-			}
-
-			/* Start consume string */
-			if (o_ptr->code & P4_DISCARD_HAND)
-			{
-				/* Make string */
-				sprintf(buf, "Consume from hand for ");
-			}
-			else if (o_ptr->code & P4_CONSUME_TWO)
-			{
-				/* Start string */
-				sprintf(buf, "Consume two %s goods for ", name);
-			}
-			else if (o_ptr->code & P4_CONSUME_PRESTIGE)
-			{
-				/* Make string */
-				sprintf(buf, "Consume prestige for ");
-			}
-			else
-			{
-				/* Start string */
-				sprintf(buf, "Consume %s good for ", name);
-			}
-
-			/* Check for cards */
-			if (o_ptr->code & P4_GET_CARD)
-			{
-				/* Create card reward string */
-				sprintf(buf2, "%d card%s", o_ptr->value, PLURAL(o_ptr->value));
-
-				/* Add to string */
-				strcat(buf, buf2);
-
-				/* Check for other reward as well */
-				if (o_ptr->code & (P4_GET_VP | P4_GET_PRESTIGE))
-				{
-					/* Add "and" */
-					strcat(buf, " and ");
-				}
-			}
-
-			/* Check for extra cards */
-			if (o_ptr->code & P4_GET_2_CARD)
-			{
-				/* Create card reward string */
-				strcat(buf, "2 cards");
-
-				/* Check for other reward as well */
-				if (o_ptr->code & (P4_GET_VP | P4_GET_PRESTIGE))
-				{
-					/* Add "and" */
-					strcat(buf, " and ");
-				}
-			}
-
-			/* Check for extra cards */
-			if (o_ptr->code & P4_GET_3_CARD)
-			{
-				/* Create card reward string */
-				strcat(buf, "3 cards");
-
-				/* Check for other reward as well */
-				if (o_ptr->code & (P4_GET_VP | P4_GET_PRESTIGE))
-				{
-					/* Add "and" */
-					strcat(buf, " and ");
-				}
-			}
-
-			/* Check for points */
-			if (o_ptr->code & P4_GET_VP)
-			{
-				/* Create VP reward string */
-				sprintf(buf2, "%d VP", o_ptr->value);
-
-				/* Add to string */
-				strcat(buf, buf2);
-
-				/* Check for other reward as well */
-				if (o_ptr->code & P4_GET_PRESTIGE)
-				{
-					/* Add "and" */
-					strcat(buf, " and ");
-				}
-			}
-
-			/* Check for prestige */
-			if (o_ptr->code & P4_GET_PRESTIGE)
-			{
-				/* Create prestige reward string */
-				sprintf(buf2, "%d prestige", o_ptr->value);
-
-				/* Add to string */
-				strcat(buf, buf2);
-			}
-
-			/* Check for multiple times */
-			if (o_ptr->times > 1)
-			{
-				/* Create times string */
-				sprintf(buf2, " (x%d)", o_ptr->times);
-
-				/* Add to string */
-				strcat(buf, buf2);
-			}
+			/* Any good */
+			name = "any";
 		}
-        return buf;
-}
 
-static char *name_produce(design *d_ptr, power *o_ptr, char *buf) {
-		/* Clear string describing power */
-		strncpy(buf, "", sizeof(buf));
-
-		/* Check for simple powers */
-		if (o_ptr->code & P5_DRAW_EACH_NOVELTY)
+		/* Start consume string */
+		if (o_ptr->code & P4_DISCARD_HAND)
 		{
 			/* Make string */
-			sprintf(buf, "Draw per Novelty produced");
+			sprintf(buf, "Consume from hand for ");
 		}
-		else if (o_ptr->code & P5_DRAW_EACH_RARE)
-		{
-			/* Make string */
-			sprintf(buf, "Draw per Rare produced");
-		}
-		else if (o_ptr->code & P5_DRAW_EACH_GENE)
-		{
-			/* Make string */
-			sprintf(buf, "Draw per Genes produced");
-		}
-		else if (o_ptr->code & P5_DRAW_EACH_ALIEN)
-		{
-			/* Make string */
-			sprintf(buf, "Draw per Alien produced");
-		}
-		else if (o_ptr->code & P5_DRAW_DIFFERENT)
-		{
-			/* Make string */
-			sprintf(buf, "Draw per kind produced");
-		}
-
-		/* Check for discard required */
-		if (o_ptr->code & P5_DISCARD)
+		else if (o_ptr->code & P4_CONSUME_TWO)
 		{
 			/* Start string */
-			sprintf(buf, "Discard to ");
+			sprintf(buf, "Consume two %s goods for ", name);
 		}
-/*More simple powers */
-else if (o_ptr->code & P5_DRAW) {
-	/* Add to string */
-	sprintf(buf, "Draw %d during produce phase", o_ptr->value);
-} else if (o_ptr->code & P5_DRAW_IF) {
-	sprintf(buf, "Draw if produced on %s", d_ptr->name);
-}
-		/* Regular production powers */
-		if (o_ptr->code & P5_PRODUCE)
+		else if (o_ptr->code & P4_CONSUME_PRESTIGE)
 		{
-			/* Add to string */
-			strcat(buf, "produce on ");
-			strcat(buf, d_ptr->name);
+			/* Make string */
+			sprintf(buf, "Consume prestige for ");
 		}
-		else if (o_ptr->code & P5_WINDFALL_ANY)
+		else
 		{
-			/* Add to string */
-			strcat(buf, "produce on any windfall");
-		}
-		else if (o_ptr->code & P5_WINDFALL_NOVELTY)
-		{
-			/* Add to string */
-			strcat(buf, "produce on Novelty windfall");
-		}
-		else if (o_ptr->code & P5_WINDFALL_RARE)
-		{
-			/* Add to string */
-			strcat(buf, "produce on Rare windfall");
-		}
-		else if ((o_ptr->code & P5_WINDFALL_GENE) &&
-		         (o_ptr->code & P5_NOT_THIS))
-		{
-			/* Add to string */
-			strcat(buf, "produce on other Genes windfall");
-		}
-		else if (o_ptr->code & P5_WINDFALL_GENE)
-		{
-			/* Add to string */
-			strcat(buf, "produce on Genes windfall");
-		}
-		else if (o_ptr->code & P5_WINDFALL_ALIEN)
-		{
-			/* Add to string */
-			strcat(buf, "produce on Alien windfall");
+			/* Start string */
+			sprintf(buf, "Consume %s good for ", name);
 		}
 
-		/* Capitalize string if needed */
-		buf[0] = toupper(buf[0]);
-                return buf;
+		/* Check for cards */
+		if (o_ptr->code & P4_GET_CARD)
+		{
+			/* Create card reward string */
+			sprintf(buf2, "%d card%s", o_ptr->value, PLURAL(o_ptr->value));
+
+			/* Add to string */
+			strcat(buf, buf2);
+
+			/* Check for other reward as well */
+			if (o_ptr->code & (P4_GET_VP | P4_GET_PRESTIGE))
+			{
+				/* Add "and" */
+				strcat(buf, " and ");
+			}
+		}
+
+		/* Check for extra cards */
+		if (o_ptr->code & P4_GET_2_CARD)
+		{
+			/* Create card reward string */
+			strcat(buf, "2 cards");
+
+			/* Check for other reward as well */
+			if (o_ptr->code & (P4_GET_VP | P4_GET_PRESTIGE))
+			{
+				/* Add "and" */
+				strcat(buf, " and ");
+			}
+		}
+
+		/* Check for extra cards */
+		if (o_ptr->code & P4_GET_3_CARD)
+		{
+			/* Create card reward string */
+			strcat(buf, "3 cards");
+
+			/* Check for other reward as well */
+			if (o_ptr->code & (P4_GET_VP | P4_GET_PRESTIGE))
+			{
+				/* Add "and" */
+				strcat(buf, " and ");
+			}
+		}
+
+		/* Check for points */
+		if (o_ptr->code & P4_GET_VP)
+		{
+			/* Create VP reward string */
+			sprintf(buf2, "%d VP", o_ptr->value);
+
+			/* Add to string */
+			strcat(buf, buf2);
+
+			/* Check for other reward as well */
+			if (o_ptr->code & P4_GET_PRESTIGE)
+			{
+				/* Add "and" */
+				strcat(buf, " and ");
+			}
+		}
+
+		/* Check for prestige */
+		if (o_ptr->code & P4_GET_PRESTIGE)
+		{
+			/* Create prestige reward string */
+			sprintf(buf2, "%d prestige", o_ptr->value);
+
+			/* Add to string */
+			strcat(buf, buf2);
+		}
+
+		/* Check for multiple times */
+		if (o_ptr->times > 1)
+		{
+			/* Create times string */
+			sprintf(buf2, " (x%d)", o_ptr->times);
+
+			/* Add to string */
+			strcat(buf, buf2);
+		}
+	}
+	return buf;
 }
 
-char *name_settle(power *o_ptr, char *buf) {
-		char buf2[256];
-		memset(buf2, 0, 256);
-		/* Check for simple powers */
-		if (o_ptr->code & P3_PLACE_TWO)
+static char *name_produce(design *d_ptr, power *o_ptr, char *buf)
+{
+	/* Clear string describing power */
+	strncpy(buf, "", sizeof(buf));
+
+	/* Check for simple powers */
+	if (o_ptr->code & P5_DRAW_EACH_NOVELTY)
+	{
+		/* Make string */
+		sprintf(buf, "Draw per Novelty produced");
+	}
+	else if (o_ptr->code & P5_DRAW_EACH_RARE)
+	{
+		/* Make string */
+		sprintf(buf, "Draw per Rare produced");
+	}
+	else if (o_ptr->code & P5_DRAW_EACH_GENE)
+	{
+		/* Make string */
+		sprintf(buf, "Draw per Genes produced");
+	}
+	else if (o_ptr->code & P5_DRAW_EACH_ALIEN)
+	{
+		/* Make string */
+		sprintf(buf, "Draw per Alien produced");
+	}
+	else if (o_ptr->code & P5_DRAW_DIFFERENT)
+	{
+		/* Make string */
+		sprintf(buf, "Draw per kind produced");
+	}
+
+	/* Check for discard required */
+	if (o_ptr->code & P5_DISCARD)
+	{
+		/* Start string */
+		sprintf(buf, "Discard to ");
+	}
+	/*More simple powers */
+	else if (o_ptr->code & P5_DRAW)
+	{
+		/* Add to string */
+		sprintf(buf, "Draw %d during produce phase", o_ptr->value);
+	}
+	else if (o_ptr->code & P5_DRAW_IF)
+	{
+		sprintf(buf, "Draw if produced on %s", d_ptr->name);
+	}
+	/* Regular production powers */
+	if (o_ptr->code & P5_PRODUCE)
+	{
+		/* Add to string */
+		strcat(buf, "produce on ");
+		strcat(buf, d_ptr->name);
+	}
+	else if (o_ptr->code & P5_WINDFALL_ANY)
+	{
+		/* Add to string */
+		strcat(buf, "produce on any windfall");
+	}
+	else if (o_ptr->code & P5_WINDFALL_NOVELTY)
+	{
+		/* Add to string */
+		strcat(buf, "produce on Novelty windfall");
+	}
+	else if (o_ptr->code & P5_WINDFALL_RARE)
+	{
+		/* Add to string */
+		strcat(buf, "produce on Rare windfall");
+	}
+	else if ((o_ptr->code & P5_WINDFALL_GENE) &&
+			 (o_ptr->code & P5_NOT_THIS))
+	{
+		/* Add to string */
+		strcat(buf, "produce on other Genes windfall");
+	}
+	else if (o_ptr->code & P5_WINDFALL_GENE)
+	{
+		/* Add to string */
+		strcat(buf, "produce on Genes windfall");
+	}
+	else if (o_ptr->code & P5_WINDFALL_ALIEN)
+	{
+		/* Add to string */
+		strcat(buf, "produce on Alien windfall");
+	}
+
+	/* Capitalize string if needed */
+	buf[0] = toupper(buf[0]);
+	return buf;
+}
+
+char *name_settle(power *o_ptr, char *buf)
+{
+	char buf2[256];
+	memset(buf2, 0, 256);
+	/* Check for simple powers */
+	if (o_ptr->code & P3_PLACE_TWO)
+	{
+		/* Make string */
+		sprintf(buf, "Place second world");
+	}
+	else if (o_ptr->code & P3_PLACE_MILITARY)
+	{
+		/* Make string */
+		sprintf(buf, "Place second military world");
+	}
+	else if (o_ptr->code & P3_PLACE_LEFTOVER)
+	{
+		/* Make string */
+		sprintf(buf, "Place with leftover military");
+	}
+	else if (o_ptr->code & P3_UPGRADE_WORLD)
+	{
+		/* Make string */
+		sprintf(buf, "Upgrade world");
+	}
+	else if (o_ptr->code & P3_PLACE_ZERO)
+	{
+		/* Make string */
+		sprintf(buf, "Place non-military world at zero cost");
+	}
+	else if (o_ptr->code & P3_FLIP_ZERO)
+	{
+		/* Make string */
+		sprintf(buf, "Flip to place non-military world");
+	}
+	else if (o_ptr->code & P3_EXTRA_MILITARY)
+	{
+		/* Make string */
+		sprintf(buf, "Add %d extra military", o_ptr->value);
+		/* Check for against powers. */
+		if (o_ptr->code & P3_AGAINST_REBEL)
 		{
-			/* Make string */
-			sprintf(buf, "Place second world");
+			strcat(buf, " against rebels");
 		}
-		else if (o_ptr->code & P3_PLACE_MILITARY)
+		else if (o_ptr->code & P3_ALIEN)
 		{
-			/* Make string */
-			sprintf(buf, "Place second military world");
+			strcat(buf, " against aliens");
 		}
-		else if (o_ptr->code & P3_PLACE_LEFTOVER)
+		else if (o_ptr->code & P3_RARE)
 		{
-			/* Make string */
-			sprintf(buf, "Place with leftover military");
+			strcat(buf, " against rare goods worlds");
 		}
-		else if (o_ptr->code & P3_UPGRADE_WORLD)
+		else if (o_ptr->code & P3_NOVELTY)
 		{
-			/* Make string */
-			sprintf(buf, "Upgrade world");
+			strcat(buf, " against novelty goods worlds");
 		}
-		else if (o_ptr->code & P3_PLACE_ZERO)
+		else if (o_ptr->code & P3_GENE)
 		{
-			/* Make string */
-			sprintf(buf, "Place non-military world at zero cost");
+			strcat(buf, " against genes worlds");
 		}
-		else if (o_ptr->code & P3_FLIP_ZERO)
+		else if (o_ptr->code & P3_PER_MILITARY)
 		{
-			/* Make string */
-			sprintf(buf, "Flip to place non-military world");
+			strcat(buf, " per military world");
+		}
+	}
+	else if (o_ptr->code & P3_REDUCE)
+	{
+		sprintf(buf, "Reduce cost of settling ");
+		if (o_ptr->code & P3_RARE)
+		{
+			strcat(buf, "Rare ");
+		}
+		else if (o_ptr->code & P3_NOVELTY)
+		{
+			strcat(buf, "Novelty ");
+		}
+		else if (o_ptr->code & P3_GENE)
+		{
+			strcat(buf, "Gene ");
+		}
+		else if (o_ptr->code & P3_ALIEN)
+		{
+			strcat(buf, "Alien ");
+		}
+		else
+		{
+			strcat(buf, "any ");
+		}
+		sprintf(buf2, "by %d", o_ptr->value);
+		strcat(buf, buf2);
+	}
+	/* Handle card discard powers. */
+	if (o_ptr->code & P3_DISCARD)
+	{
+		sprintf(buf, "Discard this card to ");
+		if (o_ptr->code & P3_REDUCE_ZERO)
+		{
+			sprintf(buf2, "settle non-alien world for zero cost");
 		}
 		else if (o_ptr->code & P3_EXTRA_MILITARY)
 		{
-			/* Make string */
-			sprintf(buf, "Add %d extra military", o_ptr->value);
-			/* Check for against powers. */
-			if (o_ptr->code & P3_AGAINST_REBEL)
-			{
-				strcat(buf, " against rebels");
-			} else if (o_ptr->code & P3_ALIEN) {
-				strcat(buf, " against aliens");
-			} else if (o_ptr->code & P3_RARE) {
-		strcat(buf, " against rare goods worlds");
-			} else if (o_ptr->code & P3_NOVELTY) {
-				strcat(buf, " against novelty goods worlds");
-			} else if (o_ptr->code & P3_GENE) {
-				strcat(buf, " against genes worlds");
-			} else if (o_ptr->code & P3_PER_MILITARY) {
-				strcat(buf, " per military world");
-			} 
+			sprintf(buf2, "add %d extra military", o_ptr->value);
 		}
-		else if (o_ptr->code & P3_REDUCE)
+		strcat(buf, buf2);
+	}
+	/* Pay for military powers. */
+	if (o_ptr->code & P3_PAY_MILITARY)
+	{
+		sprintf(buf, "Pay for military ");
+		/* Handle aliens, rebels, etc. */
+		if (o_ptr->code & P3_AGAINST_REBEL)
 		{
-			sprintf(buf, "Reduce cost of settling ");
-			if (o_ptr->code & P3_RARE) {
-				strcat(buf, "Rare ");
-			} else if (o_ptr->code & P3_NOVELTY) {
-				strcat(buf, "Novelty ");
-			} else if (o_ptr->code & P3_GENE) {
-				strcat(buf, "Gene ");
-			} else if (o_ptr->code & P3_ALIEN) {
-				strcat(buf, "Alien ");
-			} else {
-				strcat(buf, "any ");
-			}
-			sprintf(buf2, "by %d", o_ptr->value);
-			strcat(buf, buf2);
+			strcat(buf, "against rebel worlds");
 		}
-/* Handle card discard powers. */
-if (o_ptr->code & P3_DISCARD) {
-sprintf(buf, "Discard this card to ");
-if (o_ptr->code & P3_REDUCE_ZERO) {
-sprintf(buf2, "settle non-alien world for zero cost");
-} else if (o_ptr->code & P3_EXTRA_MILITARY) {
-	sprintf(buf2, "add %d extra military", o_ptr->value);
-}
-strcat(buf, buf2);
-}
-                return buf;
+		else if (o_ptr->code & P3_ALIEN)
+		{
+			strcat(buf, "against alien worlds");
+		}
+		if (o_ptr->value)
+		{
+			sprintf(buf2, "discounted by %d", o_ptr->value);
+		}
+		else
+		{
+			sprintf(buf2, "no discount");
+		}
+		strcat(buf, buf2);
+	}
+	return buf;
 }
 
-char *get_card_power_name(int i, int p) {
+char *get_card_power_name(int i, int p)
+{
 	char *buf = malloc(sizeof(char) * 1024);
-	if (buf == NULL) {
+	if (buf == NULL)
+	{
 		fprintf(stderr, "Out of memory!\n");
 		exit(1);
 	}
-/* Clear the buffer. */
+	/* Clear the buffer. */
 	memset(buf, 0, 1024);
-        design *d_ptr = real_game.deck[i].d_ptr;
-        power *o_ptr = &real_game.deck[i].d_ptr->powers[p];
-	if (o_ptr->phase == PHASE_EXPLORE) return name_explore(o_ptr, buf);
-		if (o_ptr->phase == PHASE_DEVELOP) return name_Develop(o_ptr, buf);
-        if (o_ptr->phase == PHASE_CONSUME) return name_consume(o_ptr, buf);
-        if (o_ptr->phase == PHASE_PRODUCE) return name_produce(d_ptr, o_ptr, buf);
-	if (o_ptr->phase == PHASE_SETTLE) return name_settle(o_ptr, buf);
-        strncpy(buf, "Unknown power", 1024);
-		return buf;
+	design *d_ptr = real_game.deck[i].d_ptr;
+	power *o_ptr = &real_game.deck[i].d_ptr->powers[p];
+	if (o_ptr->phase == PHASE_EXPLORE)
+		return name_explore(o_ptr, buf);
+	if (o_ptr->phase == PHASE_DEVELOP)
+		return name_Develop(o_ptr, buf);
+	if (o_ptr->phase == PHASE_CONSUME)
+		return name_consume(o_ptr, buf);
+	if (o_ptr->phase == PHASE_PRODUCE)
+		return name_produce(d_ptr, o_ptr, buf);
+	if (o_ptr->phase == PHASE_SETTLE)
+		return name_settle(o_ptr, buf);
+	strncpy(buf, "Unknown power", 1024);
+	return buf;
 }
 
-int get_card_power_score(int i, int p) {
-        power *o_ptr = &real_game.deck[i].d_ptr->powers[p];
-        if (o_ptr->phase == PHASE_CONSUME) return score_consume(o_ptr);
-        if (o_ptr->phase == PHASE_PRODUCE) return score_produce(o_ptr);
-        return 0;
+int get_card_power_score(int i, int p)
+{
+	power *o_ptr = &real_game.deck[i].d_ptr->powers[p];
+	if (o_ptr->phase == PHASE_CONSUME)
+		return score_consume(o_ptr);
+	if (o_ptr->phase == PHASE_PRODUCE)
+		return score_produce(o_ptr);
+	return 0;
 }
 
 char buf[1024];
@@ -2515,7 +2635,7 @@ char *choose_pay_prompt(int which, int mil_only, int mil_bonus)
 			/* Compute strength difference */
 			military =
 				strength_against(g, who, which,
-				                 g->takeover_power[g->num_takeover - 1], 0) -
+								 g->takeover_power[g->num_takeover - 1], 0) -
 				strength_against(g, c_ptr->owner, which, -1, 1);
 
 			/* Check for ahead in strength */
@@ -2545,8 +2665,8 @@ char *choose_pay_prompt(int which, int mil_only, int mil_bonus)
 		{
 			/* Compute payment */
 			military_world_payment(g, who, which, mil_only, mil_bonus,
-			                       &discount,
-			                       &military, &cost, &cost_card);
+								   &discount,
+								   &military, &cost, &cost_card);
 
 			/* Check for no pay-for-military power */
 			if (cost == -1)
@@ -2558,15 +2678,15 @@ char *choose_pay_prompt(int which, int mil_only, int mil_bonus)
 			{
 				/* Format text */
 				p += sprintf(p, "(%d military or %d card%s)",
-				             military, cost, PLURAL(cost));
+							 military, cost, PLURAL(cost));
 			}
 		}
 		else
 		{
 			/* Compute payment */
 			peaceful_world_payment(g, who, which, mil_only,
-			                       &discount,
-			                       &cost, &ict_mil, &iif_mil);
+								   &discount,
+								   &cost, &ict_mil, &iif_mil);
 
 			/* Format text */
 			p += sprintf(p, "(");
@@ -2582,7 +2702,8 @@ char *choose_pay_prompt(int which, int mil_only, int mil_bonus)
 			if (ict_mil >= 0 || iif_mil >= 0)
 			{
 				/* Check for cost */
-				if (cost >= 0) p += sprintf(p, " or ");
+				if (cost >= 0)
+					p += sprintf(p, " or ");
 
 				/* Check for both ICT and IIF and different military needed */
 				if (ict_mil >= 0 && iif_mil >= 0 && ict_mil != iif_mil)
@@ -2614,20 +2735,25 @@ char *choose_pay_prompt(int which, int mil_only, int mil_bonus)
 }
 
 /* Check if the human player can use a prestige action */
-int can_prestige(void) {
+int can_prestige(void)
+{
 	/* Not a BoW game */
-	if (real_game.expanded != 3) return 0;
+	if (real_game.expanded != 3)
+		return 0;
 
 	/* Presitge action already used */
-	if (real_game.p[player_us].prestige_action_used) return 0;
+	if (real_game.p[player_us].prestige_action_used)
+		return 0;
 
 	/* Returns 3 if the player can also pay for prestige actions */
 	return real_game.p[player_us].prestige > 0 ? 3 : 1;
 }
 
-static int get_discard_powers(int i) {
+static int get_discard_powers(int i)
+{
 	int j, discard = 0;
-	for (j = 0; j < real_game.deck[i].d_ptr->num_power; j++) {
+	for (j = 0; j < real_game.deck[i].d_ptr->num_power; j++)
+	{
 		/* Get power pointer */
 		power *o_ptr = &real_game.deck[i].d_ptr->powers[j];
 
@@ -2643,4 +2769,3 @@ static int get_discard_powers(int i) {
 	}
 	return discard;
 }
-
