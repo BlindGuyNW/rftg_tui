@@ -70,24 +70,64 @@ CommandOutcome handle_common_commands(game *g, char *input, int who) {
     } else if (strcmp(input, "?") == 0) {
         printf("Help: [common help info]\n");
         return CMD_HANDLED;
-    } else if (input[0] == 'h' && isdigit(input[1])) {
-        int card;
-        if (sscanf(input + 1, "%d", &card) == 1) {
-            display_hand_card(g, who, card - 1);
-        } else {
-            display_hand(g, who);
-        }
-        return CMD_HANDLED;
+    } else if (input[0] == 'h') {
+    int card_number;
+    // Expecting a format like "h" for the hand or "h #" for a specific card in the hand
+    if (sscanf(input + 1, "%d", &card_number) == 1) {
+        // Display the specified card from the hand
+        display_hand_card(g, who, card_number - 1); // Adjust for 0-based indexing
+    } else {
+        // Just "h" was entered, display the entire hand
+        display_hand(g, who);
+    }
+    return CMD_HANDLED;
     } else if (strcmp(input, "v") == 0) {
         display_vp(g);
         return CMD_HANDLED;
     } else if (strcmp(input, "m") == 0) {
         display_military(g);
         return CMD_HANDLED;
-    } else if (strcmp(input, "r") == 0) {
-        // The calling function should handle redisplaying the relevant information
-        return CMD_HANDLED;
+    } else if (input[0] == 't') {
+    int player_number = -1; // Default to -1 to indicate the human player
+    int card_number = -1; // Default to -1 to indicate no specific card
+
+    // Expecting a format like "t" for the human player's tableau, "t #" for an opponent's tableau,
+    // or "t # #" for a specific card in a tableau
+    if (input[1] == '\0') {
+        // Just "t" was entered, display the human player's tableau
+        display_tableau(g, who);
+    } else {
+        char *next_part = input + 1;
+        // Parse the player number from the input
+        int num_args = sscanf(next_part, "%d %d", &player_number, &card_number);
+
+        // Adjust for 0-based indexing
+        player_number -= 1;
+        card_number -= 1;
+
+        // Validate the player number
+        if (num_args >= 1 && player_number >= 0 && player_number < g->num_players) {
+            if (num_args == 2 && card_number >= 0) {
+                // Two numbers parsed, display the specified card from the player's tableau
+                display_tableau_card(g, player_number, card_number);
+            } else if (num_args == 1) {
+                // Only one number parsed, display the whole tableau for the player
+                display_tableau(g, player_number);
+            } else {
+                // A card number was provided but it's invalid
+                printf("Invalid card number. Please try again.\n");
+            }
+        } else {
+            // A player number was provided but it's invalid
+            printf("Invalid player number. Please try again.\n");
+        }
     }
+    return CMD_HANDLED;
+}
+
+
+
+
     // If none of the common commands were matched, we continue processing
     return CMD_CONTINUE;
 }
@@ -188,6 +228,23 @@ int get_card_choice(game *g, int who, int list[], int num, const char *prompt) {
         } else if (outcome == CMD_HANDLED) {
             continue; // The command was handled, continue the loop
         }
+        /* Handle specific commands below this point */
+                switch (action[0]) {
+                    case 'i':
+                    if (sscanf(action + 1, "%d", &selected_card) == 1) {
+                        if (selected_card >= 1 && selected_card <= num) {
+                            display_card_info(g, list[selected_card - 1]);
+                        } else {
+                            printf("Invalid info command. Please try again.\n");
+                        }
+                    } else {
+                        printf("Invalid input. Please try again or enter '?' for help.\n");
+                    }
+                    break;
+                    case 'r':
+                    display_cards(g, list, num, prompt);
+                    break;
+                default:
                 if (sscanf(action, "%d", &selected_card) == 1) {
                     if (selected_card >= 0 && selected_card <= num) {
                         return selected_card;
@@ -197,11 +254,9 @@ int get_card_choice(game *g, int who, int list[], int num, const char *prompt) {
                 } else {
                     printf("Invalid input. Please try again or enter '?' for help.\n");
                 }
-                break;
-        }
+                }
     }
 }
-
 
 
 void tui_choose_discard(game *g, int who, int list[], int *num, int discard) {
@@ -286,7 +341,7 @@ printf("Choose action\n");
             continue; // The command was handled, continue the loop
         }
                 
-        } else if (sscanf(input, "%d", &selected_action) == 1) {
+         if (sscanf(input, "%d", &selected_action) == 1) {
             if (selected_action >= 1 && selected_action <= num_available_actions) {
                 action[0] = available_actions[selected_action - 1];
                 action[1] = -1;
