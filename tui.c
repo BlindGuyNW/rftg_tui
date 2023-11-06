@@ -335,13 +335,17 @@ printf("Choose action\n");
     input[strcspn(input, "\n")] = 0;
         CommandOutcome outcome = handle_common_commands(g, input, who);
         if (outcome == CMD_QUIT) {
-            return; // or handle quitting more gracefully if necessary
+            exit(0);
         } else if (outcome == CMD_HANDLED) {
-            // The command was handled, re-display available actions or other necessary info
+            // The command was handled, re-display available actions.
             continue; // The command was handled, continue the loop
         }
-                
-         if (sscanf(input, "%d", &selected_action) == 1) {
+            if (input[0] == 'r') {
+            // Redisplay the list of available actions
+            for (int i = 0; i < num_available_actions; i++) {
+                printf("%d. %s\n", i + 1, action_name(available_actions[i]));
+            }
+         } else if (sscanf(input, "%d", &selected_action) == 1) {
             if (selected_action >= 1 && selected_action <= num_available_actions) {
                 action[0] = available_actions[selected_action - 1];
                 action[1] = -1;
@@ -366,12 +370,11 @@ while (1) {
         continue;
         }
 input[strcspn(input, "\n")] = 0;
-
-    if (input[0] == 'q') {
-        printf("Quitting...\n");
-        exit(0);
-    } else if (input[0] == '?') {
-        printf("Help: Enter a number between 1 and 7, 'q' to quit.\n");
+CommandOutcome outcome = handle_common_commands(g, input, who);
+if (outcome == CMD_QUIT) {
+    exit(0);
+} else if (outcome == CMD_HANDLED) {
+continue;
     } else {
         int choice;
         if (sscanf(input, "%d", &choice) == 1) {
@@ -840,11 +843,12 @@ void display_tableau_card(game *g, int who, int position)
 /* Generate a detailed breakdown of victory points for a given player. */
 static char *get_vp_text(game *g, int who)
 {
-    static char msg[1024];
+     static char msg[1024];
+    memset(msg, 0, sizeof(msg));
     player *p_ptr = &g->p[who];
     card *c_ptr;
-    char text[1024];
-    char bonus[1024];
+    char text[1024] = {0};
+    char bonus[1024] = {0};
     int x, t, kind, worlds, devs;
 
     /* Initialize counters */
