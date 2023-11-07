@@ -591,7 +591,7 @@ static int load_net_bin(net *learn, char *fname)
 	int header[4];
 
 	/* Open weights file */
-	fff = fopen(fname, "r");
+	fff = fopen(fname, "rb");
 
 	/* Check for failure */
 	if (!fff) return -1;

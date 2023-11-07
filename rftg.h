@@ -23,6 +23,8 @@
 /*
  * Standard headers.
  */
+#ifndef RFTG_H
+#define RFTG_H
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif
@@ -866,6 +868,44 @@ typedef struct player
 
 } player;
 
+/* A player's military strength. */
+typedef struct mil_strength
+{
+	/* Base military */
+	int base;
+
+	/* Current temporary military */
+	int bonus;
+
+	/* Maximum additional temporary military */
+	int max_bonus;
+
+	/* Additional military against rebel worlds */
+	int rebel;
+
+	/* Additional specific military */
+	int specific[6];
+
+	/* Additional extra defense during takeovers */
+	int defense;
+
+	/* Additional military when using attack imperium TO power */
+	int attack_imperium;
+
+	/* Name of attack imperium TO power */
+	char imp_card[64];
+
+	/* Imperium world played */
+	int imperium;
+
+	/* Rebel military world played */
+	int military_rebel;
+
+	/* Any value is set */
+	int has_data;
+
+} mil_strength;
+
 /*
  * Information about a game.
  */
@@ -1121,6 +1161,57 @@ extern int resolve_takeover(game *g, int who, int world, int special,
 extern void resolve_takeovers(game *g);
 extern void phase_settle(game *g);
 extern int trade_value(game *g, int who, card *c_ptr, int type, int no_bonus);
+typedef struct discounts
+{
+	/* The base discount */
+	int base;
+
+	/* The current temporary discount */
+	int bonus;
+
+	/* Additional specific discount */
+	int specific[6];
+
+	/* May discard to place at zero count */
+	int zero;
+
+	/* Additional discount when paying for military */
+	int pay_discount;
+
+	/* May pay for military with 0 discount (Rebel Cantina) */
+	int non_alien_mil_0;
+
+	/* May pay for military with 1 discount (Contact Specialist) */
+	int non_alien_mil_1;
+
+	/* May pay for rebel worlds with 2 discount (Rebel Alliance) */
+	int rebel_mil_2;
+
+	/* May pay for chromosome worlds (Ravaged Uplift World) */
+	int chromo_mil;
+
+	/* May pay for alien worlds (Alien Research Team) */
+	int alien_mil;
+
+	/* May discard to conquer with 0 discount (Imperium Invasion Fleet) */
+	int conquer_settle_0;
+
+	/* May discard to conquer with 2 discount (Imperium Cloaking Tech) */
+	int conquer_settle_2;
+
+	/* Any value is set */
+	int has_data;
+
+} discounts;
+void peaceful_world_payment(game *g, int who, int which,
+                                   int mil_only, discounts *d_ptr,
+                                   int *cost, int *ict_mil, int *iif_mil);
+int compute_forced_choice(int which, int num, int num_special, int mil_only, int mil_bonus);
+void compute_discounts(game *g, int who, discounts *d_ptr);
+void compute_military(game *g, int who, mil_strength *m_ptr);
+void military_world_payment(game *g, int who, int which,
+                            int mil_only, int mil_bonus, discounts *d_ptr,
+                            int *military, int *cost, char **cost_card);
 extern void trade_chosen(game *g, int who, int which, int no_bonus);
 extern void trade_action(game *g, int who, int no_bonus, int phase_bonus);
 extern int good_chosen(game *g, int who, int c_idx, int o_idx, int g_list[],
@@ -1169,3 +1260,4 @@ extern int export_game(game *g, char *filename, char *style_sheet,
                        int num_special, card** special_cards,
                        void (*export_log)(FILE *fff, int gid),
                        void (*export_callback)(FILE *fff, int gid), int gid);
+#endif /* RFTG_H */
