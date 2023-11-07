@@ -2366,7 +2366,12 @@ static char *name_produce(design *d_ptr, power *o_ptr, char *buf)
 		/* Make string */
 		sprintf(buf, "Draw per kind produced");
 	}
-
+	/* Check for genes worlds */
+	else if (o_ptr->code & P5_DRAW_WORLD_GENE)
+	{
+		/* Start string */
+		sprintf(buf, "Draw %d per Genes world", o_ptr->value);
+	}
 	/* Check for discard required */
 	if (o_ptr->code & P5_DISCARD)
 	{
