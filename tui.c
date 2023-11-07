@@ -25,7 +25,8 @@
 #include "tui.h"
 
 // Define a struct to hold flag and its description
-typedef struct {
+typedef struct
+{
     unsigned int flag;
     const char *description;
 } FlagDescriptor;
@@ -39,17 +40,20 @@ static FlagDescriptor flag_descriptions[] = {
     {FLAG_START_BLUE, "Start Blue"},
     {FLAG_PROMO, "Promo"},
     {FLAG_REBEL, "Rebel"},
-  {FLAG_IMPERIUM, "Imperium"},
+    {FLAG_IMPERIUM, "Imperium"},
     {FLAG_ALIEN, "Alien"},
     {FLAG_UPLIFT, "Uplift"},
     // ... add other flags as needed
 };
 
 // Function to display card flags
-void display_card_flags(unsigned int flags) {
+void display_card_flags(unsigned int flags)
+{
     printf("Flags: ");
-    for (size_t i = 0; i < sizeof(flag_descriptions) / sizeof(flag_descriptions[0]); i++) {
-        if (flags & flag_descriptions[i].flag) {
+    for (size_t i = 0; i < sizeof(flag_descriptions) / sizeof(flag_descriptions[0]); i++)
+    {
+        if (flags & flag_descriptions[i].flag)
+        {
             printf("%s ", flag_descriptions[i].description);
         }
     }
@@ -57,103 +61,129 @@ void display_card_flags(unsigned int flags) {
 }
 
 /* Common commands handling. */
-typedef enum {
+typedef enum
+{
     CMD_CONTINUE, // Continue the loop
     CMD_QUIT,     // Quit the game
     CMD_HANDLED   // Command was handled
 } CommandOutcome;
 
-CommandOutcome handle_common_commands(game *g, char *input, int who) {
-    if (strcmp(input, "q") == 0) {
+CommandOutcome handle_common_commands(game *g, char *input, int who)
+{
+    if (strcmp(input, "q") == 0)
+    {
         printf("Quitting...\n");
         return CMD_QUIT;
-    } else if (strcmp(input, "?") == 0) {
+    }
+    else if (strcmp(input, "?") == 0)
+    {
         printf("Help: [common help info]\n");
         return CMD_HANDLED;
-    } else if (input[0] == 'h') {
-    int card_number;
-    // Expecting a format like "h" for the hand or "h #" for a specific card in the hand
-    if (sscanf(input + 1, "%d", &card_number) == 1) {
-        // Display the specified card from the hand
-        display_hand_card(g, who, card_number - 1); // Adjust for 0-based indexing
-    } else {
-        // Just "h" was entered, display the entire hand
-        display_hand(g, who);
     }
-    return CMD_HANDLED;
-    } else if (strcmp(input, "v") == 0) {
+    else if (input[0] == 'h')
+    {
+        int card_number;
+        // Expecting a format like "h" for the hand or "h #" for a specific card in the hand
+        if (sscanf(input + 1, "%d", &card_number) == 1)
+        {
+            // Display the specified card from the hand
+            display_hand_card(g, who, card_number - 1); // Adjust for 0-based indexing
+        }
+        else
+        {
+            // Just "h" was entered, display the entire hand
+            display_hand(g, who);
+        }
+        return CMD_HANDLED;
+    }
+    else if (strcmp(input, "v") == 0)
+    {
         display_vp(g);
         return CMD_HANDLED;
-    } else if (strcmp(input, "m") == 0) {
+    }
+    else if (strcmp(input, "m") == 0)
+    {
         display_military(g);
         return CMD_HANDLED;
-    } else if (input[0] == 't') {
-    int player_number = -1; // Default to -1 to indicate the human player
-    int card_number = -1; // Default to -1 to indicate no specific card
-
-    // Expecting a format like "t" for the human player's tableau, "t #" for an opponent's tableau,
-    // or "t # #" for a specific card in a tableau
-    if (input[1] == '\0') {
-        // Just "t" was entered, display the human player's tableau
-        display_tableau(g, who);
-    } else {
-        char *next_part = input + 1;
-        // Parse the player number from the input
-        int num_args = sscanf(next_part, "%d %d", &player_number, &card_number);
-
-        // Adjust for 0-based indexing
-        player_number -= 1;
-        card_number -= 1;
-
-        // Validate the player number
-        if (num_args >= 1 && player_number >= 0 && player_number < g->num_players) {
-            if (num_args == 2 && card_number >= 0) {
-                // Two numbers parsed, display the specified card from the player's tableau
-                display_tableau_card(g, player_number, card_number);
-            } else if (num_args == 1) {
-                // Only one number parsed, display the whole tableau for the player
-                display_tableau(g, player_number);
-            } else {
-                // A card number was provided but it's invalid
-                printf("Invalid card number. Please try again.\n");
-            }
-        } else {
-            // A player number was provided but it's invalid
-            printf("Invalid player number. Please try again.\n");
-        }
     }
-    return CMD_HANDLED;
-}
+    else if (input[0] == 't')
+    {
+        int player_number = -1; // Default to -1 to indicate the human player
+        int card_number = -1;   // Default to -1 to indicate no specific card
 
+        // Expecting a format like "t" for the human player's tableau, "t #" for an opponent's tableau,
+        // or "t # #" for a specific card in a tableau
+        if (input[1] == '\0')
+        {
+            // Just "t" was entered, display the human player's tableau
+            display_tableau(g, who);
+        }
+        else
+        {
+            char *next_part = input + 1;
+            // Parse the player number from the input
+            int num_args = sscanf(next_part, "%d %d", &player_number, &card_number);
 
+            // Adjust for 0-based indexing
+            player_number -= 1;
+            card_number -= 1;
 
+            // Validate the player number
+            if (num_args >= 1 && player_number >= 0 && player_number < g->num_players)
+            {
+                if (num_args == 2 && card_number >= 0)
+                {
+                    // Two numbers parsed, display the specified card from the player's tableau
+                    display_tableau_card(g, player_number, card_number);
+                }
+                else if (num_args == 1)
+                {
+                    // Only one number parsed, display the whole tableau for the player
+                    display_tableau(g, player_number);
+                }
+                else
+                {
+                    // A card number was provided but it's invalid
+                    printf("Invalid card number. Please try again.\n");
+                }
+            }
+            else
+            {
+                // A player number was provided but it's invalid
+                printf("Invalid player number. Please try again.\n");
+            }
+        }
+        return CMD_HANDLED;
+    }
 
     // If none of the common commands were matched, we continue processing
     return CMD_CONTINUE;
 }
 
+/*
+ * Discard cards, inspired by ChatGPT.
+ */
 
-/* 
-* Discard cards, inspired by ChatGPT.
-*/
-
-void display_cards(game *g, int list[], int num, const char *message) {
+void display_cards(game *g, int list[], int num, const char *message)
+{
     card *c_ptr;
     printf("%s\n", message);
-    for (int i = 0; i < num; i++) {
+    for (int i = 0; i < num; i++)
+    {
         c_ptr = &g->deck[list[i]];
         printf("%d. %s\n", i + 1, c_ptr->d_ptr->name);
     }
 }
 
 // Display card details
-void display_card_info(game *g, int card_index) {
+void display_card_info(game *g, int card_index)
+{
     card *c_ptr = &g->deck[card_index];
     design *d_ptr = c_ptr->d_ptr;
 
     // Display details about the card
     printf("---- Details about %s ----\n", d_ptr->name);
-    
+
     // Display card type
     if (d_ptr->type == TYPE_WORLD)
         printf("Type: World\n");
@@ -162,12 +192,17 @@ void display_card_info(game *g, int card_index) {
     else
         printf("Type: Unknown\n");
     if (d_ptr)
-    printf("Cost: %d\n", d_ptr->cost);
+        printf("Cost: %d\n", d_ptr->cost);
     if (d_ptr->vp)
-    printf("VP: %d\n", d_ptr->vp);
-    else {
+        printf("VP: %d\n", d_ptr->vp);
+    else if (d_ptr->num_vp_bonus)
+    {
         printf("VP: special\n");
     }
+    else
+    {
+        printf("VP: 0\n");
+}
 switch (d_ptr->good_type)
 {
 case GOOD_ALIEN:
@@ -176,119 +211,145 @@ case GOOD_ALIEN:
 case GOOD_NOVELTY:
     printf("Good Type: Novelty\n");
     break;
-    case GOOD_RARE:
+case GOOD_RARE:
     printf("Good Type: Rare\n");
     break;
-    case GOOD_GENE:
+case GOOD_GENE:
     printf("Good Type: Genes\n");
     break;
 }
 if (c_ptr->num_goods)
-printf("Goods: %d\n", c_ptr->num_goods);
+    printf("Goods: %d\n", c_ptr->num_goods);
 display_card_flags(d_ptr->flags);
 
-    // Display card powers
-    for (int i = 0; i < d_ptr->num_power; i++) {
-        char *power_name = get_card_power_name(card_index, i);
-        printf("Power %d: %s\n", i + 1, power_name);
-        free(power_name);
-    }
-    
-    printf("----------------------------\n\n");
+// Display card powers
+for (int i = 0; i < d_ptr->num_power; i++)
+{
+    char *power_name = get_card_power_name(card_index, i);
+    printf("Power %d: %s\n", i + 1, power_name);
+    free(power_name);
 }
 
-int get_card_choice(game *g, int who, int list[], int num, const char *prompt) {
+printf("----------------------------\n\n");
+}
+
+int get_card_choice(game *g, int who, int list[], int num, const char *prompt)
+{
     char action[10];
     int selected_card;
 
-    while (1) {
+    while (1)
+    {
         printf("%s (or '?' for help): ", prompt);
         if (fgets(action, sizeof(action), stdin) == NULL)
         {
             printf("Error reading input. Please try again.\n");
             continue;
-            }
+        }
         action[strcspn(action, "\n")] = 0;
 
         // Validate input length and check for control characters
-        if (strlen(action) >= sizeof(action) - 1) {
+        if (strlen(action) >= sizeof(action) - 1)
+        {
             printf("Input too long! Please try again.\n");
             continue;
         }
 
-        for (int i = 0; i < strlen(action); i++) {
-            if (iscntrl(action[i])) {
+        for (int i = 0; i < strlen(action); i++)
+        {
+            if (iscntrl(action[i]))
+            {
                 printf("Invalid input! Control characters are not allowed.\n");
                 continue;
             }
         }
         CommandOutcome outcome = handle_common_commands(g, action, who);
-        if (outcome == CMD_QUIT) {
+        if (outcome == CMD_QUIT)
+        {
             exit(0); // or handle quitting more gracefully if necessary
-        } else if (outcome == CMD_HANDLED) {
+        }
+        else if (outcome == CMD_HANDLED)
+        {
             continue; // The command was handled, continue the loop
         }
         /* Handle specific commands below this point */
-                switch (action[0]) {
-                    case 'i':
-                    if (sscanf(action + 1, "%d", &selected_card) == 1) {
-                        if (selected_card >= 1 && selected_card <= num) {
-                            display_card_info(g, list[selected_card - 1]);
-                        } else {
-                            printf("Invalid info command. Please try again.\n");
-                        }
-                    } else {
-                        printf("Invalid input. Please try again or enter '?' for help.\n");
-                    }
-                    break;
-                    case 'r':
-                    display_cards(g, list, num, prompt);
-                    break;
-                default:
-                if (sscanf(action, "%d", &selected_card) == 1) {
-                    if (selected_card >= 0 && selected_card <= num) {
-                        return selected_card;
-                    } else {
-                        printf("Invalid selection. Please try again.\n");
-                    }
-                } else {
-                    printf("Invalid input. Please try again or enter '?' for help.\n");
+        switch (action[0])
+        {
+        case 'i':
+            if (sscanf(action + 1, "%d", &selected_card) == 1)
+            {
+                if (selected_card >= 1 && selected_card <= num)
+                {
+                    display_card_info(g, list[selected_card - 1]);
                 }
+                else
+                {
+                    printf("Invalid info command. Please try again.\n");
                 }
+            }
+            else
+            {
+                printf("Invalid input. Please try again or enter '?' for help.\n");
+            }
+            break;
+        case 'r':
+            display_cards(g, list, num, prompt);
+            break;
+        default:
+            if (sscanf(action, "%d", &selected_card) == 1)
+            {
+                if (selected_card >= 0 && selected_card <= num)
+                {
+                    return selected_card;
+                }
+                else
+                {
+                    printf("Invalid selection. Please try again.\n");
+                }
+            }
+            else
+            {
+                printf("Invalid input. Please try again or enter '?' for help.\n");
+            }
+        }
     }
 }
 
-
-void tui_choose_discard(game *g, int who, int list[], int *num, int discard) {
+void tui_choose_discard(game *g, int who, int list[], int *num, int discard)
+{
     char buf[1024];
-    	/* Create prompt */
-	sprintf(buf, "Choose %d card%s to discard", discard, PLURAL(discard));
+    /* Create prompt */
+    sprintf(buf, "Choose %d card%s to discard", discard, PLURAL(discard));
 
     int discard_count = 0;
     /* MSVC doesn't support use of variable length arrays, so... */
-    int temp_list[TEMP_MAX_VAL];  // Temporary list to hold indices of cards not yet discarded
+    int temp_list[TEMP_MAX_VAL]; // Temporary list to hold indices of cards not yet discarded
 
     // Initially, temp_list is a copy of the original list
-    for (int i = 0; i < *num; i++) {
+    for (int i = 0; i < *num; i++)
+    {
         temp_list[i] = list[i];
     }
 
     display_cards(g, temp_list, *num - discard_count, buf);
 
-    while (discard_count < discard) {
+    while (discard_count < discard)
+    {
         int selected_card = get_card_choice(g, who, temp_list, *num - discard_count, "Enter card number to discard");
-        
+
         // Add the selected card to the list of discarded cards
         list[discard_count] = temp_list[selected_card - 1];
-        
+
         // Remove the discarded card from temp_list by shifting all subsequent cards
-        for (int i = selected_card - 1; i < *num - discard_count - 1; i++) {
+        for (int i = selected_card - 1; i < *num - discard_count - 1; i++)
+        {
             temp_list[i] = temp_list[i + 1];
         }
-        
+
         discard_count++;
 
-        if (discard_count < discard) {
+        if (discard_count < discard)
+        {
             display_cards(g, temp_list, *num - discard_count, "Remaining options:");
         }
     }
@@ -297,26 +358,31 @@ void tui_choose_discard(game *g, int who, int list[], int *num, int discard) {
     *num = discard_count;
 }
 
-void tui_choose_action(game *g, int who, int action[2], int one) {
+void tui_choose_action(game *g, int who, int action[2], int one)
+{
     int selected_action;
-    int available_actions[TEMP_MAX_VAL];   // To store indices of actions that are available.
+    int available_actions[TEMP_MAX_VAL]; // To store indices of actions that are available.
     int num_available_actions = 0;       // Count of available actions.
-printf("Choose action\n");
+    printf("Choose action\n");
     // Check for advanced game
-    if (g->advanced) {
+    if (g->advanced)
+    {
         // Call advanced function (to be implemented later)
         // return tui_choose_action_advanced(g, who, action, one);
     }
 
     // Populate the available actions list and display them.
-    for (int i = 0; i < MAX_ACTION; i++) {
+    for (int i = 0; i < MAX_ACTION; i++)
+    {
         // Skip the ACT_SEARCH action under certain conditions
-        if (i == ACT_SEARCH && (g->expanded != 3 || g->p[who].prestige_action_used)) {
+        if (i == ACT_SEARCH && (g->expanded != 3 || g->p[who].prestige_action_used))
+        {
             continue;
         }
 
         // Skip ACT_DEVELOP2 and ACT_SETTLE2
-        if (i == ACT_DEVELOP2 || i == ACT_SETTLE2) {
+        if (i == ACT_DEVELOP2 || i == ACT_SETTLE2)
+        {
             continue;
         }
 
@@ -324,126 +390,153 @@ printf("Choose action\n");
         printf("%d. %s\n", num_available_actions, action_name(i));
     }
 
-    while (1) {
+    while (1)
+    {
         printf("Enter action number ('q' to quit, '?' for help, 'r' to redisplay list): ");
         char input[10];
         if (fgets(input, sizeof(input), stdin) == NULL)
         {
             printf("Error reading input. Please try again.\n");
             continue;
-            }
-    input[strcspn(input, "\n")] = 0;
+        }
+        input[strcspn(input, "\n")] = 0;
         CommandOutcome outcome = handle_common_commands(g, input, who);
-        if (outcome == CMD_QUIT) {
+        if (outcome == CMD_QUIT)
+        {
             exit(0);
-        } else if (outcome == CMD_HANDLED) {
+        }
+        else if (outcome == CMD_HANDLED)
+        {
             // The command was handled, re-display available actions.
             continue; // The command was handled, continue the loop
         }
-            if (input[0] == 'r') {
+        if (input[0] == 'r')
+        {
             // Redisplay the list of available actions
-            for (int i = 0; i < num_available_actions; i++) {
+            for (int i = 0; i < num_available_actions; i++)
+            {
                 printf("%d. %s\n", i + 1, action_name(available_actions[i]));
             }
-         } else if (sscanf(input, "%d", &selected_action) == 1) {
-            if (selected_action >= 1 && selected_action <= num_available_actions) {
+        }
+        else if (sscanf(input, "%d", &selected_action) == 1)
+        {
+            if (selected_action >= 1 && selected_action <= num_available_actions)
+            {
                 action[0] = available_actions[selected_action - 1];
                 action[1] = -1;
                 return; // Exit the function once the action is selected.
-            } else {
+            }
+            else
+            {
                 printf("Invalid selection. Please try again.\n");
             }
-        } else {
+        }
+        else
+        {
             printf("Invalid input. Please try again or enter 'h' for help.\n");
         }
     }
 }
 
 /* Choose a number, for Gambling World etc. */
-int tui_choose_lucky(game *g, int who) {
-char input[10];
-while (1) {
-    printf("Choose a number between 1 and 7, '?' for help, 'q' to quit: ");
-    if (fgets(input, sizeof(input), stdin) == NULL)
+int tui_choose_lucky(game *g, int who)
+{
+    char input[10];
+    while (1)
     {
-        printf("Error reading input. Please try again.\n");
-        continue;
+        printf("Choose a number between 1 and 7, '?' for help, 'q' to quit: ");
+        if (fgets(input, sizeof(input), stdin) == NULL)
+        {
+            printf("Error reading input. Please try again.\n");
+            continue;
         }
-input[strcspn(input, "\n")] = 0;
-CommandOutcome outcome = handle_common_commands(g, input, who);
-if (outcome == CMD_QUIT) {
-    exit(0);
-} else if (outcome == CMD_HANDLED) {
-continue;
-    } else {
-        int choice;
-        if (sscanf(input, "%d", &choice) == 1) {
-            if (choice >= 1 && choice <= 7) {
-                return choice;
-            } else {
-                printf("Invalid selection. Please try again.\n");
+        input[strcspn(input, "\n")] = 0;
+        CommandOutcome outcome = handle_common_commands(g, input, who);
+        if (outcome == CMD_QUIT)
+        {
+            exit(0);
+        }
+        else if (outcome == CMD_HANDLED)
+        {
+            continue;
+        }
+        else
+        {
+            int choice;
+            if (sscanf(input, "%d", &choice) == 1)
+            {
+                if (choice >= 1 && choice <= 7)
+                {
+                    return choice;
+                }
+                else
+                {
+                    printf("Invalid selection. Please try again.\n");
+                }
             }
-        } else {
-            printf("Invalid input. Please try again or enter '?' for help.\n");
+            else
+            {
+                printf("Invalid input. Please try again or enter '?' for help.\n");
+            }
         }
     }
 }
-}
 /* Place worlds and developments. */
-int tui_choose_place(game *g, int who, int list[], int num, int phase, int special) {
+int tui_choose_place(game *g, int who, int list[], int num, int phase, int special)
+{
     int choice;
-char buf[1024];
-int i, n, allow_takeover = (phase == PHASE_SETTLE);
-power_where w_list[100];
-power *o_ptr;
-/* Create prompt */
-	sprintf(buf, "Choose card to %s",
-	        phase == PHASE_DEVELOP ? "develop" : "settle");
+    char buf[1024];
+    int i, n, allow_takeover = (phase == PHASE_SETTLE);
+    power_where w_list[100];
+    power *o_ptr;
+    /* Create prompt */
+    sprintf(buf, "Choose card to %s",
+            phase == PHASE_DEVELOP ? "develop" : "settle");
 
-	/* Check for special card used to provide power */
-	if (special != -1)
-	{
-		/* Append name to prompt */
-		strcat(buf, " using ");
-		strcat(buf, g->deck[special].d_ptr->name);
+    /* Check for special card used to provide power */
+    if (special != -1)
+    {
+        /* Append name to prompt */
+        strcat(buf, " using ");
+        strcat(buf, g->deck[special].d_ptr->name);
 
-		/* XXX Check for "Rebel Sneak Attack" */
-		if (!strcmp(g->deck[special].d_ptr->name, "Rebel Sneak Attack"))
-		{
-			/* Takeover not allowed */
-			allow_takeover = 0;
-		}
-	}
+        /* XXX Check for "Rebel Sneak Attack" */
+        if (!strcmp(g->deck[special].d_ptr->name, "Rebel Sneak Attack"))
+        {
+            /* Takeover not allowed */
+            allow_takeover = 0;
+        }
+    }
 
-	/* Check for settle phase and possible takeover */
-	if (allow_takeover && settle_check_takeover(g, who, NULL, 1))
-	{
-		/* Append takeover information */
-		strcat(buf, " (or pass if you want to perform a takeover)");
-	}
-	if (phase == PHASE_SETTLE)
-	{
-		/* Get settle powers */
-		n = get_powers(g, who, PHASE_SETTLE, w_list);
+    /* Check for settle phase and possible takeover */
+    if (allow_takeover && settle_check_takeover(g, who, NULL, 1))
+    {
+        /* Append takeover information */
+        strcat(buf, " (or pass if you want to perform a takeover)");
+    }
+    if (phase == PHASE_SETTLE)
+    {
+        /* Get settle powers */
+        n = get_powers(g, who, PHASE_SETTLE, w_list);
 
-		/* Loop over powers */
-		for (i = 0; i < n; i++)
-		{
-			/* Get power pointer */
-			o_ptr = w_list[i].o_ptr;
+        /* Loop over powers */
+        for (i = 0; i < n; i++)
+        {
+            /* Get power pointer */
+            o_ptr = w_list[i].o_ptr;
 
-			/* Skip powers that aren't "flip for zero" */
-			if (!(o_ptr->code & P3_FLIP_ZERO)) continue;
+            /* Skip powers that aren't "flip for zero" */
+            if (!(o_ptr->code & P3_FLIP_ZERO))
+                continue;
 
-			/* Append flip information */
-			strcat(buf, " (or pass if you want to flip a card)");
+            /* Append flip information */
+            strcat(buf, " (or pass if you want to flip a card)");
 
-			/* Done */
-			break;
-		}
-	}
+            /* Done */
+            break;
+        }
+    }
 
-	
     // Display the list of cards using the display_cards function
     display_cards(g, list, num, buf);
 
@@ -451,7 +544,8 @@ power *o_ptr;
     choice = get_card_choice(g, who, list, num, "Enter the number of the card you want to play, or 0 to pass:");
 
     // If the user chooses to pass
-    if (choice == 0) {
+    if (choice == 0)
+    {
         return -1;
     }
 
@@ -459,21 +553,28 @@ power *o_ptr;
 }
 void tui_choose_pay(game *g, int who, int which, int list[], int *num,
                     int special[], int *num_special, int mil_only,
-                    int mil_bonus) {
+                    int mil_bonus)
+{
 
     card *c_ptr = &g->deck[which];
     int cost = 0, military = 0, ict_mil = 0, iif_mil = 0;
     char *cost_card = NULL;
     discounts discount;
 
-    if (c_ptr->d_ptr->type == TYPE_DEVELOPMENT) {
+    if (c_ptr->d_ptr->type == TYPE_DEVELOPMENT)
+    {
         cost = devel_cost(g, who, which);
-    } else if (c_ptr->d_ptr->type == TYPE_WORLD) {
+    }
+    else if (c_ptr->d_ptr->type == TYPE_WORLD)
+    {
         compute_discounts(g, who, &discount);
 
-        if (c_ptr->d_ptr->flags & FLAG_MILITARY) {
+        if (c_ptr->d_ptr->flags & FLAG_MILITARY)
+        {
             military_world_payment(g, who, which, mil_only, mil_bonus, &discount, &military, &cost, &cost_card);
-        } else {
+        }
+        else
+        {
             peaceful_world_payment(g, who, which, mil_only, &discount, &cost, &ict_mil, &iif_mil);
         }
     }
@@ -481,26 +582,33 @@ void tui_choose_pay(game *g, int who, int which, int list[], int *num,
     int forced_choice = compute_forced_choice(which, *num, *num_special, mil_only, mil_bonus);
 
     int total_regular = 0, total_special = 0;
-    if (forced_choice) {
-        if (forced_choice & 1) {
+    if (forced_choice)
+    {
+        if (forced_choice & 1)
+        {
             total_regular = *num;
         }
 
-        if (forced_choice >> 1) {
+        if (forced_choice >> 1)
+        {
             total_special = *num_special;
         }
-    } else {
+    }
+    else
+    {
         char display_message[512];
         sprintf(display_message, "Choose payment for %s (%d card%s). Here are your options:", c_ptr->d_ptr->name, cost, cost > 1 ? "s" : "");
 
         int temp_list[TEMP_MAX_VAL];
         int idx = 0;
 
-        for (int i = 0; i < *num; i++, idx++) {
+        for (int i = 0; i < *num; i++, idx++)
+        {
             temp_list[idx] = list[i];
         }
 
-        for (int i = 0; i < *num_special; i++, idx++) {
+        for (int i = 0; i < *num_special; i++, idx++)
+        {
             temp_list[idx] = special[i];
         }
 
@@ -508,23 +616,29 @@ void tui_choose_pay(game *g, int who, int which, int list[], int *num,
         display_cards(g, temp_list, combined_num, display_message);
 
         int total_paid = 0;
-        while (total_paid < cost) {
+        while (total_paid < cost)
+        {
             int selected_card = get_card_choice(g, who, temp_list, combined_num - total_paid, "Enter card number to use for payment");
 
-            if (selected_card > *num) {
+            if (selected_card > *num)
+            {
                 special[total_special] = temp_list[selected_card - 1];
                 total_special++;
-            } else {
+            }
+            else
+            {
                 list[total_regular] = temp_list[selected_card - 1];
                 total_regular++;
                 total_paid++;
             }
 
-            for (int i = selected_card - 1; i < combined_num - total_paid; i++) {
+            for (int i = selected_card - 1; i < combined_num - total_paid; i++)
+            {
                 temp_list[i] = temp_list[i + 1];
             }
 
-            if (total_paid < cost) {
+            if (total_paid < cost)
+            {
                 sprintf(display_message, "You have paid %d out of %d. Remaining options:", total_paid, cost);
                 display_cards(g, temp_list, combined_num - total_paid, display_message);
             }
@@ -535,116 +649,124 @@ void tui_choose_pay(game *g, int who, int which, int list[], int *num,
     *num_special = total_special;
 }
 /*
-* Choose cards from hand to consume.
-*/
+ * Choose cards from hand to consume.
+ */
 void tui_choose_consume_hand(game *g, int who, int c_idx, int o_idx, int list[], int *num)
 {
-	card *c_ptr;
-	power *o_ptr, prestige_bonus;
-	char buf[1024], *card_name;
-	/* Check for prestige trade bonus power */
-	if (c_idx < 0)
-	{
-		/* Make fake power */
-		prestige_bonus.phase = PHASE_CONSUME;
-		prestige_bonus.code = P4_DISCARD_HAND | P4_GET_VP;
-		prestige_bonus.value = 1;
-		prestige_bonus.times = 2;
+    card *c_ptr;
+    power *o_ptr, prestige_bonus;
+    char buf[1024], *card_name;
+    /* Check for prestige trade bonus power */
+    if (c_idx < 0)
+    {
+        /* Make fake power */
+        prestige_bonus.phase = PHASE_CONSUME;
+        prestige_bonus.code = P4_DISCARD_HAND | P4_GET_VP;
+        prestige_bonus.value = 1;
+        prestige_bonus.times = 2;
 
-		/* Use fake power */
-		o_ptr = &prestige_bonus;
+        /* Use fake power */
+        o_ptr = &prestige_bonus;
 
-		/* Use fake card name */
-		card_name = "Prestige Trade bonus";
-	}
-	else
-	{
-		/* Get card pointer */
-		c_ptr = &g->deck[c_idx];
+        /* Use fake card name */
+        card_name = "Prestige Trade bonus";
+    }
+    else
+    {
+        /* Get card pointer */
+        c_ptr = &g->deck[c_idx];
 
-		/* Get power pointer */
-		o_ptr = &c_ptr->d_ptr->powers[o_idx];
+        /* Get power pointer */
+        o_ptr = &c_ptr->d_ptr->powers[o_idx];
 
-		/* Use card name */
-		card_name = c_ptr->d_ptr->name;
-	}
-	/* Check for needing two cards */
-	if (o_ptr->code & P4_CONSUME_TWO)
-	{
-		/* Create prompt */
-		sprintf(buf, "Choose cards to consume on %s", card_name);
-	}
-	else
-	{
-		/* Create prompt */
-		sprintf(buf, "Choose up to %d card%s to consume on %s",
-		        o_ptr->times, PLURAL(o_ptr->times), card_name);
-	}
-/* Create a temporary list to handle the card selection */
-int temp_list[TEMP_MAX_VAL];
-int consume_count = 0;
-for (size_t i = 0; i < *num; i++)
-{
-    temp_list[i] = list[i];
-}
-// Display cards and prompt to the user
-display_cards(g, temp_list, *num, buf);
+        /* Use card name */
+        card_name = c_ptr->d_ptr->name;
+    }
+    /* Check for needing two cards */
+    if (o_ptr->code & P4_CONSUME_TWO)
+    {
+        /* Create prompt */
+        sprintf(buf, "Choose cards to consume on %s", card_name);
+    }
+    else
+    {
+        /* Create prompt */
+        sprintf(buf, "Choose up to %d card%s to consume on %s",
+                o_ptr->times, PLURAL(o_ptr->times), card_name);
+    }
+    /* Create a temporary list to handle the card selection */
+    int temp_list[TEMP_MAX_VAL];
+    int consume_count = 0;
+    for (size_t i = 0; i < *num; i++)
+    {
+        temp_list[i] = list[i];
+    }
+    // Display cards and prompt to the user
+    display_cards(g, temp_list, *num, buf);
 
-// Loop until the player has consumed the appropriate number of cards or decides to pass
-while (consume_count < o_ptr->times) {
-    // Get the player's choice
-    int selected_card = get_card_choice(g, who, temp_list, *num, buf);
-    
-    // Check if the player has chosen to pass
-    if (selected_card == 0) {
-        printf("You have chosen to pass.\n");
-        break; // Exit the loop if the player passes
+    // Loop until the player has consumed the appropriate number of cards or decides to pass
+    while (consume_count < o_ptr->times)
+    {
+        // Get the player's choice
+        int selected_card = get_card_choice(g, who, temp_list, *num, buf);
+
+        // Check if the player has chosen to pass
+        if (selected_card == 0)
+        {
+            printf("You have chosen to pass.\n");
+            break; // Exit the loop if the player passes
+        }
+
+        // Check if the selected card is valid
+        if (selected_card < 1 || selected_card > *num)
+        {
+            // Handle invalid input
+            printf("Invalid choice. Please select a valid card or enter 0 to pass.\n");
+            continue;
+        }
+
+        // Add the selected card to the list of consumed cards
+        list[consume_count] = temp_list[selected_card - 1];
+
+        // Remove the consumed card from temp_list by shifting all subsequent cards
+        for (int i = selected_card - 1; i < *num - 1; i++)
+        {
+            temp_list[i] = temp_list[i + 1];
+        }
+
+        // Increment the count of consumed cards
+        consume_count++;
+
+        // If there are more cards to consume, show the remaining options
+        if (consume_count < o_ptr->times)
+        {
+            display_cards(g, temp_list, *num - consume_count, "Remaining options:");
+        }
     }
 
-    // Check if the selected card is valid
-    if (selected_card < 1 || selected_card > *num) {
-        // Handle invalid input
-        printf("Invalid choice. Please select a valid card or enter 0 to pass.\n");
-        continue;
-    }
-
-    // Add the selected card to the list of consumed cards
-    list[consume_count] = temp_list[selected_card - 1];
-    
-    // Remove the consumed card from temp_list by shifting all subsequent cards
-    for (int i = selected_card - 1; i < *num - 1; i++) {
-        temp_list[i] = temp_list[i + 1];
-    }
-
-    // Increment the count of consumed cards
-    consume_count++;
-
-    // If there are more cards to consume, show the remaining options
-    if (consume_count < o_ptr->times) {
-        display_cards(g, temp_list, *num - consume_count, "Remaining options:");
-    }
-}
-
-// Update num to reflect the number of cards consumed
-*num = consume_count;
+    // Update num to reflect the number of cards consumed
+    *num = consume_count;
 }
 /*
-* Choose consume powers to use.
-*/
+ * Choose consume powers to use.
+ */
 
 void tui_choose_consume(game *g, int who, int cidx[], int oidx[], int *num,
-                        int *num_special, int optional) {
+                        int *num_special, int optional)
+{
     int choice, i;
-card *c_ptr;
+    card *c_ptr;
 
     // Loop over the cards in cidx and display their powers
-    for (i = 0; i < *num; i++) {
+    for (i = 0; i < *num; i++)
+    {
         c_ptr = &g->deck[cidx[i]];
-        printf("%d: %s, %s\n",i + 1, c_ptr->d_ptr->name, get_card_power_name(cidx[i], oidx[i]));
+        printf("%d: %s, %s\n", i + 1, c_ptr->d_ptr->name, get_card_power_name(cidx[i], oidx[i]));
     }
 
     // If optional, allow the user to not choose any power
-    if (optional) {
+    if (optional)
+    {
         printf("0: Use no powers\n");
     }
 
@@ -655,18 +777,22 @@ card *c_ptr;
     sscanf(choice_str, "%d", &choice);
 
     // Validate user's choice
-    while (choice < 0 || (choice > *num) || (!optional && choice == 0)) {
+    while (choice < 0 || (choice > *num) || (!optional && choice == 0))
+    {
         printf("Invalid choice. Please enter a valid number: ");
         char choice_str[20];
-    fgets(choice_str, sizeof(choice_str), stdin);
-    sscanf(choice_str, "%d", &choice);
+        fgets(choice_str, sizeof(choice_str), stdin);
+        sscanf(choice_str, "%d", &choice);
     }
 
     // Handle the user's choice
-    if (choice == 0 && optional) {
+    if (choice == 0 && optional)
+    {
         *num = *num_special = 0;
         return;
-    } else {
+    }
+    else
+    {
         cidx[0] = cidx[choice - 1];
         oidx[0] = oidx[choice - 1];
         *num = *num_special = 1;
@@ -674,12 +800,14 @@ card *c_ptr;
 }
 /* Choose goods to consume. */
 void tui_choose_good(game *g, int who, int c_idx, int o_idx, int goods[],
-                     int *num, int min, int max) {
+                     int *num, int min, int max)
+{
     int n = 0, selected_index, multi = -1;
-    int temp_goods[TEMP_MAX_VAL];  // Temporary list to hold indices of goods not yet chosen
+    int temp_goods[TEMP_MAX_VAL]; // Temporary list to hold indices of goods not yet chosen
 
     // Initially, temp_goods is a copy of the original list
-    for (int i = 0; i < *num; i++) {
+    for (int i = 0; i < *num; i++)
+    {
         temp_goods[i] = goods[i];
     }
 
@@ -691,14 +819,17 @@ void tui_choose_good(game *g, int who, int c_idx, int o_idx, int goods[],
     sprintf(message, "Choose good%s to consume on %s", min == 1 && max == 1 ? "" : "s", c_ptr->d_ptr->name);
     display_cards(g, temp_goods, *num, message);
 
-    while (n < max) {
+    while (n < max)
+    {
         selected_index = get_card_choice(g, who, temp_goods, *num - n, "Select a good to consume");
-        if (selected_index < 0) break; // Assuming get_card_choice returns a negative value when no card is chosen.
-        selected_index--;  // Adjust for 0-based indexing
+        if (selected_index < 0)
+            break;        // Assuming get_card_choice returns a negative value when no card is chosen.
+        selected_index--; // Adjust for 0-based indexing
 
         /* Check for multiple goods and remember it */
         card *selected_card = &g->deck[temp_goods[selected_index]];
-        if (selected_card->num_goods > 1) {
+        if (selected_card->num_goods > 1)
+        {
             multi = selected_index;
         }
 
@@ -706,21 +837,25 @@ void tui_choose_good(game *g, int who, int c_idx, int o_idx, int goods[],
         goods[n] = temp_goods[selected_index];
 
         // Remove the chosen good from temp_goods by shifting all subsequent goods
-        for (int i = selected_index; i < *num - n - 1; i++) {
+        for (int i = selected_index; i < *num - n - 1; i++)
+        {
             temp_goods[i] = temp_goods[i + 1];
         }
 
         n++;
 
-        if (n < max && n < *num) {
+        if (n < max && n < *num)
+        {
             sprintf(message, "Remaining good%s to consume on %s", min - n == 1 && max - n == 1 ? "" : "s", c_ptr->d_ptr->name);
             display_cards(g, temp_goods, *num - n, message);
         }
     }
 
     /* If not enough goods are selected and there's a card with multiple goods, use it */
-    if (multi >= 0) {
-        while (n < min) {
+    if (multi >= 0)
+    {
+        while (n < min)
+        {
             goods[n++] = goods[multi];
         }
     }
@@ -730,7 +865,8 @@ void tui_choose_good(game *g, int who, int c_idx, int o_idx, int goods[],
 }
 
 /* Choose a windfall world to produce on. */
-void tui_choose_windfall(game *g, int who, int list[], int *num) {
+void tui_choose_windfall(game *g, int who, int list[], int *num)
+{
     int choice;
 
     // Display the list of cards using the display_cards function
@@ -746,13 +882,13 @@ void tui_choose_windfall(game *g, int who, int list[], int *num) {
 /* Choose a good to trade. */
 void tui_choose_trade(game *g, int who, int list[], int *num, int no_bonus)
 {
-int choice;
-char message[1024];
-sprintf(message, "Choose good to trade%s", no_bonus ? " (no bonuses)" : "");
-display_cards(g, list, *num, message);
-choice = get_card_choice(g, who, list, *num, "Enter the number of the card you want to trade from:");
-list[0] = list[choice - 1];
-*num = 1;
+    int choice;
+    char message[1024];
+    sprintf(message, "Choose good to trade%s", no_bonus ? " (no bonuses)" : "");
+    display_cards(g, list, *num, message);
+    choice = get_card_choice(g, who, list, *num, "Enter the number of the card you want to trade from:");
+    list[0] = list[choice - 1];
+    *num = 1;
 }
 /* Display the player's hand. */
 void display_hand(game *g, int who)
@@ -769,11 +905,12 @@ void display_hand(game *g, int who)
         x = g->deck[x].next;
     }
     /* Display count of cards in other players' hands, but don't list them. */
-    for (size_t i = 0; i < g->num_players; i++) {
- /* Skip over the human player. */
- if (!g->p[i].ai)
- continue;
- printf("%s: %d cards in hand\n", g->p[i].name, count_player_area(g, i, WHERE_HAND));
+    for (size_t i = 0; i < g->num_players; i++)
+    {
+        /* Skip over the human player. */
+        if (!g->p[i].ai)
+            continue;
+        printf("%s: %d cards in hand\n", g->p[i].name, count_player_area(g, i, WHERE_HAND));
     }
 }
 
@@ -843,7 +980,7 @@ void display_tableau_card(game *g, int who, int position)
 /* Generate a detailed breakdown of victory points for a given player. */
 static char *get_vp_text(game *g, int who)
 {
-     static char msg[1024];
+    static char msg[1024];
     memset(msg, 0, sizeof(msg));
     player *p_ptr = &g->p[who];
     card *c_ptr;
@@ -888,7 +1025,7 @@ static char *get_vp_text(game *g, int who)
     x = p_ptr->head[WHERE_ACTIVE];
 
     /* Loop over active cards */
-    for ( ; x != -1; x = g->deck[x].next)
+    for (; x != -1; x = g->deck[x].next)
     {
         /* Get card pointer */
         c_ptr = &g->deck[x];
@@ -962,7 +1099,7 @@ void display_vp(game *g)
     {
         /* Get detailed VP information for player i */
         vp_details = get_vp_text(g, i);
-        
+
         /* Print player number, name, and detailed VP information */
         printf("Player %d: %s\n%s", i + 1, g->p[i].name, vp_details);
     }
@@ -1066,13 +1203,13 @@ void display_military(game *g)
     /* Display the military strength for each player */
     for (i = 0; i < g->num_players; i++)
     {
-        mil_strength m; // Stack allocation of mil_strength object
+        mil_strength m;           // Stack allocation of mil_strength object
         memset(&m, 0, sizeof(m)); // Initialize mil_strength object
 
         /* Get detailed military information for player i */
         compute_military(g, i, &m);
         military_details = get_military_text(&m);
-        
+
         /* Print player number, name, and detailed military information */
         printf("Player %d: %s\n%s", i + 1, g->p[i].name, military_details);
     }

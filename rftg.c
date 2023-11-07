@@ -2338,7 +2338,7 @@ static char *name_consume(power *o_ptr, char *buf)
 static char *name_produce(design *d_ptr, power *o_ptr, char *buf)
 {
 	/* Clear string describing power */
-	strncpy(buf, "", sizeof(buf));
+	strncpy(buf, "", 1024);
 
 	/* Check for simple powers */
 	if (o_ptr->code & P5_DRAW_EACH_NOVELTY)
