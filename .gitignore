@@ -3,3 +3,4 @@ autosave.rftg
 rftg
 *.o
 *.d
+.vscode/
