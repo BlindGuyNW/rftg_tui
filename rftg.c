@@ -2372,6 +2372,10 @@ static char *name_produce(design *d_ptr, power *o_ptr, char *buf)
 		/* Start string */
 		sprintf(buf, "Draw %d per Genes world", o_ptr->value);
 	}
+	else if (o_ptr->code & P5_DRAW_MOST_RARE)
+	{
+		sprintf(buf, "Draw %d if produced most rare goods", o_ptr->value);
+	}
 	/* Check for discard required */
 	if (o_ptr->code & P5_DISCARD)
 	{
@@ -2522,6 +2526,11 @@ char *name_settle(power *o_ptr, char *buf)
 		}
 		sprintf(buf2, "by %d", o_ptr->value);
 		strcat(buf, buf2);
+	}
+	/* Draw after... */
+	if (o_ptr->code & P3_DRAW_AFTER)
+	{
+		sprintf(buf, "Draw %d after settling", o_ptr->value);
 	}
 	/* Handle card discard powers. */
 	if (o_ptr->code & P3_DISCARD)
