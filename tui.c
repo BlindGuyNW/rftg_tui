@@ -77,7 +77,7 @@ CommandOutcome handle_common_commands(game *g, char *input, int who)
     }
     else if (strcmp(input, "?") == 0)
     {
-        printf("Help: [common help info]\n");
+        printf("Help:\n \nThis is Race for the Galaxy, a text-based version of the classic card game.\nPlease see the README file for more detailed information.\n\nBasic Commands:\n\nq: Quit the game\nh: Display your hand\nh #: Display a specific card from your hand\nv: Display victory points for all players\nm: Display military strength for all players\nt: Display your tableau\nt #: Display a specific player's tableau\n\nPlease contact the developer at zkline@speedpost.net, if you have any questions or feedback.\n");
         return CMD_HANDLED;
     }
     else if (input[0] == 'h')

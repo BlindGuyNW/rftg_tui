@@ -44,10 +44,13 @@ rftg: $(OBJECTS)
 
 # Clean up
 clean:
-	rm -f $(OBJECTS) rftg rftg.exe $(DEPS)
+	rm -f $(OBJECTS) rftg rftg.exe README.html $(DEPS)
 
 # Cross-compile for Windows
 windows:
 	$(MAKE) CROSS_COMPILE=1
-zip-win: windows
-	zip -ur rftg-win.zip rftg.exe cards.txt campaign.txt network/
+zip-win: windows doc
+	zip -ur rftg-win.zip rftg.exe cards.txt campaign.txt network/ README.html
+
+doc: README.md
+	pandoc -s -o README.html README.md
