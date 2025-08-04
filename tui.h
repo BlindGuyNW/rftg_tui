@@ -50,4 +50,6 @@ void display_cards(game *g, int list[], int num, const char *message);
     void display_hand(game *g, int who);
     extern char *get_card_power_name(int i, int p);
     int tui_new_game_menu(options *opt);
+    int tui_save_game(game *g, int who);
+    int tui_load_game(void);
 #endif

@@ -63,6 +63,12 @@ extern void reset_status(game *g, int who);
 #define TRUE 1
 
 /*
+ * Global variables
+ */
+char *load_filename = NULL;
+char *pending_save_filename = NULL;
+
+/*
  * Current (real) game state.
  */
 static game real_game;
@@ -1283,13 +1289,56 @@ static void gui_make_choice(game *g, int who, int type, int list[], int *nl,
 		else if (list[0] == -106) /* ACT_NEW_GAME */
 		{
 			/* Call new game menu */
-			if (tui_new_game_menu(&opt))
+			int menu_result = tui_new_game_menu(&opt);
+			if (menu_result == 1)
 			{
 				/* User wants to start new game */
 				restart_loop = RESTART_NEW;
 				g->game_over = 1; /* Force exit from current game */
 			}
+			else if (menu_result == 2)
+			{
+				/* User loaded a game - let the main loop handle restart */
+				g->game_over = 1; /* Force exit from current game */
+				restart_loop = RESTART_LOAD;
+			}
 			/* Otherwise continue current game */
+			return;
+		}
+		else if (list[0] == -107) /* ACT_SAVE_GAME */
+		{
+			/* Call save function */
+			if (tui_save_game(g, who))
+			{
+				printf("Game saved successfully.\n");
+			}
+			else
+			{
+				printf("Save failed.\n");
+			}
+			/* Re-call action selection after save */
+			tui_choose_action(g, who, list, 0);
+			rv = list[0];
+			break;
+		}
+		else if (list[0] == -108) /* ACT_LOAD_GAME */
+		{
+			/* Call load function */
+			if (tui_load_game())
+			{
+				printf("Game loaded successfully.\n");
+				/* Force current game over and load the saved game */
+				g->game_over = 1;
+				restart_loop = RESTART_LOAD;
+			}
+			else
+			{
+				printf("Load failed.\n");
+				/* Re-call action selection after failed load */
+				tui_choose_action(g, who, list, 0);
+				rv = list[0];
+				break;
+			}
 			return;
 		}
 		/* Save Psi-Crystal info for redo/undo */
@@ -1396,6 +1445,8 @@ static void gui_make_choice(game *g, int who, int type, int list[], int *nl,
 
 	/* Mark new size of choice log */
 	p_ptr->choice_size = l_ptr - p_ptr->choice_log;
+
+	/* Pending save logic disabled for debugging */
 
 	/* Mark one choice is done */
 	choice_done(g);
@@ -1781,17 +1832,91 @@ static void run_game(void)
 		/* Load a new game */
 		else if (restart_loop == RESTART_LOAD)
 		{
-			/* Reset our position and GUI elements */
-			reset_gui();
+			/* Check if we have a filename to load */
+			if (load_filename)
+			{
+				/* Try to load the game */
+				if (load_game(&real_game, load_filename) < 0)
+				{
+					printf("Error: Failed to load game from %s\n", load_filename);
+					free(load_filename);
+					load_filename = NULL;
+					restart_loop = 0; /* Continue current game */
+					return;
+				}
+				
+				/* Remember log sizes */
+				for (int i = 0; i < real_game.num_players; ++i)
+				{
+					orig_log_size[i] = real_game.p[i].choice_size;
+				}
+				
+				/* Set undo point */
+				num_undo = 9999;
+				
+				/* Use GUI approach: load into temporary state, then copy to real_game */
+				game load_state;
+				int i;
+				
+				/* Set up choice log pointers for temporary load state */
+				for (i = 0; i < MAX_PLAYER; i++)
+				{
+					load_state.p[i].choice_log = orig_log[i];
+				}
+				
+				/* Clear campaign structure */
+				load_state.camp_status = NULL;
+				
+				/* Try to load into temporary state */
+				if (load_game(&load_state, load_filename) < 0)
+				{
+					printf("Error: Failed to load game from %s\n", load_filename);
+					free(load_filename);
+					load_filename = NULL;
+					restart_loop = 0;
+					return;
+				}
+				
+				/* Remember log sizes */
+				for (i = 0; i < load_state.num_players; ++i)
+				{
+					orig_log_size[i] = load_state.p[i].choice_size;
+				}
+				
+				/* Copy loaded state to real game */
+				real_game = load_state;
+				
+				/* Clean up */
+				free(load_filename);
+				load_filename = NULL;
+				
+				/* Clear restart loop */
+				restart_loop = 0;
+				
+				/* Make sure game is not marked as over */
+				real_game.game_over = 0;
+				
+				/* We're not replaying - we're continuing a loaded game */
+				game_replaying = FALSE;
+				
+				/* Skip replaying - jump directly to playing the loaded game */
+				goto play_loaded_game;
+			}
+			else
+			{
+				/* No filename - just initialize new game */
+				/* Reset our position and GUI elements */
+				reset_gui();
 
-			/* Start with start of game random seed */
-			real_game.random_seed = real_game.start_seed;
+				/* Start with start of game random seed */
+				real_game.random_seed = real_game.start_seed;
 
-			/* Initialize game */
-			init_game(&real_game);
+				/* Initialize game */
+				init_game(&real_game);
 
-			/* Set undo point (will be reduced later) */
-			num_undo = 9999;
+				/* Set undo point (will be reduced later) */
+				num_undo = 9999;
+			}
 		}
 
 		/* Replay a loaded game */
@@ -1831,12 +1956,41 @@ static void run_game(void)
 			printf("Welcome to Race for the Galaxy TUI!\n\n");
 			
 			/* Show new game menu */
-			if (tui_new_game_menu(&opt))
+			int menu_result = tui_new_game_menu(&opt);
+			if (menu_result == 1)
 			{
 				/* User wants to start new game - apply options and start */
 				apply_options();
 				restart_loop = RESTART_NEW;
 				run_game();
+				return;
+			}
+			else if (menu_result == 2)
+			{
+				/* User loaded a game - use command-line load approach */
+				/* Load directly into real_game like command-line does */
+				extern char *load_filename;
+				if (load_filename && load_game(&real_game, load_filename) >= 0)
+				{
+					/* Set up log sizes like command-line load */
+					for (int i = 0; i < real_game.num_players; ++i)
+					{
+						orig_log_size[i] = real_game.p[i].choice_size;
+					}
+					/* Force current game over and set restart like command-line */
+					real_game.game_over = 1;
+					restart_loop = RESTART_LOAD;
+				}
+				else
+				{
+					printf("Failed to load game\n");
+				}
+				/* Clean up load_filename */
+				if (load_filename)
+				{
+					free(load_filename);
+					load_filename = NULL;
+				}
 				return;
 			}
 			else
@@ -1889,6 +2043,7 @@ static void run_game(void)
 		if (real_game.game_over)
 			return;
 
+play_loaded_game:
 		/* Play game rounds until finished */
 		while (game_round(&real_game))
 			;

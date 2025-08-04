@@ -90,7 +90,9 @@ typedef enum
     CMD_REDO,     // Redo last action
     CMD_REDO_ROUND, // Redo to next round
     CMD_REDO_GAME,  // Redo to end of game
-    CMD_NEW_GAME   // Start new game
+    CMD_NEW_GAME,  // Start new game
+    CMD_SAVE_GAME, // Save current game
+    CMD_LOAD_GAME  // Load saved game
 } CommandOutcome;
 
 CommandOutcome handle_common_commands(game *g, char *input, int who)
@@ -102,7 +104,7 @@ CommandOutcome handle_common_commands(game *g, char *input, int who)
     }
     else if (strcmp(input, "?") == 0)
     {
-        printf("Help:\n \nThis is Race for the Galaxy, a text-based version of the classic card game.\nPlease see the README file for more detailed information.\n\nBasic Commands:\n\nq: Quit the game\nn: New game (with setup menu)\nh: Display your hand\nh #: Display a specific card from your hand\nv: Display victory points for all players\nm: Display military strength for all players\nt: Display your tableau\nt #: Display a specific player's tableau\nu: Undo last action\nur: Undo to previous round\nug: Undo to beginning of game\nr: Redo last action\nrr: Redo to next round\nrg: Redo to end of game\n\nPlease contact the developer at zkline@speedpost.net, if you have any questions or feedback.\n");
+        printf("Help:\n \nThis is Race for the Galaxy, a text-based version of the classic card game.\nPlease see the README file for more detailed information.\n\nBasic Commands:\n\nq: Quit the game\nn: New game (with setup menu)\nsave: Save current game\nload: Load saved game\nh: Display your hand\nh #: Display a specific card from your hand\nv: Display victory points for all players\nm: Display military strength for all players\nt: Display your tableau\nt #: Display a specific player's tableau\nu: Undo last action\nur: Undo to previous round\nug: Undo to beginning of game\nr: Redo last action\nrr: Redo to next round\nrg: Redo to end of game\n\nPlease contact the developer at zkline@speedpost.net, if you have any questions or feedback.\n");
         return CMD_HANDLED;
     }
     else if (input[0] == 'h')
@@ -214,6 +216,16 @@ CommandOutcome handle_common_commands(game *g, char *input, int who)
     {
         /* Return new game command */
         return CMD_NEW_GAME;
+    }
+    else if (strcmp(input, "save") == 0)
+    {
+        /* Return save game command */
+        return CMD_SAVE_GAME;
+    }
+    else if (strcmp(input, "load") == 0)
+    {
+        /* Return load game command */
+        return CMD_LOAD_GAME;
     }
 
     // If none of the common commands were matched, we continue processing
@@ -561,6 +573,20 @@ void tui_choose_action(game *g, int who, int action[2], int one)
         {
             /* Special action code for new game */
             action[0] = -106;
+            action[1] = -1;
+            return;
+        }
+        else if (outcome == CMD_SAVE_GAME)
+        {
+            /* Special action code for save game */
+            action[0] = -107;
+            action[1] = -1;
+            return;
+        }
+        else if (outcome == CMD_LOAD_GAME)
+        {
+            /* Special action code for load game */
+            action[0] = -108;
             action[1] = -1;
             return;
         }
@@ -1376,7 +1402,7 @@ void display_military(game *g)
 
 /*
  * Display new game menu and get parameters from user.
- * Returns 1 if user wants to start a new game, 0 if cancelled.
+ * Returns 1 if user wants to start a new game, 2 if loaded a game, 0 if cancelled.
  */
 int tui_new_game_menu(options *opt)
 {
@@ -1443,6 +1469,7 @@ int tui_new_game_menu(options *opt)
         printf("\n");
         printf("Enter number to change setting (1-7)\n");
         printf("Enter 's' to start game with these settings\n");
+        printf("Enter 'l' to load saved game\n");
         printf("Enter 'c' to cancel\n");
         printf("Choice: ");
         
@@ -1475,6 +1502,19 @@ int tui_new_game_menu(options *opt)
         if (strcmp(input, "c") == 0)
         {
             return 0;
+        }
+        
+        /* Check for load game */
+        if (strcmp(input, "l") == 0)
+        {
+            /* Try to load a game */
+            if (tui_load_game())
+            {
+                /* Load successful - we need to tell the caller that we loaded a game instead of starting new */
+                return 2; /* Special return code for "loaded game" */
+            }
+            /* Load failed or cancelled - continue showing menu */
+            continue;
         }
         
         /* Parse numeric choice */
@@ -1594,4 +1634,130 @@ int tui_new_game_menu(options *opt)
                 break;
         }
     }
+}
+
+/*
+ * Save current game with user-specified filename.
+ * Returns 1 if game was saved, 0 if cancelled.
+ */
+int tui_save_game(game *g, int who)
+{
+    char filename[256];
+    char input[256];
+    
+    printf("Save current game\n");
+    printf("Enter filename (without .rftg extension): ");
+    
+    if (fgets(input, sizeof(input), stdin) == NULL)
+    {
+        return 0;
+    }
+    
+    /* Remove newline */
+    input[strcspn(input, "\n")] = 0;
+    
+    /* Check for empty input */
+    if (strlen(input) == 0)
+    {
+        printf("Save cancelled.\n");
+        return 0;
+    }
+    
+    /* Add .rftg extension if not present */
+    if (strstr(input, ".rftg") == NULL)
+    {
+        snprintf(filename, sizeof(filename), "%s.rftg", input);
+    }
+    else
+    {
+        strncpy(filename, input, sizeof(filename) - 1);
+        filename[sizeof(filename) - 1] = 0;
+    }
+    
+    /* Save the game */
+    if (save_game(g, filename, who) < 0)
+    {
+        printf("Error: Failed to save game to %s\n", filename);
+        return 0;
+    }
+    
+    printf("Game saved to %s\n", filename);
+    return 1;
+}
+
+/*
+ * Show list of save files and load selected one.
+ * Returns 1 if game was loaded, 0 if cancelled.
+ */
+int tui_load_game(void)
+{
+    char line[256];
+    FILE *pipe;
+    int count = 0;
+    char files[20][256]; /* Support up to 20 save files */
+    int choice;
+    
+    printf("Available save files:\n");
+    
+    /* Use ls to find .rftg files */
+    pipe = popen("ls -1 *.rftg 2>/dev/null", "r");
+    if (pipe == NULL)
+    {
+        printf("No save files found.\n");
+        return 0;
+    }
+    
+    /* Read filenames */
+    while (fgets(line, sizeof(line), pipe) != NULL && count < 20)
+    {
+        /* Remove newline */
+        line[strcspn(line, "\n")] = 0;
+        
+        /* Skip autosave file */
+        if (strcmp(line, "autosave.rftg") == 0)
+            continue;
+            
+        strcpy(files[count], line);
+        printf("%d. %s\n", count + 1, line);
+        count++;
+    }
+    
+    pclose(pipe);
+    
+    if (count == 0)
+    {
+        printf("No save files found.\n");
+        return 0;
+    }
+    
+    printf("Enter number to load (1-%d) or 0 to cancel: ", count);
+    
+    if (fgets(line, sizeof(line), stdin) == NULL)
+    {
+        return 0;
+    }
+    
+    choice = atoi(line);
+    
+    if (choice == 0)
+    {
+        printf("Load cancelled.\n");
+        return 0;
+    }
+    
+    if (choice < 1 || choice > count)
+    {
+        printf("Invalid choice.\n");
+        return 0;
+    }
+    
+    /* We can't directly load here - we need to set up the restart mechanism */
+    /* Store the filename to load in a global variable for rftg.c to use */
+    extern char *load_filename;
+    if (load_filename) free(load_filename);
+    load_filename = strdup(files[choice - 1]);
+    
+    printf("Loading %s...\n", files[choice - 1]);
+    
+    return 1;
 }

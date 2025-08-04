@@ -94,6 +94,18 @@ static int read_game(game *g, FILE* fff)
 	/* Clear simulation flag */
 	g->simulation = 0;
 
+	/* Read current round number (added in later version, might not exist) */
+	int round_temp = 1; /* Default to round 1 for backwards compatibility */
+	if (fscanf(fff, "%d\n", &round_temp) != 1)
+	{
+		/* Round number not found - use default and rewind */
+		g->round = 1;
+	}
+	else
+	{
+		g->round = round_temp;
+	}
+
 	/* Load over players */
 	for (i = 0; i < g->num_players; i++)
 	{
@@ -221,6 +233,9 @@ void write_game(game *g, FILE *fff, int player_us)
 
 	/* Write campaign information (if any) */
 	fprintf(fff, "%s\n", g->camp ? g->camp->name : "none");
+
+	/* Write current round number */
+	fprintf(fff, "%d\n", g->round);
 
 	/* Loop over players */
 	for (i = 0; i < g->num_players; i++)
