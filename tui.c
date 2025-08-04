@@ -24,6 +24,22 @@
 #include "rftg.h"
 #include "tui.h"
 
+/* External declaration for restart_loop */
+extern int restart_loop;
+
+/* Define restart loop constants */
+#define RESTART_UNDO 5
+#define RESTART_UNDO_ROUND 6
+#define RESTART_UNDO_GAME 7
+
+/* Special action codes for undo/redo */
+#define ACT_UNDO -100
+#define ACT_UNDO_ROUND -101
+#define ACT_UNDO_GAME -102
+#define ACT_REDO -103
+#define ACT_REDO_ROUND -104
+#define ACT_REDO_GAME -105
+
 // Define a struct to hold flag and its description
 typedef struct
 {
@@ -65,7 +81,13 @@ typedef enum
 {
     CMD_CONTINUE, // Continue the loop
     CMD_QUIT,     // Quit the game
-    CMD_HANDLED   // Command was handled
+    CMD_HANDLED,  // Command was handled
+    CMD_UNDO,     // Undo last action
+    CMD_UNDO_ROUND, // Undo to previous round
+    CMD_UNDO_GAME,  // Undo to beginning of game
+    CMD_REDO,     // Redo last action
+    CMD_REDO_ROUND, // Redo to next round
+    CMD_REDO_GAME  // Redo to end of game
 } CommandOutcome;
 
 CommandOutcome handle_common_commands(game *g, char *input, int who)
@@ -77,7 +99,7 @@ CommandOutcome handle_common_commands(game *g, char *input, int who)
     }
     else if (strcmp(input, "?") == 0)
     {
-        printf("Help:\n \nThis is Race for the Galaxy, a text-based version of the classic card game.\nPlease see the README file for more detailed information.\n\nBasic Commands:\n\nq: Quit the game\nh: Display your hand\nh #: Display a specific card from your hand\nv: Display victory points for all players\nm: Display military strength for all players\nt: Display your tableau\nt #: Display a specific player's tableau\n\nPlease contact the developer at zkline@speedpost.net, if you have any questions or feedback.\n");
+        printf("Help:\n \nThis is Race for the Galaxy, a text-based version of the classic card game.\nPlease see the README file for more detailed information.\n\nBasic Commands:\n\nq: Quit the game\nh: Display your hand\nh #: Display a specific card from your hand\nv: Display victory points for all players\nm: Display military strength for all players\nt: Display your tableau\nt #: Display a specific player's tableau\nu: Undo last action\nur: Undo to previous round\nug: Undo to beginning of game\nr: Redo last action\nrr: Redo to next round\nrg: Redo to end of game\n\nPlease contact the developer at zkline@speedpost.net, if you have any questions or feedback.\n");
         return CMD_HANDLED;
     }
     else if (input[0] == 'h')
@@ -155,6 +177,36 @@ CommandOutcome handle_common_commands(game *g, char *input, int who)
         }
         return CMD_HANDLED;
     }
+    else if (strcmp(input, "u") == 0)
+    {
+        /* Return special undo command */
+        return CMD_UNDO;
+    }
+    else if (strcmp(input, "ur") == 0)
+    {
+        /* Return special undo round command */
+        return CMD_UNDO_ROUND;
+    }
+    else if (strcmp(input, "ug") == 0)
+    {
+        /* Return special undo game command */
+        return CMD_UNDO_GAME;
+    }
+    else if (strcmp(input, "r") == 0)
+    {
+        /* Return special redo command */
+        return CMD_REDO;
+    }
+    else if (strcmp(input, "rr") == 0)
+    {
+        /* Return special redo round command */
+        return CMD_REDO_ROUND;
+    }
+    else if (strcmp(input, "rg") == 0)
+    {
+        /* Return special redo game command */
+        return CMD_REDO_GAME;
+    }
 
     // If none of the common commands were matched, we continue processing
     return CMD_CONTINUE;
@@ -197,12 +249,12 @@ void display_card_info(game *g, int card_index)
         printf("VP: %d\n", d_ptr->vp);
     else if (d_ptr->num_vp_bonus)
     {
-        printf("VP: special\n");
+        printf("VP: 0 (plus bonuses listed below)\n");
     }
     else
     {
         printf("VP: 0\n");
-}
+    }
 switch (d_ptr->good_type)
 {
 case GOOD_ALIEN:
@@ -220,6 +272,11 @@ case GOOD_GENE:
 }
 if (c_ptr->num_goods)
     printf("Goods: %d\n", c_ptr->num_goods);
+
+// Display military strength for military worlds
+if (d_ptr->type == TYPE_WORLD && (d_ptr->flags & FLAG_MILITARY))
+    printf("Military: %d\n", d_ptr->cost);
+
 display_card_flags(d_ptr->flags);
 
 // Display card powers
@@ -228,6 +285,57 @@ for (int i = 0; i < d_ptr->num_power; i++)
     char *power_name = get_card_power_name(card_index, i);
     printf("Power %d: %s\n", i + 1, power_name);
     free(power_name);
+}
+
+// Display VP bonuses if any
+if (d_ptr->num_vp_bonus > 0)
+{
+    printf("VP Bonuses:\n");
+    for (int i = 0; i < d_ptr->num_vp_bonus; i++)
+    {
+        vp_bonus *vp = &d_ptr->bonuses[i];
+        printf("  +%d VP for ", vp->point);
+        
+        // Convert VP bonus type to readable string
+        switch (vp->type)
+        {
+            case VP_NOVELTY_PRODUCTION: printf("Novelty production worlds"); break;
+            case VP_RARE_PRODUCTION: printf("Rare production worlds"); break;
+            case VP_GENE_PRODUCTION: printf("Gene production worlds"); break; 
+            case VP_ALIEN_PRODUCTION: printf("Alien production worlds"); break;
+            case VP_NOVELTY_WINDFALL: printf("Novelty windfall worlds"); break;
+            case VP_RARE_WINDFALL: printf("Rare windfall worlds"); break;
+            case VP_GENE_WINDFALL: printf("Gene windfall worlds"); break;
+            case VP_ALIEN_WINDFALL: printf("Alien windfall worlds"); break;
+            case VP_DEVEL_EXPLORE: printf("Explore developments"); break;
+            case VP_WORLD_EXPLORE: printf("Explore worlds"); break;
+            case VP_DEVEL_TRADE: printf("Trade developments"); break;
+            case VP_WORLD_TRADE: printf("Trade worlds"); break;
+            case VP_DEVEL_CONSUME: printf("Consume developments"); break;
+            case VP_WORLD_CONSUME: printf("Consume worlds"); break;
+            case VP_SIX_DEVEL: printf("6-cost developments"); break;
+            case VP_DEVEL: printf("developments"); break;
+            case VP_WORLD: printf("worlds"); break;
+            case VP_NONMILITARY_WORLD: printf("non-military worlds"); break;
+            case VP_REBEL_FLAG: printf("Rebel worlds"); break;
+            case VP_ALIEN_FLAG: printf("Alien worlds"); break;
+            case VP_TERRAFORMING_FLAG: printf("Terraforming worlds"); break;
+            case VP_UPLIFT_FLAG: printf("Uplift worlds"); break;
+            case VP_IMPERIUM_FLAG: printf("Imperium worlds"); break;
+            case VP_MILITARY: printf("military strength"); break;
+            case VP_TOTAL_MILITARY: printf("total military strength"); break;
+            case VP_NEGATIVE_MILITARY: printf("negative military"); break;
+            case VP_THREE_VP: printf("every 3 VP"); break;
+            case VP_KIND_GOOD: printf("different kind of good"); break;
+            case VP_PRESTIGE: printf("prestige"); break;
+            case VP_NAME:
+                if (vp->name) printf("each %s", vp->name);
+                else printf("named cards");
+                break;
+            default: printf("special condition"); break;
+        }
+        printf("\n");
+    }
 }
 
 printf("----------------------------\n\n");
@@ -404,6 +512,42 @@ void tui_choose_action(game *g, int who, int action[2], int one)
         if (outcome == CMD_QUIT)
         {
             exit(0);
+        }
+        else if (outcome == CMD_UNDO)
+        {
+            action[0] = ACT_UNDO;
+            action[1] = -1;
+            return;
+        }
+        else if (outcome == CMD_UNDO_ROUND)
+        {
+            action[0] = ACT_UNDO_ROUND;
+            action[1] = -1;
+            return;
+        }
+        else if (outcome == CMD_UNDO_GAME)
+        {
+            action[0] = ACT_UNDO_GAME;
+            action[1] = -1;
+            return;
+        }
+        else if (outcome == CMD_REDO)
+        {
+            action[0] = ACT_REDO;
+            action[1] = -1;
+            return;
+        }
+        else if (outcome == CMD_REDO_ROUND)
+        {
+            action[0] = ACT_REDO_ROUND;
+            action[1] = -1;
+            return;
+        }
+        else if (outcome == CMD_REDO_GAME)
+        {
+            action[0] = ACT_REDO_GAME;
+            action[1] = -1;
+            return;
         }
         else if (outcome == CMD_HANDLED)
         {

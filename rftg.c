@@ -191,7 +191,11 @@ int is_round_boundary(int advanced, int *p)
  */
 void message_add(game *g, char *msg)
 {
-	printf("%s", msg);
+	/* Don't print messages during replay */
+	if (!game_replaying)
+	{
+		printf("%s", msg);
+	}
 }
 
 /*
@@ -199,8 +203,12 @@ void message_add(game *g, char *msg)
  */
 void message_add_formatted(game *g, char *msg, char *tag)
 {
-	/* Just dump the message into the log without formatting. */
-	printf("%s", msg);
+	/* Don't print messages during replay */
+	if (!game_replaying)
+	{
+		/* Just dump the message into the log without formatting. */
+		printf("%s", msg);
+	}
 }
 /*
  * Add a private message to the message buffer.
@@ -1264,6 +1272,43 @@ static void gui_make_choice(game *g, int who, int type, int list[], int *nl,
 	case CHOICE_ACTION:
 		/* Choose actions */
 		tui_choose_action(g, who, list, arg1);
+		/* Check for undo commands */
+		if (list[0] == -100) /* ACT_UNDO */
+		{
+			restart_loop = 5; /* RESTART_UNDO */
+			g->game_over = 1; /* Force exit from current game */
+			return;
+		}
+		else if (list[0] == -101) /* ACT_UNDO_ROUND */
+		{
+			restart_loop = 6; /* RESTART_UNDO_ROUND */
+			g->game_over = 1; /* Force exit from current game */
+			return;
+		}
+		else if (list[0] == -102) /* ACT_UNDO_GAME */
+		{
+			restart_loop = 7; /* RESTART_UNDO_GAME */
+			g->game_over = 1; /* Force exit from current game */
+			return;
+		}
+		else if (list[0] == -103) /* ACT_REDO */
+		{
+			restart_loop = 8; /* RESTART_REDO */
+			g->game_over = 1; /* Force exit from current game */
+			return;
+		}
+		else if (list[0] == -104) /* ACT_REDO_ROUND */
+		{
+			restart_loop = 9; /* RESTART_REDO_ROUND */
+			g->game_over = 1; /* Force exit from current game */
+			return;
+		}
+		else if (list[0] == -105) /* ACT_REDO_GAME */
+		{
+			restart_loop = 10; /* RESTART_REDO_GAME */
+			g->game_over = 1; /* Force exit from current game */
+			return;
+		}
 		/* Save Psi-Crystal info for redo/undo */
 		rv = arg1;
 		break;
@@ -2089,6 +2134,10 @@ static char *name_explore(power *o_ptr, char *buf)
 	{
 		sprintf(buf, "Keep %d extra after explore", o_ptr->value);
 	}
+	else if (o_ptr->code & P1_DISCARD_PRESTIGE)
+	{
+		sprintf(buf, "Discard prestige to draw/keep more");
+	}
 	else
 	{
 		sprintf(buf, "Unknown explore power");
@@ -2113,6 +2162,22 @@ static char *name_Develop(power *o_ptr, char *buf)
 	else if (o_ptr->code == P2_DRAW_AFTER)
 	{
 		sprintf(buf, "Draw %d after playing a development", o_ptr->value);
+	}
+	else if (o_ptr->code & P2_SAVE_COST)
+	{
+		sprintf(buf, "Save %d in cost reduction", o_ptr->value);
+	}
+	else if (o_ptr->code & P2_PRESTIGE)
+	{
+		sprintf(buf, "Gain %d prestige", o_ptr->value);
+	}
+	else if (o_ptr->code & P2_PRESTIGE_REBEL)
+	{
+		sprintf(buf, "Gain %d prestige if played rebel world", o_ptr->value);
+	}
+	else if (o_ptr->code & P2_PRESTIGE_SIX)
+	{
+		sprintf(buf, "Gain %d prestige if 6-cost development", o_ptr->value);
 	}
 	else
 	{
@@ -2430,6 +2495,24 @@ static char *name_produce(design *d_ptr, power *o_ptr, char *buf)
 		/* Add to string */
 		strcat(buf, "produce on Alien windfall");
 	}
+	
+	/* Expansion powers */
+	else if (o_ptr->code & P5_SHIFT_RARE)
+	{
+		strcat(buf, "shift Rare goods to other worlds");
+	}
+	else if (o_ptr->code & P5_PRESTIGE_IF)
+	{
+		strcat(buf, "gain prestige if condition met");
+	}
+	else if (o_ptr->code & P5_PRESTIGE_MOST_CHROMO)
+	{
+		strcat(buf, "gain prestige if most Chromosome worlds");
+	}
+	else if (o_ptr->code & P5_TAKE_SAVED)
+	{
+		strcat(buf, "take saved cost reductions");
+	}
 
 	/* Capitalize string if needed */
 	buf[0] = toupper(buf[0]);
@@ -2500,6 +2583,14 @@ char *name_settle(power *o_ptr, char *buf)
 		{
 			strcat(buf, " per military world");
 		}
+		else if (o_ptr->code & P3_AGAINST_CHROMO)
+		{
+			strcat(buf, " against chromosome worlds");
+		}
+		else if (o_ptr->code & P3_PER_CHROMO)
+		{
+			strcat(buf, " per chromosome world");
+		}
 	}
 	else if (o_ptr->code & P3_REDUCE)
 	{
@@ -2559,6 +2650,10 @@ char *name_settle(power *o_ptr, char *buf)
 		{
 			strcat(buf, "against alien worlds");
 		}
+		else if (o_ptr->code & P3_AGAINST_CHROMO)
+		{
+			strcat(buf, "against chromosome worlds");
+		}
 		if (o_ptr->value)
 		{
 			sprintf(buf2, "discounted by %d", o_ptr->value);
@@ -2569,6 +2664,37 @@ char *name_settle(power *o_ptr, char *buf)
 		}
 		strcat(buf, buf2);
 	}
+	
+	/* Prestige powers */
+	if (o_ptr->code & P3_PRESTIGE)
+	{
+		sprintf(buf, "Gain %d prestige", o_ptr->value);
+	}
+	else if (o_ptr->code & P3_PRESTIGE_REBEL)
+	{
+		sprintf(buf, "Gain %d prestige if rebel world played", o_ptr->value);
+	}
+	else if (o_ptr->code & P3_PAY_PRESTIGE)
+	{
+		sprintf(buf, "Pay prestige to reduce cost by %d", o_ptr->value);
+	}
+	else if (o_ptr->code & P3_SAVE_COST)
+	{
+		sprintf(buf, "Save %d in cost reduction", o_ptr->value);
+	}
+	else if (o_ptr->code & P3_CONSUME_PRESTIGE)
+	{
+		sprintf(buf, "Consume prestige for benefits");
+	}
+	else if (o_ptr->code & P3_PRODUCE_PRESTIGE)
+	{
+		sprintf(buf, "Produce prestige");
+	}
+	else if (o_ptr->code & P3_TAKEOVER_PRESTIGE)
+	{
+		sprintf(buf, "Gain prestige from takeovers");
+	}
+	
 	return buf;
 }
 
