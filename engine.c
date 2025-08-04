@@ -12634,7 +12634,7 @@ int game_round(game *g)
 		{
 			/* Format message */
 			sprintf(msg, "%s chooses %s.\n", p_ptr->name,
-				action_name(p_ptr->action[0]));
+				plain_actname[p_ptr->action[0]]);
 
 			if (p_ptr->action[0] == ACT_SEARCH || p_ptr->action[0] & ACT_PRESTIGE)
 			{
@@ -12653,8 +12653,8 @@ int game_round(game *g)
 		{
 			/* Format message */
 			sprintf(msg, "%s chooses %s/%s.\n", p_ptr->name,
-			        action_name(p_ptr->action[0]),
-			        action_name(p_ptr->action[1]));
+			        plain_actname[p_ptr->action[0]],
+			        plain_actname[p_ptr->action[1]]);
 
 			if (p_ptr->action[0] == ACT_SEARCH || p_ptr->action[0] & ACT_PRESTIGE ||
 			    p_ptr->action[1] == ACT_SEARCH || p_ptr->action[1] & ACT_PRESTIGE)
@@ -12707,7 +12707,7 @@ int game_round(game *g)
 		{
 			/* Format message */
 			sprintf(msg, "%s chooses %s.\n", p_ptr->name,
-				action_name(p_ptr->action[0]));
+				plain_actname[p_ptr->action[0]]);
 
 			if (p_ptr->action[0] == ACT_SEARCH || p_ptr->action[0] & ACT_PRESTIGE)
 			{
@@ -12726,8 +12726,8 @@ int game_round(game *g)
 		{
 			/* Format message */
 			sprintf(msg, "%s chooses %s/%s.\n", p_ptr->name,
-			        action_name(p_ptr->action[0]),
-			        action_name(p_ptr->action[1]));
+			        plain_actname[p_ptr->action[0]],
+			        plain_actname[p_ptr->action[1]]);
 
 			if (p_ptr->action[0] == ACT_SEARCH || p_ptr->action[0] & ACT_PRESTIGE ||
 			    p_ptr->action[1] == ACT_SEARCH || p_ptr->action[1] & ACT_PRESTIGE)

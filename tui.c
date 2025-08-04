@@ -486,6 +486,348 @@ void tui_choose_discard(game *g, int who, int list[], int *num, int discard)
     *num = discard_count;
 }
 
+/*
+ * Choose start world and initial hand discards
+ */
+void tui_choose_start(game *g, int who, int list[], int *num, int special[], int *num_special)
+{
+    int i, selected_world = -1, target_hand_size = 4;
+    int discard_count, cards_to_discard;
+    
+    printf("=== GAME START: Choose Start World and Hand ===\n\n");
+    
+    /* Step 1: Choose start world */
+    if (*num_special > 1)
+    {
+        printf("Available start worlds:\n");
+        for (i = 0; i < *num_special; i++)
+        {
+            card *c_ptr = &g->deck[special[i]];
+            printf("%d. %s\n", i + 1, c_ptr->d_ptr->name);
+        }
+        
+        while (selected_world < 0)
+        {
+            printf("\nEnter start world number (1-%d): ", *num_special);
+            char input[10];
+            if (fgets(input, sizeof(input), stdin) == NULL)
+            {
+                printf("Error reading input. Please try again.\n");
+                continue;
+            }
+            input[strcspn(input, "\n")] = 0;
+            
+            CommandOutcome outcome = handle_common_commands(g, input, who);
+            if (outcome == CMD_QUIT) exit(0);
+            else if (outcome == CMD_HANDLED) continue;
+            
+            int choice = atoi(input);
+            if (choice >= 1 && choice <= *num_special)
+            {
+                selected_world = choice - 1;
+                printf("Selected: %s\n\n", g->deck[special[selected_world]].d_ptr->name);
+            }
+            else
+            {
+                printf("Invalid choice. Please try again.\n");
+            }
+        }
+    }
+    else
+    {
+        /* Only one start world option */
+        selected_world = 0;
+        printf("Start world: %s\n\n", g->deck[special[0]].d_ptr->name);
+    }
+    
+    /* Step 2: Choose cards to discard from hand */
+    cards_to_discard = *num - target_hand_size;
+    if (cards_to_discard > 0)
+    {
+        printf("Your starting hand (%d cards):\n", *num);
+        display_cards(g, list, *num, "");
+        
+        printf("\nYou must discard %d card%s to get to %d cards.\n", 
+               cards_to_discard, PLURAL(cards_to_discard), target_hand_size);
+        
+        /* Use existing discard logic */
+        tui_choose_discard(g, who, list, num, cards_to_discard);
+    }
+    
+    /* Return selected start world */
+    special[0] = special[selected_world];
+    *num_special = 1;
+}
+
+/*
+ * Choose settle power to use
+ */
+void tui_choose_settle(game *g, int who, int cidx[], int oidx[], int *num, int *num_special)
+{
+    int i, selected_power = -1;
+    
+    printf("=== SETTLE PHASE: Choose Settle Power ===\n\n");
+    
+    /* Check if we have only one power */
+    if (*num == 1)
+    {
+        /* Only one settle power available */
+        card *c_ptr = &g->deck[cidx[0]];
+        char *power_name = get_card_power_name(cidx[0], oidx[0]);
+        printf("Using settle power: %s - %s\n", c_ptr->d_ptr->name, power_name);
+        free(power_name);
+        return;
+    }
+    
+    /* Display available settle powers */
+    printf("Available settle powers:\n");
+    for (i = 0; i < *num; i++)
+    {
+        card *c_ptr = &g->deck[cidx[i]];
+        char *power_name = get_card_power_name(cidx[i], oidx[i]);
+        printf("%d. %s - %s\n", i + 1, c_ptr->d_ptr->name, power_name);
+        free(power_name);
+    }
+    
+    /* Get player's choice */
+    while (selected_power < 0)
+    {
+        printf("\nEnter settle power number (1-%d): ", *num);
+        char input[10];
+        if (fgets(input, sizeof(input), stdin) == NULL)
+        {
+            printf("Error reading input. Please try again.\n");
+            continue;
+        }
+        input[strcspn(input, "\n")] = 0;
+        
+        CommandOutcome outcome = handle_common_commands(g, input, who);
+        if (outcome == CMD_QUIT) exit(0);
+        else if (outcome == CMD_HANDLED) continue;
+        
+        int choice = atoi(input);
+        if (choice >= 1 && choice <= *num)
+        {
+            selected_power = choice - 1;
+            card *c_ptr = &g->deck[cidx[selected_power]];
+            char *power_name = get_card_power_name(cidx[selected_power], oidx[selected_power]);
+            printf("Selected: %s - %s\n", c_ptr->d_ptr->name, power_name);
+            free(power_name);
+        }
+        else
+        {
+            printf("Invalid choice. Please try again.\n");
+        }
+    }
+    
+    /* Return selected power (move it to first position) */
+    if (selected_power != 0)
+    {
+        /* Swap selected power to first position */
+        int temp_cidx = cidx[0];
+        int temp_oidx = oidx[0];
+        cidx[0] = cidx[selected_power];
+        oidx[0] = oidx[selected_power];
+        cidx[selected_power] = temp_cidx;
+        oidx[selected_power] = temp_oidx;
+    }
+    
+    /* Set to use only the selected power */
+    *num = 1;
+}
+
+/*
+ * Choose card to save for later
+ */
+void tui_choose_save(game *g, int who, int list[], int *num)
+{
+    int i, selected_card = -1;
+    
+    printf("=== Choose Card to Save ===\n\n");
+    
+    /* Check if we have only one card */
+    if (*num == 1)
+    {
+        /* Only one card available */
+        card *c_ptr = &g->deck[list[0]];
+        printf("Saving card: %s\n", c_ptr->d_ptr->name);
+        return;
+    }
+    
+    /* Display available cards */
+    printf("Choose card to save for later:\n");
+    display_cards(g, list, *num, "");
+    
+    /* Get player's choice */
+    while (selected_card < 0)
+    {
+        printf("\nEnter card number (1-%d): ", *num);
+        char input[10];
+        if (fgets(input, sizeof(input), stdin) == NULL)
+        {
+            printf("Error reading input. Please try again.\n");
+            continue;
+        }
+        input[strcspn(input, "\n")] = 0;
+        
+        CommandOutcome outcome = handle_common_commands(g, input, who);
+        if (outcome == CMD_QUIT) exit(0);
+        else if (outcome == CMD_HANDLED) continue;
+        
+        int choice = atoi(input);
+        if (choice >= 1 && choice <= *num)
+        {
+            selected_card = choice - 1;
+            card *c_ptr = &g->deck[list[selected_card]];
+            printf("Selected: %s\n", c_ptr->d_ptr->name);
+        }
+        else
+        {
+            printf("Invalid choice. Please try again.\n");
+        }
+    }
+    
+    /* Return selected card (move it to first position) */
+    if (selected_card != 0)
+    {
+        /* Swap selected card to first position */
+        int temp = list[0];
+        list[0] = list[selected_card];
+        list[selected_card] = temp;
+    }
+    
+    /* Set to save only the selected card */
+    *num = 1;
+}
+
+/*
+ * Choose actions in advanced 2-player game
+ */
+void tui_choose_action_advanced(game *g, int who, int action[2], int one)
+{
+    int i, selected_actions[2] = {-1, -1};
+    int available_actions[TEMP_MAX_VAL];
+    int num_available_actions = 0;
+    int num_to_select = (one == 0) ? 2 : 1;
+    int actions_selected = 0;
+    
+    printf("=== ADVANCED GAME: Choose Actions ===\n\n");
+    
+    /* Set prompt based on what we're choosing */
+    if (one == 0)
+        printf("Choose TWO actions for this round:\n");
+    else if (one == 1)
+        printf("Choose your FIRST action:\n");
+    else if (one == 2)
+        printf("Choose your SECOND action:\n");
+    
+    /* Populate available actions list - include advanced actions */
+    for (i = 0; i < MAX_ACTION; i++)
+    {
+        /* Skip ACT_SEARCH under certain conditions */
+        if (i == ACT_SEARCH && (g->expanded != 3 || g->p[who].prestige_action_used))
+        {
+            continue;
+        }
+        
+        /* In advanced game, include ACT_DEVELOP2 and ACT_SETTLE2 */
+        available_actions[num_available_actions] = i;
+        num_available_actions++;
+        printf("%d. %s\n", num_available_actions, actname[i]);
+    }
+    
+    /* Get player's action choices */
+    while (actions_selected < num_to_select)
+    {
+        if (num_to_select == 2)
+        {
+            if (actions_selected == 0)
+                printf("\nSelect action %d of 2: ", actions_selected + 1);
+            else
+                printf("Select action %d of 2: ", actions_selected + 1);
+        }
+        else
+        {
+            printf("\nSelect action: ");
+        }
+        
+        char input[10];
+        if (fgets(input, sizeof(input), stdin) == NULL)
+        {
+            printf("Error reading input. Please try again.\n");
+            continue;
+        }
+        input[strcspn(input, "\n")] = 0;
+        
+        CommandOutcome outcome = handle_common_commands(g, input, who);
+        if (outcome == CMD_QUIT) exit(0);
+        else if (outcome == CMD_HANDLED) continue;
+        
+        if (strcmp(input, "r") == 0)
+        {
+            /* Redisplay action list */
+            for (i = 0; i < num_available_actions; i++)
+            {
+                printf("%d. %s\n", i + 1, actname[available_actions[i]]);
+            }
+            continue;
+        }
+        
+        int choice = atoi(input);
+        
+        if (choice >= 1 && choice <= num_available_actions)
+        {
+            int selected_action = available_actions[choice - 1];
+            
+            /* Check if action already selected */
+            if (num_to_select == 2 && actions_selected > 0 && 
+                selected_actions[0] == selected_action)
+            {
+                printf("You already selected %s. Choose a different action.\n", 
+                       actname[selected_action]);
+                continue;
+            }
+            
+            
+            selected_actions[actions_selected] = selected_action;
+            printf("Selected: %s\n", actname[selected_action]);
+            actions_selected++;
+        }
+        else
+        {
+            printf("Invalid choice. Please try again.\n");
+        }
+    }
+    
+    /* Return selected actions */
+    action[0] = selected_actions[0];
+    if (num_to_select == 2)
+        action[1] = selected_actions[1];
+    else
+        action[1] = -1;
+    
+    /* Apply the same coercion logic as the GUI */
+    /* Check for second Develop chosen without first */
+    if ((action[0] & ACT_MASK) == ACT_DEVELOP2)
+        action[0] = ACT_DEVELOP | (action[0] & ACT_PRESTIGE);
+    if ((action[1] & ACT_MASK) == ACT_DEVELOP2 &&
+        (action[0] & ACT_MASK) != ACT_DEVELOP)
+        action[1] = ACT_DEVELOP | (action[1] & ACT_PRESTIGE);
+    
+    /* Check for second Settle chosen without first */
+    if ((action[0] & ACT_MASK) == ACT_SETTLE2)
+        action[0] = ACT_SETTLE | (action[0] & ACT_PRESTIGE);
+    if ((action[1] & ACT_MASK) == ACT_SETTLE2 &&
+        (action[0] & ACT_MASK) != ACT_SETTLE)
+        action[1] = ACT_SETTLE | (action[1] & ACT_PRESTIGE);
+    
+    if (num_to_select == 2)
+    {
+        printf("\nSelected actions: %s and %s\n", 
+               actname[action[0]], actname[action[1]]);
+    }
+}
+
 void tui_choose_action(game *g, int who, int action[2], int one)
 {
     int selected_action;
@@ -495,8 +837,9 @@ void tui_choose_action(game *g, int who, int action[2], int one)
     // Check for advanced game
     if (g->advanced)
     {
-        // Call advanced function (to be implemented later)
-        // return tui_choose_action_advanced(g, who, action, one);
+        /* Call advanced function */
+        tui_choose_action_advanced(g, who, action, one);
+        return;
     }
 
     // Populate the available actions list and display them.
@@ -515,7 +858,7 @@ void tui_choose_action(game *g, int who, int action[2], int one)
         }
 
         available_actions[num_available_actions++] = i;
-        printf("%d. %s\n", num_available_actions, action_name(i));
+        printf("%d. %s\n", num_available_actions, actname[i]);
     }
 
     while (1)
@@ -600,7 +943,7 @@ void tui_choose_action(game *g, int who, int action[2], int one)
             // Redisplay the list of available actions
             for (int i = 0; i < num_available_actions; i++)
             {
-                printf("%d. %s\n", i + 1, action_name(available_actions[i]));
+                printf("%d. %s\n", i + 1, plain_actname[available_actions[i]]);
             }
         }
         else if (sscanf(input, "%d", &selected_action) == 1)

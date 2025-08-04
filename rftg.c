@@ -143,7 +143,7 @@ static char *goal_description[MAX_GOAL] =
 /*
  * Player names.
  */
-static char *player_names[MAX_PLAYER] = {"[P0]", "[P1]", "[P2]", "[P3]", "[P4]", "[P5]"};
+static char *player_names[MAX_PLAYER] = {"Human", "AI", "AI 2", "AI 3", "AI 4", "AI 5"};
 
 /*
  * Check whether a log position marks a round boundary.
@@ -1246,6 +1246,18 @@ static void gui_make_choice(game *g, int who, int type, int list[], int *nl,
 		tui_choose_discard(g, who, list, nl, arg1);
 		rv = 0;
 		break;
+	case CHOICE_SAVE:
+
+		/* Choose card to save for later */
+		tui_choose_save(g, who, list, nl);
+		rv = 0;
+		break;
+	case CHOICE_START:
+
+		/* Choose start world and initial discards */
+		tui_choose_start(g, who, list, nl, special, ns);
+		rv = 0;
+		break;
 	case CHOICE_ACTION:
 		/* Choose actions */
 		tui_choose_action(g, who, list, arg1);
@@ -1343,6 +1355,13 @@ static void gui_make_choice(game *g, int who, int type, int list[], int *nl,
 		}
 		/* Save Psi-Crystal info for redo/undo */
 		rv = arg1;
+		break;
+	/* Choose settle power to use */
+	case CHOICE_SETTLE:
+
+		/* Choose settle power */
+		tui_choose_settle(g, who, list, special, nl, ns);
+		rv = 0;
 		break;
 	/* Choose card to place*/
 	case CHOICE_PLACE:
