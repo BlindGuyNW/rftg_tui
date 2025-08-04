@@ -38,58 +38,29 @@
 #define RESTART_REDO_GAME 10
 #define RESTART_REPLAY 11
 #define RESTART_CURRENT 12
+#define RESTART_NEW_MENU 13
 
 /*
- * User options.
+ * User options instance with default values.
  */
-typedef struct options
+options opt = 
 {
-	/* Number of players */
-	int num_players;
-
-	/* Expansion level */
-	int expanded;
-
-	/* Player name */
-	char *player_name;
-
-	/* Two-player advanced game */
-	int advanced;
-
-	/* Disable goals */
-	int disable_goal;
-
-	/* Disable takeovers */
-	int disable_takeover;
-
-	/* Customize seed */
-	int customize_seed;
-
-	/* Seed value */
-	unsigned int seed;
-
-	/* Campaign name */
-	char *campaign_name;
-
-	/* Display the VP value for cards in hand */
-	int vp_in_hand;
-
-	/* Autosave */
-	int auto_save;
-
-} options;
+	2, // num_players
+	0, // expanded 
+	NULL, // player_name
+	0, // advanced
+	0, // disable_goal
+	0, // disable_takeover
+	0, // customize_seed
+	0, // seed
+	"", // campaign_name
+	0, // vp_in_hand
+	1, // auto_save
+};
 
 extern void reset_status(game *g, int who);
 #define FALSE 0
 #define TRUE 1
-
-/*
- * Our default options.
- */
-static options opt =
-	{
-		2, // num_players
-};
 
 /*
  * Current (real) game state.
@@ -1309,6 +1280,18 @@ static void gui_make_choice(game *g, int who, int type, int list[], int *nl,
 			g->game_over = 1; /* Force exit from current game */
 			return;
 		}
+		else if (list[0] == -106) /* ACT_NEW_GAME */
+		{
+			/* Call new game menu */
+			if (tui_new_game_menu(&opt))
+			{
+				/* User wants to start new game */
+				restart_loop = RESTART_NEW;
+				g->game_over = 1; /* Force exit from current game */
+			}
+			/* Otherwise continue current game */
+			return;
+		}
 		/* Save Psi-Crystal info for redo/undo */
 		rv = arg1;
 		break;
@@ -1840,6 +1823,30 @@ static void run_game(void)
 			init_game(&real_game);
 		}
 
+		/* Show new game menu */
+		else if (restart_loop == RESTART_NEW_MENU)
+		{
+			/* Clear screen and show welcome message */
+			printf("\033[2J\033[H");
+			printf("Welcome to Race for the Galaxy TUI!\n\n");
+			
+			/* Show new game menu */
+			if (tui_new_game_menu(&opt))
+			{
+				/* User wants to start new game - apply options and start */
+				apply_options();
+				restart_loop = RESTART_NEW;
+				run_game();
+				return;
+			}
+			else
+			{
+				/* User cancelled - exit */
+				printf("Goodbye!\n");
+				exit(0);
+			}
+		}
+
 		/* Reset counts */
 		pos = choice = 0;
 
@@ -1937,8 +1944,8 @@ int main(int argc, char *argv[])
 	/* Load campaigns */
 	read_campaign();
 
-	/* By default restore single-player game */
-	restart_loop = RESTART_RESTORE;
+	/* By default show new game menu */
+	restart_loop = RESTART_NEW_MENU;
 
 	/* Parse arguments */
 	for (i = 1; i < argc; i++)

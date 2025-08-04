@@ -1087,6 +1087,46 @@ extern decisions ai_func;
 extern decisions gui_func;
 
 /*
+ * User options structure
+ */
+typedef struct options
+{
+	/* Number of players */
+	int num_players;
+
+	/* Expansion level */
+	int expanded;
+
+	/* Player name */
+	char *player_name;
+
+	/* Two-player advanced game */
+	int advanced;
+
+	/* Disable goals */
+	int disable_goal;
+
+	/* Disable takeovers */
+	int disable_takeover;
+
+	/* Customize seed */
+	int customize_seed;
+
+	/* Seed value */
+	unsigned int seed;
+
+	/* Campaign name */
+	char *campaign_name;
+
+	/* Display the VP value for cards in hand */
+	int vp_in_hand;
+
+	/* Autosave */
+	int auto_save;
+
+} options;
+
+/*
  * Macro functions.
  */
 #define PLURAL(x) ((x) == 1 ? "" : "s")

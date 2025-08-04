@@ -23,6 +23,8 @@
 
 #include "rftg.h"
 #include "tui.h"
+#include <string.h>
+#include <stdlib.h>
 
 /* External declaration for restart_loop */
 extern int restart_loop;
@@ -87,7 +89,8 @@ typedef enum
     CMD_UNDO_GAME,  // Undo to beginning of game
     CMD_REDO,     // Redo last action
     CMD_REDO_ROUND, // Redo to next round
-    CMD_REDO_GAME  // Redo to end of game
+    CMD_REDO_GAME,  // Redo to end of game
+    CMD_NEW_GAME   // Start new game
 } CommandOutcome;
 
 CommandOutcome handle_common_commands(game *g, char *input, int who)
@@ -99,7 +102,7 @@ CommandOutcome handle_common_commands(game *g, char *input, int who)
     }
     else if (strcmp(input, "?") == 0)
     {
-        printf("Help:\n \nThis is Race for the Galaxy, a text-based version of the classic card game.\nPlease see the README file for more detailed information.\n\nBasic Commands:\n\nq: Quit the game\nh: Display your hand\nh #: Display a specific card from your hand\nv: Display victory points for all players\nm: Display military strength for all players\nt: Display your tableau\nt #: Display a specific player's tableau\nu: Undo last action\nur: Undo to previous round\nug: Undo to beginning of game\nr: Redo last action\nrr: Redo to next round\nrg: Redo to end of game\n\nPlease contact the developer at zkline@speedpost.net, if you have any questions or feedback.\n");
+        printf("Help:\n \nThis is Race for the Galaxy, a text-based version of the classic card game.\nPlease see the README file for more detailed information.\n\nBasic Commands:\n\nq: Quit the game\nn: New game (with setup menu)\nh: Display your hand\nh #: Display a specific card from your hand\nv: Display victory points for all players\nm: Display military strength for all players\nt: Display your tableau\nt #: Display a specific player's tableau\nu: Undo last action\nur: Undo to previous round\nug: Undo to beginning of game\nr: Redo last action\nrr: Redo to next round\nrg: Redo to end of game\n\nPlease contact the developer at zkline@speedpost.net, if you have any questions or feedback.\n");
         return CMD_HANDLED;
     }
     else if (input[0] == 'h')
@@ -206,6 +209,11 @@ CommandOutcome handle_common_commands(game *g, char *input, int who)
     {
         /* Return special redo game command */
         return CMD_REDO_GAME;
+    }
+    else if (strcmp(input, "n") == 0)
+    {
+        /* Return new game command */
+        return CMD_NEW_GAME;
     }
 
     // If none of the common commands were matched, we continue processing
@@ -546,6 +554,13 @@ void tui_choose_action(game *g, int who, int action[2], int one)
         else if (outcome == CMD_REDO_GAME)
         {
             action[0] = ACT_REDO_GAME;
+            action[1] = -1;
+            return;
+        }
+        else if (outcome == CMD_NEW_GAME)
+        {
+            /* Special action code for new game */
+            action[0] = -106;
             action[1] = -1;
             return;
         }
@@ -1356,5 +1371,227 @@ void display_military(game *g)
 
         /* Print player number, name, and detailed military information */
         printf("Player %d: %s\n%s", i + 1, g->p[i].name, military_details);
+    }
+}
+
+/*
+ * Display new game menu and get parameters from user.
+ * Returns 1 if user wants to start a new game, 0 if cancelled.
+ */
+int tui_new_game_menu(options *opt)
+{
+    char input[256];
+    int choice;
+    int max_players;
+    options temp_opt;
+    
+    /* Copy current options to temporary */
+    memcpy(&temp_opt, opt, sizeof(options));
+    
+    while (1)
+    {
+        /* Clear screen */
+        printf("\033[2J\033[H");
+        
+        /* Display header */
+        printf("=== New Game Setup ===\n\n");
+        
+        /* Display current settings */
+        printf("Current settings:\n");
+        printf("1. Player name: %s\n", temp_opt.player_name ? temp_opt.player_name : "Human");
+        printf("2. Expansion: %s\n", exp_names[temp_opt.expanded]);
+        
+        /* Calculate max players for current expansion */
+        max_players = (temp_opt.expanded == 0) ? 4 : 
+                      (temp_opt.expanded == 4) ? 5 : 6;
+        
+        printf("3. Number of players: %d", temp_opt.num_players);
+        if (temp_opt.num_players > max_players)
+        {
+            printf(" (will be reduced to %d)", max_players);
+        }
+        printf("\n");
+        
+        /* Show advanced option only for 2 players */
+        if (temp_opt.num_players == 2)
+        {
+            printf("4. Two-player advanced: %s\n", temp_opt.advanced ? "Yes" : "No");
+        }
+        
+        /* Show goals option for expansions 1-3 */
+        if (temp_opt.expanded >= 1 && temp_opt.expanded <= 3)
+        {
+            printf("5. Disable goals: %s\n", temp_opt.disable_goal ? "Yes" : "No");
+        }
+        
+        /* Show takeovers option for expansions 2-3 */
+        if (temp_opt.expanded >= 2 && temp_opt.expanded <= 3)
+        {
+            printf("6. Disable takeovers: %s\n", temp_opt.disable_takeover ? "Yes" : "No");
+        }
+        
+        printf("7. Custom seed: ");
+        if (temp_opt.customize_seed)
+        {
+            printf("%u\n", temp_opt.seed);
+        }
+        else
+        {
+            printf("Random\n");
+        }
+        
+        printf("\n");
+        printf("Enter number to change setting (1-7)\n");
+        printf("Enter 's' to start game with these settings\n");
+        printf("Enter 'c' to cancel\n");
+        printf("Choice: ");
+        
+        /* Get user input */
+        if (fgets(input, sizeof(input), stdin) == NULL)
+        {
+            return 0;
+        }
+        input[strcspn(input, "\n")] = 0;
+        
+        /* Check for start game */
+        if (strcmp(input, "s") == 0)
+        {
+            /* Validate and adjust player count */
+            if (temp_opt.num_players > max_players)
+            {
+                temp_opt.num_players = max_players;
+            }
+            
+            /* Copy temporary options back */
+            memcpy(opt, &temp_opt, sizeof(options));
+            
+            /* Clear campaign */
+            opt->campaign_name = "";
+            
+            return 1;
+        }
+        
+        /* Check for cancel */
+        if (strcmp(input, "c") == 0)
+        {
+            return 0;
+        }
+        
+        /* Parse numeric choice */
+        choice = atoi(input);
+        
+        switch (choice)
+        {
+            case 1:
+                /* Change player name */
+                printf("Enter player name (max 50 characters): ");
+                if (fgets(input, sizeof(input), stdin) != NULL)
+                {
+                    input[strcspn(input, "\n")] = 0;
+                    if (strlen(input) > 0)
+                    {
+                        if (temp_opt.player_name) free(temp_opt.player_name);
+                        temp_opt.player_name = strdup(input);
+                    }
+                }
+                break;
+                
+            case 2:
+                /* Change expansion */
+                printf("\nSelect expansion:\n");
+                for (int i = 0; i <= MAX_EXPANSION - 1; i++)
+                {
+                    printf("%d. %s\n", i + 1, exp_names[i]);
+                }
+                printf("Choice: ");
+                if (fgets(input, sizeof(input), stdin) != NULL)
+                {
+                    int exp = atoi(input) - 1;
+                    if (exp >= 0 && exp < MAX_EXPANSION)
+                    {
+                        temp_opt.expanded = exp;
+                        
+                        /* Reset advanced if not 2 players */
+                        if (temp_opt.num_players != 2)
+                        {
+                            temp_opt.advanced = 0;
+                        }
+                        
+                        /* Reset goals/takeovers if not applicable */
+                        if (exp < 1 || exp > 3)
+                        {
+                            temp_opt.disable_goal = 0;
+                        }
+                        if (exp < 2 || exp > 3)
+                        {
+                            temp_opt.disable_takeover = 0;
+                        }
+                    }
+                }
+                break;
+                
+            case 3:
+                /* Change number of players */
+                printf("\nSelect number of players (2-%d): ", max_players);
+                if (fgets(input, sizeof(input), stdin) != NULL)
+                {
+                    int num = atoi(input);
+                    if (num >= 2 && num <= 6)
+                    {
+                        temp_opt.num_players = num;
+                        
+                        /* Reset advanced if not 2 players */
+                        if (num != 2)
+                        {
+                            temp_opt.advanced = 0;
+                        }
+                    }
+                }
+                break;
+                
+            case 4:
+                /* Toggle advanced (only for 2 players) */
+                if (temp_opt.num_players == 2)
+                {
+                    temp_opt.advanced = !temp_opt.advanced;
+                }
+                break;
+                
+            case 5:
+                /* Toggle disable goals (expansions 1-3) */
+                if (temp_opt.expanded >= 1 && temp_opt.expanded <= 3)
+                {
+                    temp_opt.disable_goal = !temp_opt.disable_goal;
+                }
+                break;
+                
+            case 6:
+                /* Toggle disable takeovers (expansions 2-3) */
+                if (temp_opt.expanded >= 2 && temp_opt.expanded <= 3)
+                {
+                    temp_opt.disable_takeover = !temp_opt.disable_takeover;
+                }
+                break;
+                
+            case 7:
+                /* Custom seed */
+                if (temp_opt.customize_seed)
+                {
+                    /* Currently custom, switch to random */
+                    temp_opt.customize_seed = 0;
+                }
+                else
+                {
+                    /* Currently random, get custom seed */
+                    printf("Enter seed value (0-4294967295): ");
+                    if (fgets(input, sizeof(input), stdin) != NULL)
+                    {
+                        unsigned int seed = (unsigned int)strtoul(input, NULL, 10);
+                        temp_opt.seed = seed;
+                        temp_opt.customize_seed = 1;
+                    }
+                }
+                break;
+        }
     }
 }

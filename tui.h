@@ -22,6 +22,9 @@
 
 #ifndef TUI_H
 #define TUI_H
+
+#include "rftg.h"
+
 #define TEMP_MAX_VAL 100
 // Function declarations
 int get_card_choice(game *g, int who, int list[], int num, const char *prompt);
@@ -46,4 +49,5 @@ void display_cards(game *g, int list[], int num, const char *message);
     void display_military(game *g);
     void display_hand(game *g, int who);
     extern char *get_card_power_name(int i, int p);
+    int tui_new_game_menu(options *opt);
 #endif
