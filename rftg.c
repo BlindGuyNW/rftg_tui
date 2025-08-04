@@ -2103,7 +2103,9 @@ int main(int argc, char *argv[])
 	}
 
 	/* Run games */
-	run_game();
+	do {
+		run_game();
+	} while (restart_loop);
 
 	/* Exit */
 	return 0;
