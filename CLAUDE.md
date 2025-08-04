@@ -26,9 +26,16 @@ The main executable is `rftg` and requires `cards.txt` and the `network/` direct
 - `ai.c` - AI decision-making logic
 
 ### User Interface
-- `tui.c` - Text-based user interface implementation
+- `tui.c` - Text-based user interface implementation with full expansion 3 support
 - `tui.h` - TUI function declarations
 - `rftg.c` - Main program entry point and game loop
+
+#### Expansion 3 (The Brink of War) Support
+The TUI now fully supports prestige actions from expansion 3:
+- **Search Action**: Search deck for specific card categories (uses prestige action, no cost)
+- **Prestige Boosts**: Enhanced actions that cost 1 prestige point + prestige action
+- **Prestige Display**: View prestige points and action status with 'v' command
+- Both regular and advanced game modes support prestige functionality
 
 ### Game State Management
 - `loadsave.c` - Save/load game functionality with autosave support

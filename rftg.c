@@ -1403,6 +1403,73 @@ static void gui_make_choice(game *g, int who, int type, int list[], int *nl,
 		tui_choose_consume_hand(g, who, arg1, arg2, list, nl);
 		rv = 0;
 		break;
+	/* Choose card to discard for prestige */
+	case CHOICE_DISCARD_PRESTIGE:
+
+		tui_choose_discard_prestige(g, who, list, nl);
+		rv = 0;
+		break;
+	/* Choose world to takeover */
+	case CHOICE_TAKEOVER:
+
+		rv = tui_choose_takeover(g, who, list, nl, special, ns);
+		break;
+	/* Choose takeover to defend against */
+	case CHOICE_DEFEND:
+
+		tui_choose_defend(g, who, list, nl);
+		rv = 0;
+		break;
+	/* Choose takeover to prevent */
+	case CHOICE_TAKEOVER_PREVENT:
+
+		tui_choose_takeover_prevent(g, who, list, nl, special);
+		rv = 0;
+		break;
+	/* Choose world to upgrade */
+	case CHOICE_UPGRADE:
+
+		tui_choose_upgrade(g, who, list, nl, special, ns);
+		rv = 0;
+		break;
+	/* Choose ante for gambling */
+	case CHOICE_ANTE:
+
+		rv = tui_choose_ante(g, who, arg1, arg2);
+		break;
+	/* Choose cards to keep */
+	case CHOICE_KEEP:
+
+		tui_choose_keep(g, who, list, nl, arg1, arg2);
+		rv = 0;
+		break;
+	/* Choose world to produce on */
+	case CHOICE_PRODUCE:
+
+		tui_choose_produce(g, who, list, nl);
+		rv = 0;
+		break; 
+	/* Choose cards to discard during produce */
+	case CHOICE_DISCARD_PRODUCE:
+
+		tui_choose_discard_produce(g, who, list, nl, arg1);
+		rv = 0;
+		break;
+	/* Choose type of good to search for */
+	case CHOICE_SEARCH_TYPE:
+
+		rv = tui_choose_search_type(g, who);
+		break;
+	/* Choose cards to keep after search */
+	case CHOICE_SEARCH_KEEP:
+
+		rv = tui_choose_search_keep(g, who, arg1, arg2);
+		break;
+	/* Choose Oort Cloud kind */
+	case CHOICE_OORT_KIND:
+
+		rv = tui_choose_oort_kind(g, who);
+		break;
 	/* Error */
 	default:
 		display_error("Unimplemented choice type!\n");

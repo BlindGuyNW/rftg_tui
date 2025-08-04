@@ -701,6 +701,57 @@ void tui_choose_save(game *g, int who, int list[], int *num)
 }
 
 /*
+ * Ask player if they want to apply prestige boost to an action
+ */
+static int ask_prestige_boost(game *g, int who, int action)
+{
+    int choice;
+    
+    /* Check if prestige boost is possible */
+    if (g->expanded != 3 || g->p[who].prestige_action_used || g->p[who].prestige <= 0)
+    {
+        return 0; /* No prestige boost possible */
+    }
+    
+    /* Skip search action - it uses prestige action but no prestige points */
+    if (action == ACT_SEARCH)
+    {
+        return 0;
+    }
+    
+    printf("\nApply PRESTIGE BOOST to %s? (Costs 1 prestige point + your prestige action)\n", actname[action]);
+    printf("You have %d prestige point%s available.\n", g->p[who].prestige, PLURAL(g->p[who].prestige));
+    printf("1. No, use regular action\n");
+    printf("2. Yes, use prestige-boosted action\n");
+    
+    while (1)
+    {
+        printf("Enter choice (1-2): ");
+        fflush(stdout);
+        
+        if (scanf("%d", &choice) != 1)
+        {
+            /* Clear invalid input */
+            int c;
+            while ((c = getchar()) != '\n' && c != EOF);
+            printf("Invalid input. Please enter a number.\n");
+            continue;
+        }
+        
+        if (choice == 1)
+        {
+            return 0; /* No prestige boost */
+        }
+        else if (choice == 2)
+        {
+            return 1; /* Apply prestige boost */
+        }
+        
+        printf("Invalid choice. Please select 1 or 2.\n");
+    }
+}
+
+/*
  * Choose actions in advanced 2-player game
  */
 void tui_choose_action_advanced(game *g, int who, int action[2], int one)
@@ -789,8 +840,18 @@ void tui_choose_action_advanced(game *g, int who, int action[2], int one)
             }
             
             
+            /* Ask about prestige boost for this action */
+            if (ask_prestige_boost(g, who, selected_action))
+            {
+                selected_action |= ACT_PRESTIGE;
+                printf("Selected: %s (PRESTIGE BOOSTED)\n", actname[selected_action & ACT_MASK]);
+            }
+            else
+            {
+                printf("Selected: %s\n", actname[selected_action]);
+            }
+            
             selected_actions[actions_selected] = selected_action;
-            printf("Selected: %s\n", actname[selected_action]);
             actions_selected++;
         }
         else
@@ -950,7 +1011,20 @@ void tui_choose_action(game *g, int who, int action[2], int one)
         {
             if (selected_action >= 1 && selected_action <= num_available_actions)
             {
-                action[0] = available_actions[selected_action - 1];
+                int chosen_action = available_actions[selected_action - 1];
+                
+                /* Ask about prestige boost for this action */
+                if (ask_prestige_boost(g, who, chosen_action))
+                {
+                    chosen_action |= ACT_PRESTIGE;
+                    printf("Action selected: %s (PRESTIGE BOOSTED)\n", actname[chosen_action & ACT_MASK]);
+                }
+                else
+                {
+                    printf("Action selected: %s\n", actname[chosen_action]);
+                }
+                
+                action[0] = chosen_action;
                 action[1] = -1;
                 return; // Exit the function once the action is selected.
             }
@@ -1537,10 +1611,22 @@ static char *get_vp_text(game *g, int who)
     }
 
     /* VP from prestige */
-    if (p_ptr->prestige)
+    if (p_ptr->prestige || (g->expanded == 3))
     {
-        sprintf(text, "Prestige: %d VP%s\n", p_ptr->prestige, PLURAL(p_ptr->prestige));
+        sprintf(text, "Prestige: %d VP%s", p_ptr->prestige, PLURAL(p_ptr->prestige));
         strcat(msg, text);
+        
+        /* Show prestige action status in expansion 3 */
+        if (g->expanded == 3)
+        {
+            sprintf(text, " (Prestige action: %s)\n", 
+                    p_ptr->prestige_action_used ? "USED" : "Available");
+            strcat(msg, text);
+        }
+        else
+        {
+            strcat(msg, "\n");
+        }
     }
 
     /* Remember old kind */
@@ -2103,4 +2189,559 @@ int tui_load_game(void)
     printf("Loading %s...\n", files[choice - 1]);
     
     return 1;
+}
+
+/*
+ * Choose whether to discard a card for prestige.
+ */
+void tui_choose_discard_prestige(game *g, int who, int list[], int *num)
+{
+    int choice;
+    char prompt[256];
+    
+    if (*num == 0)
+    {
+        /* No cards to discard */
+        return;
+    }
+    
+    sprintf(prompt, "Choose card to discard for prestige (or 0 to skip):");
+    
+    /* Display available cards */
+    display_cards(g, list, *num, "Available cards to discard for prestige:");
+    
+    while (1)
+    {
+        printf("%s ", prompt);
+        fflush(stdout);
+        
+        if (scanf("%d", &choice) != 1)
+        {
+            /* Clear invalid input */
+            int c;
+            while ((c = getchar()) != '\n' && c != EOF);
+            printf("Invalid input. Please enter a number.\n");
+            continue;
+        }
+        
+        /* Skip discarding */
+        if (choice == 0)
+        {
+            *num = 0;
+            return;
+        }
+        
+        /* Validate choice */
+        if (choice >= 1 && choice <= *num)
+        {
+            /* Move selected card to front of list */
+            int selected = list[choice - 1];
+            list[0] = selected;
+            *num = 1;
+            return;
+        }
+        
+        printf("Invalid choice. Please select 1-%d or 0 to skip.\n", *num);
+    }
+}
+
+/*
+ * Choose a world to takeover.
+ */
+int tui_choose_takeover(game *g, int who, int list[], int *num, int special[], int *num_special)
+{
+    int choice;
+    
+    if (*num == 0)
+    {
+        /* No takeover targets available */
+        return 0;
+    }
+    
+    /* Display available takeover targets */
+    display_cards(g, list, *num, "Choose world to attempt takeover (or 0 to skip):");
+    
+    while (1)
+    {
+        printf("Enter world number to takeover (1-%d) or 0 to skip: ", *num);
+        fflush(stdout);
+        
+        if (scanf("%d", &choice) != 1)
+        {
+            /* Clear invalid input */
+            int c;
+            while ((c = getchar()) != '\n' && c != EOF);
+            printf("Invalid input. Please enter a number.\n");
+            continue;
+        }
+        
+        /* Skip takeover */
+        if (choice == 0)
+        {
+            return 0;
+        }
+        
+        /* Validate choice */
+        if (choice >= 1 && choice <= *num)
+        {
+            return list[choice - 1];
+        }
+        
+        printf("Invalid choice. Please select 1-%d or 0 to skip.\n", *num);
+    }
+}
+
+/*
+ * Choose which takeover to defend against.
+ */
+void tui_choose_defend(game *g, int who, int list[], int *num)
+{
+    int choice;
+    
+    if (*num == 0)
+    {
+        /* No defense options */
+        return;
+    }
+    
+    /* Display takeover attempts that can be defended */
+    printf("Choose takeover to defend against (or 0 to allow all):\n");
+    for (int i = 0; i < *num; i++)
+    {
+        printf("%d. Defend against takeover of %s\n", i + 1, g->deck[list[i]].d_ptr->name);
+    }
+    
+    while (1)
+    {
+        printf("Enter choice (1-%d) or 0 to allow all takeovers: ", *num);
+        fflush(stdout);
+        
+        if (scanf("%d", &choice) != 1)
+        {
+            /* Clear invalid input */
+            int c;
+            while ((c = getchar()) != '\n' && c != EOF);
+            printf("Invalid input. Please enter a number.\n");
+            continue;
+        }
+        
+        /* Allow all takeovers */
+        if (choice == 0)
+        {
+            *num = 0;
+            return;
+        }
+        
+        /* Validate choice */
+        if (choice >= 1 && choice <= *num)
+        {
+            /* Move selected defense to front */
+            int selected = list[choice - 1];
+            list[0] = selected;
+            *num = 1;
+            return;
+        }
+        
+        printf("Invalid choice. Please select 1-%d or 0 to allow all.\n", *num);
+    }
+}
+
+/*
+ * Choose which takeover to prevent.
+ */
+void tui_choose_takeover_prevent(game *g, int who, int list[], int *num, int special[])
+{
+    int choice;
+    
+    if (*num == 0)
+    {
+        /* No takeovers to prevent */
+        return;
+    }
+    
+    /* Display takeover attempts that can be prevented */
+    printf("Choose takeover to prevent (or 0 to allow all):\n");
+    for (int i = 0; i < *num; i++)
+    {
+        printf("%d. Prevent takeover of %s\n", i + 1, g->deck[list[i]].d_ptr->name);
+    }
+    
+    while (1)
+    {
+        printf("Enter choice (1-%d) or 0 to allow all takeovers: ", *num);
+        fflush(stdout);
+        
+        if (scanf("%d", &choice) != 1)
+        {
+            /* Clear invalid input */
+            int c;
+            while ((c = getchar()) != '\n' && c != EOF);
+            printf("Invalid input. Please enter a number.\n");
+            continue;
+        }
+        
+        /* Allow all takeovers */
+        if (choice == 0)
+        {
+            *num = 0;
+            return;
+        }
+        
+        /* Validate choice */
+        if (choice >= 1 && choice <= *num)
+        {
+            /* Move selected prevention to front */
+            int selected = list[choice - 1];
+            list[0] = selected;
+            *num = 1;
+            return;
+        }
+        
+        printf("Invalid choice. Please select 1-%d or 0 to allow all.\n", *num);
+    }
+}
+
+/*
+ * Choose whether to upgrade a world.
+ */
+void tui_choose_upgrade(game *g, int who, int list[], int *num, int special[], int *num_special)
+{
+    int choice;
+    
+    if (*num == 0)
+    {
+        /* No upgrade options */
+        return;
+    }
+    
+    /* Display worlds that can be upgraded */
+    display_cards(g, list, *num, "Choose world to upgrade (or 0 to skip):");
+    
+    while (1)
+    {
+        printf("Enter world number to upgrade (1-%d) or 0 to skip: ", *num);
+        fflush(stdout);
+        
+        if (scanf("%d", &choice) != 1)
+        {
+            /* Clear invalid input */
+            int c;
+            while ((c = getchar()) != '\n' && c != EOF);
+            printf("Invalid input. Please enter a number.\n");
+            continue;
+        }
+        
+        /* Skip upgrade */
+        if (choice == 0)
+        {
+            *num = 0;
+            return;
+        }
+        
+        /* Validate choice */
+        if (choice >= 1 && choice <= *num)
+        {
+            /* Move selected world to front */
+            int selected = list[choice - 1];
+            list[0] = selected;
+            *num = 1;
+            return;
+        }
+        
+        printf("Invalid choice. Please select 1-%d or 0 to skip.\n", *num);
+    }
+}
+
+/*
+ * Choose ante for gambling.
+ */
+int tui_choose_ante(game *g, int who, int min, int max)
+{
+    int choice;
+    
+    printf("Choose ante to gamble (minimum %d, maximum %d): ", min, max);
+    
+    while (1)
+    {
+        fflush(stdout);
+        
+        if (scanf("%d", &choice) != 1)
+        {
+            /* Clear invalid input */
+            int c;
+            while ((c = getchar()) != '\n' && c != EOF);
+            printf("Invalid input. Please enter a number.\n");
+            continue;
+        }
+        
+        /* Validate choice */
+        if (choice >= min && choice <= max)
+        {
+            return choice;
+        }
+        
+        printf("Invalid choice. Please select %d-%d: ", min, max);
+    }
+}
+
+/*
+ * Choose which cards to keep.
+ */
+void tui_choose_keep(game *g, int who, int list[], int *num, int min, int max)
+{
+    int choice, selected = 0;
+    int temp_list[TEMP_MAX_VAL];
+    int keep_list[TEMP_MAX_VAL];
+    
+    if (*num == 0)
+    {
+        return;
+    }
+    
+    /* Copy original list */
+    for (int i = 0; i < *num; i++)
+    {
+        temp_list[i] = list[i];
+    }
+    
+    printf("Choose %d-%d cards to keep:\n", min, max);
+    display_cards(g, temp_list, *num, "Available cards:");
+    
+    while (selected < max && selected < *num)
+    {
+        if (selected >= min)
+        {
+            printf("Selected %d cards. Enter card number to add (1-%d) or 0 to finish: ", 
+                   selected, *num - selected);
+        }
+        else
+        {
+            printf("Selected %d cards (need at least %d). Enter card number to add (1-%d): ", 
+                   selected, min, *num - selected);
+        }
+        
+        fflush(stdout);
+        
+        if (scanf("%d", &choice) != 1)
+        {
+            /* Clear invalid input */
+            int c;
+            while ((c = getchar()) != '\n' && c != EOF);
+            printf("Invalid input. Please enter a number.\n");
+            continue;
+        }
+        
+        /* Finish selection if minimum met */
+        if (choice == 0 && selected >= min)
+        {
+            break;
+        }
+        
+        /* Validate choice */
+        if (choice >= 1 && choice <= (*num - selected))
+        {
+            /* Add to keep list */
+            keep_list[selected] = temp_list[choice - 1];
+            selected++;
+            
+            /* Remove from temp list */
+            for (int i = choice - 1; i < *num - selected; i++)
+            {
+                temp_list[i] = temp_list[i + 1];
+            }
+            
+            if (selected < max && selected < *num)
+            {
+                printf("Remaining options:\n");
+                display_cards(g, temp_list, *num - selected, "");
+            }
+        }
+        else
+        {
+            printf("Invalid choice.\n");
+        }
+    }
+    
+    /* Copy kept cards back to list */
+    for (int i = 0; i < selected; i++)
+    {
+        list[i] = keep_list[i];
+    }
+    *num = selected;
+}
+
+/*
+ * Choose world to produce on.
+ */
+void tui_choose_produce(game *g, int who, int list[], int *num)
+{
+    int choice;
+    
+    if (*num == 0)
+    {
+        return;
+    }
+    
+    if (*num == 1)
+    {
+        /* Only one choice, automatically select it */
+        return;
+    }
+    
+    display_cards(g, list, *num, "Choose world to produce on:");
+    
+    while (1)
+    {
+        printf("Enter world number to produce on (1-%d): ", *num);
+        fflush(stdout);
+        
+        if (scanf("%d", &choice) != 1)
+        {
+            /* Clear invalid input */
+            int c;
+            while ((c = getchar()) != '\n' && c != EOF);
+            printf("Invalid input. Please enter a number.\n");
+            continue;
+        }
+        
+        /* Validate choice */
+        if (choice >= 1 && choice <= *num)
+        {
+            /* Move selected world to front */
+            int selected = list[choice - 1];
+            list[0] = selected;
+            *num = 1;
+            return;
+        }
+        
+        printf("Invalid choice. Please select 1-%d.\n", *num);
+    }
+}
+
+/*
+ * Choose cards to discard during produce phase.
+ */
+void tui_choose_discard_produce(game *g, int who, int list[], int *num, int discard)
+{
+    tui_choose_discard(g, who, list, num, discard);
+}
+
+/*
+ * Choose type of good to search for.
+ */
+int tui_choose_search_type(game *g, int who)
+{
+    int choice, i;
+    
+    printf("Choose search category:\n");
+    
+    /* Display all available search categories */
+    for (i = 0; i < MAX_SEARCH; i++)
+    {
+        printf("%d. %s\n", i + 1, search_name[i]);
+    }
+    
+    while (1)
+    {
+        printf("Enter choice (1-%d): ", MAX_SEARCH);
+        fflush(stdout);
+        
+        if (scanf("%d", &choice) != 1)
+        {
+            /* Clear invalid input */
+            int c;
+            while ((c = getchar()) != '\n' && c != EOF);
+            printf("Invalid input. Please enter a number.\n");
+            continue;
+        }
+        
+        /* Validate and convert choice */
+        if (choice >= 1 && choice <= MAX_SEARCH)
+        {
+            return choice - 1; /* Convert to 0-based index */
+        }
+        
+        printf("Invalid choice. Please select 1-%d.\n", MAX_SEARCH);
+    }
+}
+
+/*
+ * Choose cards to keep after search.
+ */
+int tui_choose_search_keep(game *g, int who, int which, int category)
+{
+    card *c_ptr;
+    int choice;
+    
+    /* Get card pointer */
+    c_ptr = &g->deck[which];
+    
+    printf("\nCard found: %s\n", c_ptr->d_ptr->name);
+    printf("Choose action:\n");
+    printf("1. Keep card\n");
+    printf("2. Discard (continue searching)\n");
+    
+    while (1)
+    {
+        printf("Enter choice (1-2): ");
+        fflush(stdout);
+        
+        if (scanf("%d", &choice) != 1)
+        {
+            /* Clear invalid input */
+            int c;
+            while ((c = getchar()) != '\n' && c != EOF);
+            printf("Invalid input. Please enter a number.\n");
+            continue;
+        }
+        
+        /* Validate choice */
+        if (choice == 1)
+        {
+            return 1; /* Keep card */
+        }
+        else if (choice == 2)
+        {
+            return 0; /* Discard and continue searching */
+        }
+        
+        printf("Invalid choice. Please select 1 or 2.\n");
+    }
+}
+
+/*
+ * Choose Oort Cloud kind.
+ */
+int tui_choose_oort_kind(game *g, int who)
+{
+    int choice;
+    
+    printf("Choose Oort Cloud kind:\n");
+    printf("1. Novelty\n");
+    printf("2. Rare\n");
+    printf("3. Gene\n"); 
+    printf("4. Alien\n");
+    
+    while (1)
+    {
+        printf("Enter choice (1-4): ");
+        fflush(stdout);
+        
+        if (scanf("%d", &choice) != 1)
+        {
+            /* Clear invalid input */
+            int c;
+            while ((c = getchar()) != '\n' && c != EOF);
+            printf("Invalid input. Please enter a number.\n");
+            continue;
+        }
+        
+        /* Validate and convert choice */
+        if (choice >= 1 && choice <= 4)
+        {
+            return choice - 1; /* Convert to 0-based index */
+        }
+        
+        printf("Invalid choice. Please select 1-4.\n");
+    }
 }
