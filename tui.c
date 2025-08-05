@@ -901,13 +901,13 @@ void tui_choose_action_advanced(game *g, int who, int action[2], int one)
         if (num_to_select == 2)
         {
             if (actions_selected == 0)
-                printf("\nSelect action %d of 2: ", actions_selected + 1);
+                printf("\nSelect action %d of 2 ('q' to quit, '?' for help, 'r' to redisplay list): ", actions_selected + 1);
             else
-                printf("Select action %d of 2: ", actions_selected + 1);
+                printf("Select action %d of 2 ('q' to quit, '?' for help, 'r' to redisplay list): ", actions_selected + 1);
         }
         else
         {
-            printf("\nSelect action: ");
+            printf("\nSelect action ('q' to quit, '?' for help, 'r' to redisplay list): ");
         }
         
         char input[10];
@@ -919,7 +919,67 @@ void tui_choose_action_advanced(game *g, int who, int action[2], int one)
         input[strcspn(input, "\n")] = 0;
         
         CommandOutcome outcome = handle_common_commands(g, input, who);
-        if (outcome == CMD_QUIT) exit(0);
+        if (outcome == CMD_QUIT)
+        {
+            exit(0);
+        }
+        else if (outcome == CMD_UNDO)
+        {
+            action[0] = ACT_UNDO;
+            action[1] = -1;
+            return;
+        }
+        else if (outcome == CMD_UNDO_ROUND)
+        {
+            action[0] = ACT_UNDO_ROUND;
+            action[1] = -1;
+            return;
+        }
+        else if (outcome == CMD_UNDO_GAME)
+        {
+            action[0] = ACT_UNDO_GAME;
+            action[1] = -1;
+            return;
+        }
+        else if (outcome == CMD_REDO)
+        {
+            action[0] = ACT_REDO;
+            action[1] = -1;
+            return;
+        }
+        else if (outcome == CMD_REDO_ROUND)
+        {
+            action[0] = ACT_REDO_ROUND;
+            action[1] = -1;
+            return;
+        }
+        else if (outcome == CMD_REDO_GAME)
+        {
+            action[0] = ACT_REDO_GAME;
+            action[1] = -1;
+            return;
+        }
+        else if (outcome == CMD_NEW_GAME)
+        {
+            /* Special action code for new game */
+            action[0] = -106;
+            action[1] = -1;
+            return;
+        }
+        else if (outcome == CMD_SAVE_GAME)
+        {
+            /* Special action code for save game */
+            action[0] = -107;
+            action[1] = -1;
+            return;
+        }
+        else if (outcome == CMD_LOAD_GAME)
+        {
+            /* Special action code for load game */
+            action[0] = -108;
+            action[1] = -1;
+            return;
+        }
         else if (outcome == CMD_HANDLED) continue;
         
         if (strcmp(input, "r") == 0)
