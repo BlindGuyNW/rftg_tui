@@ -104,7 +104,7 @@ CommandOutcome handle_common_commands(game *g, char *input, int who)
     }
     else if (strcmp(input, "?") == 0)
     {
-        printf("Help:\n \nThis is Race for the Galaxy, a text-based version of the classic card game.\nPlease see the README file for more detailed information.\n\nBasic Commands:\n\nq: Quit the game\nn: New game (with setup menu)\nsave: Save current game\nload: Load saved game\nh: Display your hand\nh #: Display a specific card from your hand\nv: Display victory points for all players\nm: Display military strength for all players\nt: Display your tableau\nt #: Display a specific player's tableau\nu: Undo last action\nur: Undo to previous round\nug: Undo to beginning of game\nr: Redo last action\nrr: Redo to next round\nrg: Redo to end of game\n\nPlease contact the developer at zkline@speedpost.net, if you have any questions or feedback.\n");
+        printf("Help:\n \nThis is Race for the Galaxy, a text-based version of the classic card game.\nPlease see the README file for more detailed information.\n\nBasic Commands:\n\nq: Quit the game\nn: New game (with setup menu)\nsave: Save current game\nload: Load saved game\nh: Display your hand\nh #: Display a specific card from your hand\nv: Display victory points for all players\nm: Display military strength for all players\nt: Display your tableau\nt #: Display a specific player's tableau\ni#: Show detailed info for card # in current selection\nu: Undo last action\nur: Undo to previous round\nug: Undo to beginning of game\nr: Redo last action\nrr: Redo to next round\nrg: Redo to end of game\n\nPlease contact the developer at zkline@speedpost.net, if you have any questions or feedback.\n");
         return CMD_HANDLED;
     }
     else if (input[0] == 'h')
@@ -521,6 +521,30 @@ void tui_choose_start(game *g, int who, int list[], int *num, int special[], int
             if (outcome == CMD_QUIT) exit(0);
             else if (outcome == CMD_HANDLED) continue;
             
+            /* Handle 'i' command for start world info */
+            if (input[0] == 'i')
+            {
+                int info_choice;
+                if (sscanf(input + 1, "%d", &info_choice) == 1)
+                {
+                    if (info_choice >= 1 && info_choice <= *num_special)
+                    {
+                        display_card_info(g, special[info_choice - 1]);
+                        continue;
+                    }
+                    else
+                    {
+                        printf("Invalid info command. Please try again.\n");
+                        continue;
+                    }
+                }
+                else
+                {
+                    printf("Usage: i<number> to see info for start world <number>\n");
+                    continue;
+                }
+            }
+            
             int choice = atoi(input);
             if (choice >= 1 && choice <= *num_special)
             {
@@ -604,6 +628,30 @@ void tui_choose_settle(game *g, int who, int cidx[], int oidx[], int *num, int *
         CommandOutcome outcome = handle_common_commands(g, input, who);
         if (outcome == CMD_QUIT) exit(0);
         else if (outcome == CMD_HANDLED) continue;
+        
+        /* Handle 'i' command for settle power info */
+        if (input[0] == 'i')
+        {
+            int info_choice;
+            if (sscanf(input + 1, "%d", &info_choice) == 1)
+            {
+                if (info_choice >= 1 && info_choice <= *num)
+                {
+                    display_card_info(g, cidx[info_choice - 1]);
+                    continue;
+                }
+                else
+                {
+                    printf("Invalid info command. Please try again.\n");
+                    continue;
+                }
+            }
+            else
+            {
+                printf("Usage: i<number> to see info for settle power <number>\n");
+                continue;
+            }
+        }
         
         int choice = atoi(input);
         if (choice >= 1 && choice <= *num)
