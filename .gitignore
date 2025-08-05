@@ -4,3 +4,11 @@ rftg
 *.o
 *.d
 .vscode/
+
+# Test scripts
+test_*.sh
+trace_*.sh
+debug_*.sh
+*.gdb
+test_*.txt
+interactive_test.txt

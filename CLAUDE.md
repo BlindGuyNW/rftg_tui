@@ -87,6 +87,7 @@ Central game state containing:
 
 ### Testing
 No automated test framework exists. Testing is done by playing games and verifying correct rule enforcement.
+- Always use manual testing, rather than sending input to the program from the Claude Code env
 
 ### Game Phases
 The game follows a strict phase system (explore, develop, settle, consume, produce) with power resolution at each phase. Understanding this flow is crucial for any modifications.
