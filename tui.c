@@ -1307,50 +1307,105 @@ void tui_choose_pay(game *g, int who, int which, int list[], int *num,
     else
     {
         char display_message[512];
-        sprintf(display_message, "Choose payment for %s (%d card%s). Here are your options:", c_ptr->d_ptr->name, cost, cost > 1 ? "s" : "");
+        
+        // Check if there are special cards that might affect payment
+        int has_cost_reducing_special = 0;
+        for (int i = 0; i < *num_special; i++)
+        {
+            card *spec_card = &g->deck[special[i]];
+            for (int j = 0; j < spec_card->d_ptr->num_power; j++)
+            {
+                power *o_ptr = &spec_card->d_ptr->powers[j];
+                if (o_ptr->phase == PHASE_SETTLE && (o_ptr->code & P3_REDUCE_ZERO))
+                {
+                    has_cost_reducing_special = 1;
+                    break;
+                }
+            }
+            if (has_cost_reducing_special) break;
+        }
+        
+        if (has_cost_reducing_special)
+        {
+            sprintf(display_message, "Choose payment for %s (%d card%s, or use special ability):", 
+                    c_ptr->d_ptr->name, cost, cost > 1 ? "s" : "");
+        }
+        else
+        {
+            sprintf(display_message, "Choose payment for %s (%d card%s):", 
+                    c_ptr->d_ptr->name, cost, cost > 1 ? "s" : "");
+        }
 
         int temp_list[TEMP_MAX_VAL];
+        int is_special[TEMP_MAX_VAL]; // Track which cards are special
         int idx = 0;
 
         for (int i = 0; i < *num; i++, idx++)
         {
             temp_list[idx] = list[i];
+            is_special[idx] = 0; // Regular card
         }
 
         for (int i = 0; i < *num_special; i++, idx++)
         {
             temp_list[idx] = special[i];
+            is_special[idx] = 1; // Special card
         }
 
         int combined_num = *num + *num_special;
         display_cards(g, temp_list, combined_num, display_message);
 
         int total_paid = 0;
-        while (total_paid < cost)
+        int payment_complete = 0;
+        
+        while (!payment_complete)
         {
-            int selected_card = get_card_choice(g, who, temp_list, combined_num - total_paid, "Enter card number to use for payment");
+            int selected_card = get_card_choice(g, who, temp_list, combined_num - (total_regular + total_special), "Enter card number to use for payment");
 
-            if (selected_card > *num)
+            // Check if this is a special card based on our tracking array
+            if (is_special[selected_card - 1])
             {
                 special[total_special] = temp_list[selected_card - 1];
                 total_special++;
+                
+                // For special cards that might complete payment (like Doomed World),
+                // we exit the loop and let the engine validate
+                // Some special cards might not complete payment but provide bonuses
+                payment_complete = 1;
             }
             else
             {
                 list[total_regular] = temp_list[selected_card - 1];
                 total_regular++;
                 total_paid++;
+                
+                // Check if we've paid enough regular cards
+                if (total_paid >= cost)
+                {
+                    payment_complete = 1;
+                }
             }
 
-            for (int i = selected_card - 1; i < combined_num - total_paid; i++)
+            // Shift both arrays to remove the selected card
+            int remaining = combined_num - (total_regular + total_special);
+            for (int i = selected_card - 1; i < remaining; i++)
             {
                 temp_list[i] = temp_list[i + 1];
+                is_special[i] = is_special[i + 1];
             }
 
-            if (total_paid < cost)
+            if (!payment_complete && remaining > 1)
             {
-                sprintf(display_message, "You have paid %d out of %d. Remaining options:", total_paid, cost);
-                display_cards(g, temp_list, combined_num - total_paid, display_message);
+                if (total_special > 0)
+                {
+                    // If special cards selected, let user continue or stop
+                    sprintf(display_message, "Special ability selected. Continue payment? (%d paid out of %d):", total_paid, cost);
+                }
+                else
+                {
+                    sprintf(display_message, "You have paid %d out of %d. Remaining options:", total_paid, cost);
+                }
+                display_cards(g, temp_list, remaining, display_message);
             }
         }
     }
