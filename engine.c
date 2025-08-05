@@ -2750,15 +2750,11 @@ static void pay_devel(game *g, int who, int cost)
  */
 void develop_action(game *g, int who, int placing)
 {
-	player *p_ptr;
 	card *c_ptr;
 	power_where w_list[100];
 	power *o_ptr;
 	char* name;
 	int i, n, cost;
-
-	/* Get player pointer */
-	p_ptr = &g->p[who];
 
 	/* Get card placed */
 	c_ptr = &g->deck[placing];
@@ -5980,7 +5976,7 @@ void settle_finish(game *g, int who, int world, int mil_only, int special,
 void settle_chosen(game *g, int who, int first, int c_idx, int o_idx)
 {
 	player *p_ptr;
-	card *c_ptr;
+	card *c_ptr = NULL;
 	power *o_ptr;
 	int list[MAX_DECK];
 	int mil_spent, mil_spent_spec, mil_bonus;
@@ -6308,7 +6304,7 @@ void settle_chosen(game *g, int who, int first, int c_idx, int o_idx)
 static int settle_action(game *g, int who, int world)
 {
 	player *p_ptr;
-	card *c_ptr;
+	card *c_ptr = NULL;
 	power_where w_list[100], *w_ptr;
 	power *o_ptr;
 	int i, x, n, num = 0;
@@ -12634,7 +12630,7 @@ int game_round(game *g)
 		{
 			/* Format message */
 			sprintf(msg, "%s chooses %s.\n", p_ptr->name,
-				plain_actname[p_ptr->action[0]]);
+				action_name(p_ptr->action[0]));
 
 			if (p_ptr->action[0] == ACT_SEARCH || p_ptr->action[0] & ACT_PRESTIGE)
 			{
@@ -12653,8 +12649,8 @@ int game_round(game *g)
 		{
 			/* Format message */
 			sprintf(msg, "%s chooses %s/%s.\n", p_ptr->name,
-			        plain_actname[p_ptr->action[0]],
-			        plain_actname[p_ptr->action[1]]);
+			        action_name(p_ptr->action[0]),
+			        action_name(p_ptr->action[1]));
 
 			if (p_ptr->action[0] == ACT_SEARCH || p_ptr->action[0] & ACT_PRESTIGE ||
 			    p_ptr->action[1] == ACT_SEARCH || p_ptr->action[1] & ACT_PRESTIGE)
@@ -12707,7 +12703,7 @@ int game_round(game *g)
 		{
 			/* Format message */
 			sprintf(msg, "%s chooses %s.\n", p_ptr->name,
-				plain_actname[p_ptr->action[0]]);
+				action_name(p_ptr->action[0]));
 
 			if (p_ptr->action[0] == ACT_SEARCH || p_ptr->action[0] & ACT_PRESTIGE)
 			{
@@ -12726,8 +12722,8 @@ int game_round(game *g)
 		{
 			/* Format message */
 			sprintf(msg, "%s chooses %s/%s.\n", p_ptr->name,
-			        plain_actname[p_ptr->action[0]],
-			        plain_actname[p_ptr->action[1]]);
+			        action_name(p_ptr->action[0]),
+			        action_name(p_ptr->action[1]));
 
 			if (p_ptr->action[0] == ACT_SEARCH || p_ptr->action[0] & ACT_PRESTIGE ||
 			    p_ptr->action[1] == ACT_SEARCH || p_ptr->action[1] & ACT_PRESTIGE)

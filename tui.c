@@ -492,7 +492,7 @@ void tui_choose_discard(game *g, int who, int list[], int *num, int discard)
 void tui_choose_start(game *g, int who, int list[], int *num, int special[], int *num_special)
 {
     int i, selected_world = -1, target_hand_size = 4;
-    int discard_count, cards_to_discard;
+    int cards_to_discard;
     
     printf("=== GAME START: Choose Start World and Hand ===\n\n");
     
@@ -641,7 +641,7 @@ void tui_choose_settle(game *g, int who, int cidx[], int oidx[], int *num, int *
  */
 void tui_choose_save(game *g, int who, int list[], int *num)
 {
-    int i, selected_card = -1;
+    int selected_card = -1;
     
     printf("=== Choose Card to Save ===\n\n");
     

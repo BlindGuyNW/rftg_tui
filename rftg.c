@@ -113,6 +113,7 @@ static int player_us;
  */
 static int restart_loop;
 
+__attribute__((unused))
 static char *goal_description[MAX_GOAL] =
 	{
 		"First to have five VP chips",
@@ -997,6 +998,7 @@ typedef struct pow_loc
 /*
  * Compare two consume powers for sorting.
  */
+__attribute__((unused))
 static int cmp_consume(const void *l1, const void *l2)
 {
 	pow_loc *l_ptr1 = (pow_loc *)l1;
@@ -1087,6 +1089,7 @@ static int score_produce(power *o_ptr)
 /*
  * Compare two produce powers for sorting.
  */
+__attribute__((unused))
 static int cmp_produce(const void *l1, const void *l2)
 {
 	pow_loc *l_ptr1 = (pow_loc *)l1;
@@ -2990,7 +2993,6 @@ char *choose_pay_prompt(int which, int mil_only, int mil_bonus)
 	game *g = &real_game;
 	int who = player_us;
 	card *c_ptr;
-	power *o_ptr;
 	char *cost_card;
 	char *p;
 	int military, cost, ict_mil, iif_mil;
@@ -3139,6 +3141,7 @@ int can_prestige(void)
 	return real_game.p[player_us].prestige > 0 ? 3 : 1;
 }
 
+__attribute__((unused))
 static int get_discard_powers(int i)
 {
 	int j, discard = 0;
