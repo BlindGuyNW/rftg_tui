@@ -104,7 +104,39 @@ CommandOutcome handle_common_commands(game *g, char *input, int who)
     }
     else if (strcmp(input, "?") == 0)
     {
-        printf("Help:\n \nThis is Race for the Galaxy, a text-based version of the classic card game.\nPlease see the README file for more detailed information.\n\nBasic Commands:\n\nq: Quit the game\nn: New game (with setup menu)\nsave: Save current game\nload: Load saved game\nh: Display your hand\nh #: Display a specific card from your hand\nv: Display victory points for all players\nm: Display military strength for all players\nt: Display your tableau\nt #: Display a specific player's tableau\ni#: Show detailed info for card # in current selection\nu: Undo last action\nur: Undo to previous round\nug: Undo to beginning of game\nr: Redo last action\nrr: Redo to next round\nrg: Redo to end of game\n\nPlease contact the developer at zkline@speedpost.net, if you have any questions or feedback.\n");
+        printf("=== Race for the Galaxy - Help ===\n\n");
+        printf("This is a text-based version of the classic card game.\n");
+        printf("See the README file for detailed game rules.\n\n");
+        
+        printf("Card Inspection:\n");
+        printf("  h          - Show your hand\n");
+        printf("  h #        - Show details for card # in your hand\n");
+        printf("  t          - Show your tableau (cards in play)\n");
+        printf("  t #        - Show player #'s tableau\n");
+        printf("  t # #      - Show details for card # in player #'s tableau\n");
+        printf("  ta         - Show all players' tableaus\n");
+        printf("  i#         - Show details for card # in current selection\n\n");
+        
+        printf("Game Information:\n");
+        printf("  v          - Show victory points for all players\n");
+        printf("  m          - Show military strength for all players\n\n");
+        
+        printf("Game Control:\n");
+        printf("  q          - Quit the game\n");
+        printf("  n          - Start new game (with setup menu)\n");
+        printf("  save       - Save current game\n");
+        printf("  load       - Load saved game\n\n");
+        
+        printf("Undo/Redo:\n");
+        printf("  u          - Undo last action\n");
+        printf("  ur         - Undo to previous round\n");
+        printf("  ug         - Undo to beginning of game\n");
+        printf("  r          - Redo last action\n");
+        printf("  rr         - Redo to next round\n");
+        printf("  rg         - Redo to end of game\n\n");
+        
+        printf("Example: 't 2 3' shows details for card 3 in player 2's tableau\n");
+        printf("Players are numbered starting from 1.\n\n");
         return CMD_HANDLED;
     }
     else if (input[0] == 'h')
@@ -138,9 +170,20 @@ CommandOutcome handle_common_commands(game *g, char *input, int who)
         int player_number = -1; // Default to -1 to indicate the human player
         int card_number = -1;   // Default to -1 to indicate no specific card
 
+        // Check for "ta" command to show all tableaus
+        if (strcmp(input, "ta") == 0)
+        {
+            printf("=== All Players' Tableaus ===\n\n");
+            for (int i = 0; i < g->num_players; i++)
+            {
+                display_tableau(g, i);
+                printf("\n");
+            }
+            return CMD_HANDLED;
+        }
         // Expecting a format like "t" for the human player's tableau, "t #" for an opponent's tableau,
         // or "t # #" for a specific card in a tableau
-        if (input[1] == '\0')
+        else if (input[1] == '\0')
         {
             // Just "t" was entered, display the human player's tableau
             display_tableau(g, who);
@@ -171,13 +214,24 @@ CommandOutcome handle_common_commands(game *g, char *input, int who)
                 else
                 {
                     // A card number was provided but it's invalid
-                    printf("Invalid card number. Please try again.\n");
+                    printf("Invalid card number %d. ", card_number + 1);
+                    printf("Player %d has %d cards in their tableau.\n", 
+                           player_number + 1, count_player_area(g, player_number, WHERE_ACTIVE));
                 }
             }
             else
             {
                 // A player number was provided but it's invalid
-                printf("Invalid player number. Please try again.\n");
+                if (num_args >= 1)
+                {
+                    printf("Invalid player number %d. ", player_number + 1);
+                    printf("Valid players are 1-%d.\n", g->num_players);
+                }
+                else
+                {
+                    printf("Invalid tableau command. Use 't', 't #', or 't # #'.\n");
+                    printf("Type '?' for help.\n");
+                }
             }
         }
         return CMD_HANDLED;
@@ -337,17 +391,23 @@ if (d_ptr->num_vp_bonus > 0)
             case VP_DEVEL: printf("developments"); break;
             case VP_WORLD: printf("worlds"); break;
             case VP_NONMILITARY_WORLD: printf("non-military worlds"); break;
+            case VP_NONMILITARY_TRADE: printf("non-military Trade worlds"); break;
             case VP_REBEL_FLAG: printf("Rebel worlds"); break;
             case VP_ALIEN_FLAG: printf("Alien worlds"); break;
             case VP_TERRAFORMING_FLAG: printf("Terraforming worlds"); break;
             case VP_UPLIFT_FLAG: printf("Uplift worlds"); break;
             case VP_IMPERIUM_FLAG: printf("Imperium worlds"); break;
+            case VP_CHROMO_FLAG: printf("Chromosome worlds"); break;
             case VP_MILITARY: printf("military strength"); break;
             case VP_TOTAL_MILITARY: printf("total military strength"); break;
             case VP_NEGATIVE_MILITARY: printf("negative military"); break;
+            case VP_REBEL_MILITARY: printf("Rebel military worlds"); break;
             case VP_THREE_VP: printf("every 3 VP"); break;
             case VP_KIND_GOOD: printf("different kind of good"); break;
             case VP_PRESTIGE: printf("prestige"); break;
+            case VP_ALIEN_HISTORY: printf("Alien Technology worlds"); break;
+            case VP_ALIEN_SCIENCE: printf("Alien Science worlds"); break;
+            case VP_ALIEN_UPLIFT: printf("Alien Uplift worlds"); break;
             case VP_NAME:
                 if (vp->name) printf("each %s", vp->name);
                 else printf("named cards");
@@ -1584,7 +1644,8 @@ void display_hand_card(game *g, int who, int position)
     }
     else
     {
-        printf("Invalid card position. Please try again.\n");
+        printf("Invalid card position %d. You have %d cards in your hand.\n", 
+               position + 1, count_player_area(g, who, WHERE_HAND));
     }
 }
 /* Display the cards on the table. */
@@ -1594,7 +1655,7 @@ void display_tableau(game *g, int who)
 
     /* Display the cards on the table in a numbered list */
     x = g->p[who].head[WHERE_ACTIVE];
-    printf("Cards in play for %s:\n", g->p[who].name);
+    printf("Cards in play for %s (Player %d):\n", g->p[who].name, who + 1);
     while (x != -1)
     {
         count++;
@@ -1622,7 +1683,8 @@ void display_tableau_card(game *g, int who, int position)
     }
     else
     {
-        printf("Invalid card position. Please try again.\n");
+        printf("Invalid card position %d. %s has %d cards in their tableau.\n", 
+               position + 1, g->p[who].name, count_player_area(g, who, WHERE_ACTIVE));
     }
 }
 

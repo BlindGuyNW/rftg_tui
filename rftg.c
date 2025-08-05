@@ -2381,15 +2381,25 @@ static char *name_explore(power *o_ptr, char *buf)
 	/* Simple powers */
 	if (o_ptr->code == P1_DRAW)
 	{
-		sprintf(buf, "Draw %d extra after explore", o_ptr->value);
+		sprintf(buf, "+%d card%s drawn when exploring", o_ptr->value, 
+		        o_ptr->value == 1 ? "" : "s");
 	}
 	else if (o_ptr->code == P1_KEEP)
 	{
-		sprintf(buf, "Keep %d extra after explore", o_ptr->value);
+		sprintf(buf, "Keep %d extra card%s after exploring", o_ptr->value,
+		        o_ptr->value == 1 ? "" : "s");
+	}
+	else if (o_ptr->code & P1_DISCARD_ANY)
+	{
+		sprintf(buf, "May discard any cards from hand when exploring");
 	}
 	else if (o_ptr->code & P1_DISCARD_PRESTIGE)
 	{
-		sprintf(buf, "Discard prestige to draw/keep more");
+		sprintf(buf, "Spend prestige for enhanced explore actions");
+	}
+	else if (o_ptr->code & P1_ORB_MOVEMENT)
+	{
+		sprintf(buf, "Move orb %d spaces", o_ptr->value);
 	}
 	else
 	{
@@ -2402,35 +2412,36 @@ static char *name_Develop(power *o_ptr, char *buf)
 {
 	/* Clear the buffer. */
 	strncpy(buf, "", 1024);
-	/* Simple powers */
+	
 	if (o_ptr->code == P2_DRAW)
 	{
-		/* Make string */
-		sprintf(buf, "Draw %d in develop phase", o_ptr->value);
+		sprintf(buf, "Draw %d card%s when developing", o_ptr->value,
+		        o_ptr->value == 1 ? "" : "s");
 	}
 	else if (o_ptr->code == P2_REDUCE)
 	{
-		sprintf(buf, "Reduce cost to  play developments by %d", o_ptr->value);
+		sprintf(buf, "Developments cost %d less to play", o_ptr->value);
 	}
 	else if (o_ptr->code == P2_DRAW_AFTER)
 	{
-		sprintf(buf, "Draw %d after playing a development", o_ptr->value);
+		sprintf(buf, "Draw %d card%s after playing a development", o_ptr->value,
+		        o_ptr->value == 1 ? "" : "s");
 	}
 	else if (o_ptr->code & P2_SAVE_COST)
 	{
-		sprintf(buf, "Save %d in cost reduction", o_ptr->value);
+		sprintf(buf, "Save up to %d credits in cost reductions", o_ptr->value);
 	}
 	else if (o_ptr->code & P2_PRESTIGE)
 	{
-		sprintf(buf, "Gain %d prestige", o_ptr->value);
+		sprintf(buf, "Gain %d prestige when developing", o_ptr->value);
 	}
 	else if (o_ptr->code & P2_PRESTIGE_REBEL)
 	{
-		sprintf(buf, "Gain %d prestige if played rebel world", o_ptr->value);
+		sprintf(buf, "Gain %d prestige if you have a Rebel world", o_ptr->value);
 	}
 	else if (o_ptr->code & P2_PRESTIGE_SIX)
 	{
-		sprintf(buf, "Gain %d prestige if 6-cost development", o_ptr->value);
+		sprintf(buf, "Gain %d prestige if this is a 6-cost development", o_ptr->value);
 	}
 	else
 	{
@@ -2443,211 +2454,161 @@ static char *name_consume(power *o_ptr, char *buf)
 	/* Clear the buffer. */
 	strncpy(buf, "", 1024);
 
-	char *name, buf2[1024];
-	/* Check for simple powers */
+	/* Handle simple standalone powers first */
 	if (o_ptr->code == P4_DRAW)
 	{
-		/* Make string */
-		sprintf(buf, "Draw %d", o_ptr->value);
+		sprintf(buf, "Draw %d card%s when consuming", o_ptr->value,
+		        o_ptr->value == 1 ? "" : "s");
 	}
 	else if (o_ptr->code == P4_VP)
 	{
-		/* Make string */
-		sprintf(buf, "Take VP");
+		sprintf(buf, "Gain 1 victory point when consuming");
 	}
 	else if (o_ptr->code == P4_DRAW_LUCKY)
 	{
-		/* Make string */
-		sprintf(buf, "Draw if lucky");
+		sprintf(buf, "Draw 1 card if you are lucky (gambling)");
 	}
 	else if (o_ptr->code == P4_ANTE_CARD)
 	{
-		/* Make string */
-		sprintf(buf, "Ante card");
+		sprintf(buf, "Place a card as ante (gambling)");
 	}
 	else if (o_ptr->code & P4_CONSUME_3_DIFF)
 	{
-		/* Make string */
-		sprintf(buf, "Consume 3 kinds");
+		sprintf(buf, "Consume 3 different types of goods");
 	}
 	else if (o_ptr->code & P4_CONSUME_N_DIFF)
 	{
-		/* Make string */
-		sprintf(buf, "Consume different kinds");
+		sprintf(buf, "Consume different types of goods");
 	}
 	else if (o_ptr->code & P4_CONSUME_ALL)
 	{
-		/* Make string */
-		sprintf(buf, "Consume all goods");
+		sprintf(buf, "Consume all your goods");
 	}
+	/* Trade powers */
 	else if (o_ptr->code & P4_TRADE_ACTION)
 	{
-		/* Make string */
-		sprintf(buf, "Trade good");
-
-		/* Check for no bonuses */
 		if (o_ptr->code & P4_TRADE_NO_BONUS)
 		{
-			/* Append qualifier */
-			strcat(buf, " (no bonus)");
+			sprintf(buf, "Trade any good (receive no trade bonus)");
+		}
+		else
+		{
+			sprintf(buf, "Trade any good");
 		}
 	}
 	else if (o_ptr->code & P4_TRADE_ANY)
 	{
-		sprintf(buf, "Trade any good for %d extra", o_ptr->value);
+		sprintf(buf, "Trade any good for +%d extra card%s", o_ptr->value,
+		        o_ptr->value == 1 ? "" : "s");
 	}
 	else if (o_ptr->code & P4_TRADE_NOVELTY)
 	{
-		sprintf(buf, "Trade novelty good for %d extra", o_ptr->value);
+		sprintf(buf, "Trade Novelty goods for +%d extra card%s", o_ptr->value,
+		        o_ptr->value == 1 ? "" : "s");
 	}
 	else if (o_ptr->code & P4_TRADE_GENE)
 	{
-		sprintf(buf, "Trade genes good for %d extra", o_ptr->value);
+		sprintf(buf, "Trade Genes goods for +%d extra card%s", o_ptr->value,
+		        o_ptr->value == 1 ? "" : "s");
 	}
 	else if (o_ptr->code & P4_TRADE_RARE)
 	{
-		sprintf(buf, "Trade rare good for %d extra", o_ptr->value);
+		sprintf(buf, "Trade Rare goods for +%d extra card%s", o_ptr->value,
+		        o_ptr->value == 1 ? "" : "s");
 	}
 	else if (o_ptr->code & P4_TRADE_ALIEN)
 	{
-		sprintf(buf, "Trade alien good for %d extra", o_ptr->value);
+		sprintf(buf, "Trade Alien goods for +%d extra card%s", o_ptr->value,
+		        o_ptr->value == 1 ? "" : "s");
 	}
 	else if (o_ptr->code & P4_TRADE_THIS)
 	{
-		sprintf(buf, "Trade this good for %d extra", o_ptr->value);
+		sprintf(buf, "Trade this world's good for +%d extra card%s", o_ptr->value,
+		        o_ptr->value == 1 ? "" : "s");
 	}
-
+	/* Complex consume powers - build description dynamically */
 	else
 	{
-		/* Get type of good to consume */
-		if (o_ptr->code & P4_CONSUME_NOVELTY)
-		{
-			/* Novelty good */
-			name = "Novelty ";
-		}
-		else if (o_ptr->code & P4_CONSUME_RARE)
-		{
-			/* Rare good */
-			name = "Rare ";
-		}
-		else if (o_ptr->code & P4_CONSUME_GENE)
-		{
-			/* Genes good */
-			name = "Genes ";
-		}
-		else if (o_ptr->code & P4_CONSUME_ALIEN)
-		{
-			/* Alien good */
-			name = "Alien ";
-		}
-		else
-		{
-			/* Any good */
-			name = "any";
-		}
-
-		/* Start consume string */
+		char consume_type[64], reward[256];
+		
+		/* Determine what is being consumed */
 		if (o_ptr->code & P4_DISCARD_HAND)
 		{
-			/* Make string */
-			sprintf(buf, "Consume from hand for ");
-		}
-		else if (o_ptr->code & P4_CONSUME_TWO)
-		{
-			/* Start string */
-			sprintf(buf, "Consume two %s goods for ", name);
+			strcpy(consume_type, "Discard cards from hand");
 		}
 		else if (o_ptr->code & P4_CONSUME_PRESTIGE)
 		{
-			/* Make string */
-			sprintf(buf, "Consume prestige for ");
+			strcpy(consume_type, "Spend 1 prestige");
 		}
 		else
 		{
-			/* Start string */
-			sprintf(buf, "Consume %s good for ", name);
+			char *good_type;
+			if (o_ptr->code & P4_CONSUME_NOVELTY) good_type = "Novelty";
+			else if (o_ptr->code & P4_CONSUME_RARE) good_type = "Rare";
+			else if (o_ptr->code & P4_CONSUME_GENE) good_type = "Genes";
+			else if (o_ptr->code & P4_CONSUME_ALIEN) good_type = "Alien";
+			else good_type = "any";
+			
+			if (o_ptr->code & P4_CONSUME_TWO)
+			{
+				sprintf(consume_type, "Consume 2 %s goods", good_type);
+			}
+			else
+			{
+				sprintf(consume_type, "Consume 1 %s good", good_type);
+			}
 		}
 
-		/* Check for cards */
+		/* Build reward string */
+		strcpy(reward, "");
+		int has_reward = 0;
+		
 		if (o_ptr->code & P4_GET_CARD)
 		{
-			/* Create card reward string */
-			sprintf(buf2, "%d card%s", o_ptr->value, PLURAL(o_ptr->value));
-
-			/* Add to string */
-			strcat(buf, buf2);
-
-			/* Check for other reward as well */
-			if (o_ptr->code & (P4_GET_VP | P4_GET_PRESTIGE))
-			{
-				/* Add "and" */
-				strcat(buf, " and ");
-			}
+			sprintf(reward + strlen(reward), "%d card%s", 
+			        o_ptr->value, o_ptr->value == 1 ? "" : "s");
+			has_reward = 1;
 		}
-
-		/* Check for extra cards */
 		if (o_ptr->code & P4_GET_2_CARD)
 		{
-			/* Create card reward string */
-			strcat(buf, "2 cards");
-
-			/* Check for other reward as well */
-			if (o_ptr->code & (P4_GET_VP | P4_GET_PRESTIGE))
-			{
-				/* Add "and" */
-				strcat(buf, " and ");
-			}
+			if (has_reward) strcat(reward, " and ");
+			strcat(reward, "2 cards");
+			has_reward = 1;
 		}
-
-		/* Check for extra cards */
 		if (o_ptr->code & P4_GET_3_CARD)
 		{
-			/* Create card reward string */
-			strcat(buf, "3 cards");
-
-			/* Check for other reward as well */
-			if (o_ptr->code & (P4_GET_VP | P4_GET_PRESTIGE))
-			{
-				/* Add "and" */
-				strcat(buf, " and ");
-			}
+			if (has_reward) strcat(reward, " and ");
+			strcat(reward, "3 cards");
+			has_reward = 1;
 		}
-
-		/* Check for points */
 		if (o_ptr->code & P4_GET_VP)
 		{
-			/* Create VP reward string */
-			sprintf(buf2, "%d VP", o_ptr->value);
-
-			/* Add to string */
-			strcat(buf, buf2);
-
-			/* Check for other reward as well */
-			if (o_ptr->code & P4_GET_PRESTIGE)
-			{
-				/* Add "and" */
-				strcat(buf, " and ");
-			}
+			if (has_reward) strcat(reward, " and ");
+			sprintf(reward + strlen(reward), "%d victory point%s", 
+			        o_ptr->value, o_ptr->value == 1 ? "" : "s");
+			has_reward = 1;
 		}
-
-		/* Check for prestige */
 		if (o_ptr->code & P4_GET_PRESTIGE)
 		{
-			/* Create prestige reward string */
-			sprintf(buf2, "%d prestige", o_ptr->value);
-
-			/* Add to string */
-			strcat(buf, buf2);
+			if (has_reward) strcat(reward, " and ");
+			sprintf(reward + strlen(reward), "%d prestige", o_ptr->value);
+			has_reward = 1;
 		}
 
-		/* Check for multiple times */
+		/* Combine consume action with reward */
+		if (has_reward)
+		{
+			sprintf(buf, "%s to gain %s", consume_type, reward);
+		}
+		else
+		{
+			strcpy(buf, consume_type);
+		}
+
+		/* Add multiplier if applicable */
 		if (o_ptr->times > 1)
 		{
-			/* Create times string */
-			sprintf(buf2, " (x%d)", o_ptr->times);
-
-			/* Add to string */
-			strcat(buf, buf2);
+			sprintf(buf + strlen(buf), " (may use %d times)", o_ptr->times);
 		}
 	}
 	return buf;
@@ -2658,113 +2619,96 @@ static char *name_produce(design *d_ptr, power *o_ptr, char *buf)
 	/* Clear string describing power */
 	strncpy(buf, "", 1024);
 
-	/* Check for simple powers */
+	/* Draw powers based on production */
 	if (o_ptr->code & P5_DRAW_EACH_NOVELTY)
 	{
-		/* Make string */
-		sprintf(buf, "Draw per Novelty produced");
+		sprintf(buf, "Draw 1 card for each Novelty good produced");
 	}
 	else if (o_ptr->code & P5_DRAW_EACH_RARE)
 	{
-		/* Make string */
-		sprintf(buf, "Draw per Rare produced");
+		sprintf(buf, "Draw 1 card for each Rare good produced");
 	}
 	else if (o_ptr->code & P5_DRAW_EACH_GENE)
 	{
-		/* Make string */
-		sprintf(buf, "Draw per Genes produced");
+		sprintf(buf, "Draw 1 card for each Genes good produced");
 	}
 	else if (o_ptr->code & P5_DRAW_EACH_ALIEN)
 	{
-		/* Make string */
-		sprintf(buf, "Draw per Alien produced");
+		sprintf(buf, "Draw 1 card for each Alien good produced");
 	}
 	else if (o_ptr->code & P5_DRAW_DIFFERENT)
 	{
-		/* Make string */
-		sprintf(buf, "Draw per kind produced");
+		sprintf(buf, "Draw 1 card for each different type of good produced");
 	}
-	/* Check for genes worlds */
 	else if (o_ptr->code & P5_DRAW_WORLD_GENE)
 	{
-		/* Start string */
-		sprintf(buf, "Draw %d per Genes world", o_ptr->value);
+		sprintf(buf, "Draw %d card%s for each Genes world you own", 
+		        o_ptr->value, o_ptr->value == 1 ? "" : "s");
 	}
 	else if (o_ptr->code & P5_DRAW_MOST_RARE)
 	{
-		sprintf(buf, "Draw %d if produced most rare goods", o_ptr->value);
+		sprintf(buf, "Draw %d card%s if you produced the most Rare goods", 
+		        o_ptr->value, o_ptr->value == 1 ? "" : "s");
 	}
-	/* Check for discard required */
-	if (o_ptr->code & P5_DISCARD)
-	{
-		/* Start string */
-		sprintf(buf, "Discard to ");
-	}
-	/*More simple powers */
 	else if (o_ptr->code & P5_DRAW)
 	{
-		/* Add to string */
-		sprintf(buf, "Draw %d during produce phase", o_ptr->value);
+		sprintf(buf, "Draw %d card%s during produce phase", 
+		        o_ptr->value, o_ptr->value == 1 ? "" : "s");
 	}
 	else if (o_ptr->code & P5_DRAW_IF)
 	{
-		sprintf(buf, "Draw if produced on %s", d_ptr->name);
+		sprintf(buf, "Draw 1 card if %s produced a good", d_ptr->name);
 	}
-	/* Regular production powers */
-	if (o_ptr->code & P5_PRODUCE)
+	/* Discard power modifier */
+	else if (o_ptr->code & P5_DISCARD)
 	{
-		/* Add to string */
-		strcat(buf, "produce on ");
-		strcat(buf, d_ptr->name);
+		sprintf(buf, "Discard 1 card to activate this power");
+	}
+	/* Production powers - what this world can produce */
+	else if (o_ptr->code & P5_PRODUCE)
+	{
+		sprintf(buf, "Produce good on %s", d_ptr->name);
 	}
 	else if (o_ptr->code & P5_WINDFALL_ANY)
 	{
-		/* Add to string */
-		strcat(buf, "produce on any windfall");
+		sprintf(buf, "Produce good on any windfall world");
 	}
 	else if (o_ptr->code & P5_WINDFALL_NOVELTY)
 	{
-		/* Add to string */
-		strcat(buf, "produce on Novelty windfall");
+		sprintf(buf, "Produce good on Novelty windfall worlds");
 	}
 	else if (o_ptr->code & P5_WINDFALL_RARE)
 	{
-		/* Add to string */
-		strcat(buf, "produce on Rare windfall");
+		sprintf(buf, "Produce good on Rare windfall worlds");
 	}
-	else if ((o_ptr->code & P5_WINDFALL_GENE) &&
-			 (o_ptr->code & P5_NOT_THIS))
+	else if ((o_ptr->code & P5_WINDFALL_GENE) && (o_ptr->code & P5_NOT_THIS))
 	{
-		/* Add to string */
-		strcat(buf, "produce on other Genes windfall");
+		sprintf(buf, "Produce good on other Genes windfall worlds");
 	}
 	else if (o_ptr->code & P5_WINDFALL_GENE)
 	{
-		/* Add to string */
-		strcat(buf, "produce on Genes windfall");
+		sprintf(buf, "Produce good on Genes windfall worlds");
 	}
 	else if (o_ptr->code & P5_WINDFALL_ALIEN)
 	{
-		/* Add to string */
-		strcat(buf, "produce on Alien windfall");
+		sprintf(buf, "Produce good on Alien windfall worlds");
 	}
-	
-	/* Expansion powers */
+	/* Special expansion powers */
 	else if (o_ptr->code & P5_SHIFT_RARE)
 	{
-		strcat(buf, "shift Rare goods to other worlds");
+		sprintf(buf, "Move Rare goods from this world to other worlds");
 	}
 	else if (o_ptr->code & P5_PRESTIGE_IF)
 	{
-		strcat(buf, "gain prestige if condition met");
+		sprintf(buf, "Gain prestige if special condition is met");
 	}
 	else if (o_ptr->code & P5_PRESTIGE_MOST_CHROMO)
 	{
-		strcat(buf, "gain prestige if most Chromosome worlds");
+		sprintf(buf, "Gain prestige if you have the most Chromosome worlds");
 	}
 	else if (o_ptr->code & P5_TAKE_SAVED)
 	{
-		strcat(buf, "take saved cost reductions");
+		sprintf(buf, "Use saved cost reductions from developments");
 	}
 
 	/* Capitalize string if needed */
@@ -2776,176 +2720,199 @@ char *name_settle(power *o_ptr, char *buf)
 {
 	char buf2[256];
 	memset(buf2, 0, 256);
-	/* Check for simple powers */
+	
+	/* Placement powers */
 	if (o_ptr->code & P3_PLACE_TWO)
 	{
-		/* Make string */
-		sprintf(buf, "Place second world");
+		sprintf(buf, "May settle a second world");
 	}
 	else if (o_ptr->code & P3_PLACE_MILITARY)
 	{
-		/* Make string */
-		sprintf(buf, "Place second military world");
+		sprintf(buf, "May settle a second military world");
 	}
 	else if (o_ptr->code & P3_PLACE_LEFTOVER)
 	{
-		/* Make string */
-		sprintf(buf, "Place with leftover military");
+		sprintf(buf, "May settle a world using leftover military");
 	}
 	else if (o_ptr->code & P3_UPGRADE_WORLD)
 	{
-		/* Make string */
-		sprintf(buf, "Upgrade world");
+		sprintf(buf, "May upgrade a world to a better version");
 	}
 	else if (o_ptr->code & P3_PLACE_ZERO)
 	{
-		/* Make string */
-		sprintf(buf, "Place non-military world at zero cost");
+		sprintf(buf, "May settle any non-military world for free");
 	}
 	else if (o_ptr->code & P3_FLIP_ZERO)
 	{
-		/* Make string */
-		sprintf(buf, "Flip to place non-military world");
+		sprintf(buf, "Discard this card to settle any non-military world for free");
 	}
+	/* Military bonuses */
 	else if (o_ptr->code & P3_EXTRA_MILITARY)
 	{
-		/* Make string */
-		sprintf(buf, "Add %d extra military", o_ptr->value);
-		/* Check for against powers. */
 		if (o_ptr->code & P3_AGAINST_REBEL)
 		{
-			strcat(buf, " against rebels");
+			sprintf(buf, "+%d military when conquering Rebel worlds", o_ptr->value);
 		}
 		else if (o_ptr->code & P3_ALIEN)
 		{
-			strcat(buf, " against aliens");
+			sprintf(buf, "+%d military when conquering Alien worlds", o_ptr->value);
 		}
 		else if (o_ptr->code & P3_RARE)
 		{
-			strcat(buf, " against rare goods worlds");
+			sprintf(buf, "+%d military when conquering Rare goods worlds", o_ptr->value);
 		}
 		else if (o_ptr->code & P3_NOVELTY)
 		{
-			strcat(buf, " against novelty goods worlds");
+			sprintf(buf, "+%d military when conquering Novelty goods worlds", o_ptr->value);
 		}
 		else if (o_ptr->code & P3_GENE)
 		{
-			strcat(buf, " against genes worlds");
+			sprintf(buf, "+%d military when conquering Genes worlds", o_ptr->value);
 		}
 		else if (o_ptr->code & P3_PER_MILITARY)
 		{
-			strcat(buf, " per military world");
+			sprintf(buf, "+%d military for each military world you own", o_ptr->value);
 		}
 		else if (o_ptr->code & P3_AGAINST_CHROMO)
 		{
-			strcat(buf, " against chromosome worlds");
+			sprintf(buf, "+%d military when conquering Chromosome worlds", o_ptr->value);
 		}
 		else if (o_ptr->code & P3_PER_CHROMO)
 		{
-			strcat(buf, " per chromosome world");
+			sprintf(buf, "+%d military for each Chromosome world you own", o_ptr->value);
+		}
+		else
+		{
+			sprintf(buf, "+%d military when settling worlds", o_ptr->value);
 		}
 	}
+	/* Cost reduction powers */
 	else if (o_ptr->code & P3_REDUCE)
 	{
-		sprintf(buf, "Reduce cost of settling ");
 		if (o_ptr->code & P3_RARE)
 		{
-			strcat(buf, "Rare ");
+			sprintf(buf, "Rare worlds cost %d less to settle", o_ptr->value);
 		}
 		else if (o_ptr->code & P3_NOVELTY)
 		{
-			strcat(buf, "Novelty ");
+			sprintf(buf, "Novelty worlds cost %d less to settle", o_ptr->value);
 		}
 		else if (o_ptr->code & P3_GENE)
 		{
-			strcat(buf, "Gene ");
+			sprintf(buf, "Genes worlds cost %d less to settle", o_ptr->value);
 		}
 		else if (o_ptr->code & P3_ALIEN)
 		{
-			strcat(buf, "Alien ");
+			sprintf(buf, "Alien worlds cost %d less to settle", o_ptr->value);
 		}
 		else
 		{
-			strcat(buf, "any ");
+			sprintf(buf, "All worlds cost %d less to settle", o_ptr->value);
 		}
-		sprintf(buf2, "by %d", o_ptr->value);
-		strcat(buf, buf2);
 	}
-	/* Draw after... */
-	if (o_ptr->code & P3_DRAW_AFTER)
+	/* Draw powers */
+	else if (o_ptr->code & P3_DRAW_AFTER)
 	{
-		sprintf(buf, "Draw %d after settling", o_ptr->value);
+		sprintf(buf, "Draw %d card%s after settling a world", 
+		        o_ptr->value, o_ptr->value == 1 ? "" : "s");
 	}
-	/* Handle card discard powers. */
-	if (o_ptr->code & P3_DISCARD)
+	/* Discard powers */
+	else if (o_ptr->code & P3_DISCARD)
 	{
-		sprintf(buf, "Discard this card to ");
 		if (o_ptr->code & P3_REDUCE_ZERO)
 		{
-			sprintf(buf2, "settle non-alien world for zero cost");
+			sprintf(buf, "Discard this card to settle any non-Alien world for free");
 		}
 		else if (o_ptr->code & P3_EXTRA_MILITARY)
 		{
-			sprintf(buf2, "add %d extra military", o_ptr->value);
-		}
-		strcat(buf, buf2);
-	}
-	/* Pay for military powers. */
-	if (o_ptr->code & P3_PAY_MILITARY)
-	{
-		sprintf(buf, "Pay for military ");
-		/* Handle aliens, rebels, etc. */
-		if (o_ptr->code & P3_AGAINST_REBEL)
-		{
-			strcat(buf, "against rebel worlds");
-		}
-		else if (o_ptr->code & P3_ALIEN)
-		{
-			strcat(buf, "against alien worlds");
-		}
-		else if (o_ptr->code & P3_AGAINST_CHROMO)
-		{
-			strcat(buf, "against chromosome worlds");
-		}
-		if (o_ptr->value)
-		{
-			sprintf(buf2, "discounted by %d", o_ptr->value);
+			sprintf(buf, "Discard this card to gain +%d military", o_ptr->value);
 		}
 		else
 		{
-			sprintf(buf2, "no discount");
+			sprintf(buf, "Discard this card for special effect");
 		}
-		strcat(buf, buf2);
+	}
+	/* Pay for military powers */
+	else if (o_ptr->code & P3_PAY_MILITARY)
+	{
+		if (o_ptr->code & P3_AGAINST_REBEL)
+		{
+			if (o_ptr->value)
+			{
+				sprintf(buf, "Pay cards instead of military to conquer Rebel worlds (-%d cost)", o_ptr->value);
+			}
+			else
+			{
+				sprintf(buf, "Pay cards instead of military to conquer Rebel worlds (no discount)");
+			}
+		}
+		else if (o_ptr->code & P3_ALIEN)
+		{
+			if (o_ptr->value)
+			{
+				sprintf(buf, "Pay cards instead of military to conquer Alien worlds (-%d cost)", o_ptr->value);
+			}
+			else
+			{
+				sprintf(buf, "Pay cards instead of military to conquer Alien worlds (no discount)");
+			}
+		}
+		else if (o_ptr->code & P3_AGAINST_CHROMO)
+		{
+			if (o_ptr->value)
+			{
+				sprintf(buf, "Pay cards instead of military to conquer Chromosome worlds (-%d cost)", o_ptr->value);
+			}
+			else
+			{
+				sprintf(buf, "Pay cards instead of military to conquer Chromosome worlds (no discount)");
+			}
+		}
+		else
+		{
+			if (o_ptr->value)
+			{
+				sprintf(buf, "Pay cards instead of military to conquer worlds (-%d cost)", o_ptr->value);
+			}
+			else
+			{
+				sprintf(buf, "Pay cards instead of military to conquer worlds (no discount)");
+			}
+		}
 	}
 	
-	/* Prestige powers */
-	if (o_ptr->code & P3_PRESTIGE)
+	/* Prestige and special powers */
+	else if (o_ptr->code & P3_PRESTIGE)
 	{
-		sprintf(buf, "Gain %d prestige", o_ptr->value);
+		sprintf(buf, "Gain %d prestige when settling", o_ptr->value);
 	}
 	else if (o_ptr->code & P3_PRESTIGE_REBEL)
 	{
-		sprintf(buf, "Gain %d prestige if rebel world played", o_ptr->value);
+		sprintf(buf, "Gain %d prestige if you settle a Rebel world", o_ptr->value);
 	}
 	else if (o_ptr->code & P3_PAY_PRESTIGE)
 	{
-		sprintf(buf, "Pay prestige to reduce cost by %d", o_ptr->value);
+		sprintf(buf, "Spend prestige to reduce world costs by %d", o_ptr->value);
 	}
 	else if (o_ptr->code & P3_SAVE_COST)
 	{
-		sprintf(buf, "Save %d in cost reduction", o_ptr->value);
+		sprintf(buf, "Save up to %d credits in cost reductions", o_ptr->value);
 	}
 	else if (o_ptr->code & P3_CONSUME_PRESTIGE)
 	{
-		sprintf(buf, "Consume prestige for benefits");
+		sprintf(buf, "Spend prestige for special benefits");
 	}
 	else if (o_ptr->code & P3_PRODUCE_PRESTIGE)
 	{
-		sprintf(buf, "Produce prestige");
+		sprintf(buf, "Generate prestige points");
 	}
 	else if (o_ptr->code & P3_TAKEOVER_PRESTIGE)
 	{
-		sprintf(buf, "Gain prestige from takeovers");
+		sprintf(buf, "Gain prestige when you take over opponent worlds");
+	}
+	else
+	{
+		sprintf(buf, "Unknown settle power");
 	}
 	
 	return buf;
