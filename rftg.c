@@ -1360,7 +1360,12 @@ static void gui_make_choice(game *g, int who, int type, int list[], int *nl,
 				g->game_over = 1; /* Force exit from current game */
 				restart_loop = RESTART_LOAD;
 			}
-			/* Otherwise continue current game */
+			else
+			{
+				/* User cancelled - exit the game */
+				printf("Exiting game...\n");
+				exit(0);
+			}
 			return;
 		}
 		else if (list[0] == -107) /* ACT_SAVE_GAME */

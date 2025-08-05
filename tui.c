@@ -423,7 +423,7 @@ printf("----------------------------\n\n");
 
 int get_card_choice(game *g, int who, int list[], int num, const char *prompt)
 {
-    char action[10];
+    char action[16];
     int selected_card;
 
     while (1)
@@ -2176,7 +2176,7 @@ int tui_new_game_menu(options *opt)
         printf("Enter 's' to start game with these settings\n");
         printf("Enter 'l' to load saved game\n");
         printf("Enter 'a' to continue from autosave\n");
-        printf("Enter 'c' to cancel\n");
+        printf("Enter 'x' to exit\n");
         printf("Choice: ");
         
         /* Get user input */
@@ -2204,8 +2204,8 @@ int tui_new_game_menu(options *opt)
             return 1;
         }
         
-        /* Check for cancel */
-        if (strcmp(input, "c") == 0)
+        /* Check for exit */
+        if (strcmp(input, "x") == 0)
         {
             return 0;
         }
