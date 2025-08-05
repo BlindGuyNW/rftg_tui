@@ -236,17 +236,17 @@ CommandOutcome handle_common_commands(game *g, char *input, int who)
         }
         return CMD_HANDLED;
     }
-    else if (strcmp(input, "u") == 0 || strcmp(input, "undo") == 0)
+    else if (strcmp(input, "undo") == 0)
     {
         /* Return special undo command */
         return CMD_UNDO;
     }
-    else if (strcmp(input, "ur") == 0 || strcmp(input, "undo round") == 0)
+    else if (strcmp(input, "undo round") == 0)
     {
         /* Return special undo round command */
         return CMD_UNDO_ROUND;
     }
-    else if (strcmp(input, "ug") == 0 || strcmp(input, "undo game") == 0)
+    else if (strcmp(input, "undo game") == 0)
     {
         /* Return special undo game command */
         return CMD_UNDO_GAME;
