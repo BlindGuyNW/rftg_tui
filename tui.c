@@ -236,32 +236,32 @@ CommandOutcome handle_common_commands(game *g, char *input, int who)
         }
         return CMD_HANDLED;
     }
-    else if (strcmp(input, "u") == 0)
+    else if (strcmp(input, "u") == 0 || strcmp(input, "undo") == 0)
     {
         /* Return special undo command */
         return CMD_UNDO;
     }
-    else if (strcmp(input, "ur") == 0)
+    else if (strcmp(input, "ur") == 0 || strcmp(input, "undo round") == 0)
     {
         /* Return special undo round command */
         return CMD_UNDO_ROUND;
     }
-    else if (strcmp(input, "ug") == 0)
+    else if (strcmp(input, "ug") == 0 || strcmp(input, "undo game") == 0)
     {
         /* Return special undo game command */
         return CMD_UNDO_GAME;
     }
-    else if (strcmp(input, "r") == 0)
+    else if (strcmp(input, "redo") == 0)
     {
-        /* Return special redo command */
+        /* Return special redo command - note: 'r' is reserved for redisplay */
         return CMD_REDO;
     }
-    else if (strcmp(input, "rr") == 0)
+    else if (strcmp(input, "redo round") == 0)
     {
         /* Return special redo round command */
         return CMD_REDO_ROUND;
     }
-    else if (strcmp(input, "rg") == 0)
+    else if (strcmp(input, "redo game") == 0)
     {
         /* Return special redo game command */
         return CMD_REDO_GAME;
@@ -901,13 +901,13 @@ void tui_choose_action_advanced(game *g, int who, int action[2], int one)
         if (num_to_select == 2)
         {
             if (actions_selected == 0)
-                printf("\nSelect action %d of 2 ('q' to quit, '?' for help, 'r' to redisplay list): ", actions_selected + 1);
+                printf("\nSelect action %d of 2 ('q' to quit, '?' for help, 'r' to redisplay): ", actions_selected + 1);
             else
-                printf("Select action %d of 2 ('q' to quit, '?' for help, 'r' to redisplay list): ", actions_selected + 1);
+                printf("Select action %d of 2 ('q' to quit, '?' for help, 'r' to redisplay): ", actions_selected + 1);
         }
         else
         {
-            printf("\nSelect action ('q' to quit, '?' for help, 'r' to redisplay list): ");
+            printf("\nSelect action ('q' to quit, '?' for help, 'r' to redisplay): ");
         }
         
         char input[10];
@@ -1092,7 +1092,7 @@ void tui_choose_action(game *g, int who, int action[2], int one)
 
     while (1)
     {
-        printf("Enter action number ('q' to quit, '?' for help, 'r' to redisplay list): ");
+        printf("Enter action number ('q' to quit, '?' for help, 'r' to redisplay): ");
         char input[10];
         if (fgets(input, sizeof(input), stdin) == NULL)
         {
