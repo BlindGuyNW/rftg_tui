@@ -1247,6 +1247,49 @@ static void gui_make_choice(game *g, int who, int type, int list[], int *nl,
 
 		/* Choose discards */
 		tui_choose_discard(g, who, list, nl, arg1);
+		
+		/* Check for undo/redo commands */
+		if (*nl == 1 && list[0] < -99)
+		{
+			/* Handle undo/redo based on the specific value */
+			if (list[0] == -100) /* Undo */
+			{
+				restart_loop = 5; /* RESTART_UNDO */
+				g->game_over = 1;
+				return;
+			}
+			else if (list[0] == -101) /* Undo round */
+			{
+				restart_loop = 6; /* RESTART_UNDO_ROUND */
+				g->game_over = 1;
+				return;
+			}
+			else if (list[0] == -102) /* Undo game */
+			{
+				restart_loop = 7; /* RESTART_UNDO_GAME */
+				g->game_over = 1;
+				return;
+			}
+			else if (list[0] == -103) /* Redo */
+			{
+				restart_loop = 8; /* RESTART_REDO */
+				g->game_over = 1;
+				return;
+			}
+			else if (list[0] == -104) /* Redo round */
+			{
+				restart_loop = 9; /* RESTART_REDO_ROUND */
+				g->game_over = 1;
+				return;
+			}
+			else if (list[0] == -105) /* Redo game */
+			{
+				restart_loop = 10; /* RESTART_REDO_GAME */
+				g->game_over = 1;
+				return;
+			}
+		}
+		
 		rv = 0;
 		break;
 	case CHOICE_SAVE:
@@ -1369,11 +1412,96 @@ static void gui_make_choice(game *g, int who, int type, int list[], int *nl,
 	/* Choose card to place*/
 	case CHOICE_PLACE:
 		rv = tui_choose_place(g, who, list, *nl, arg1, arg2);
+		
+		/* Check for undo/redo commands */
+		if (rv < -99)
+		{
+			/* Handle undo/redo based on the specific value */
+			if (rv == -100) /* Undo */
+			{
+				restart_loop = 5; /* RESTART_UNDO */
+				g->game_over = 1;
+				return;
+			}
+			else if (rv == -101) /* Undo round */
+			{
+				restart_loop = 6; /* RESTART_UNDO_ROUND */
+				g->game_over = 1;
+				return;
+			}
+			else if (rv == -102) /* Undo game */
+			{
+				restart_loop = 7; /* RESTART_UNDO_GAME */
+				g->game_over = 1;
+				return;
+			}
+			else if (rv == -103) /* Redo */
+			{
+				restart_loop = 8; /* RESTART_REDO */
+				g->game_over = 1;
+				return;
+			}
+			else if (rv == -104) /* Redo round */
+			{
+				restart_loop = 9; /* RESTART_REDO_ROUND */
+				g->game_over = 1;
+				return;
+			}
+			else if (rv == -105) /* Redo game */
+			{
+				restart_loop = 10; /* RESTART_REDO_GAME */
+				g->game_over = 1;
+				return;
+			}
+		}
 		break;
 	/* Choose payment for cards */
 	case CHOICE_PAYMENT:
 		tui_choose_pay(g, who, arg1, list, nl, special, ns,
 					   arg2, arg3);
+		
+		/* Check for undo/redo commands */
+		if (*nl == 1 && list[0] < -99)
+		{
+			/* Handle undo/redo based on the specific value */
+			if (list[0] == -100) /* Undo */
+			{
+				restart_loop = 5; /* RESTART_UNDO */
+				g->game_over = 1;
+				return;
+			}
+			else if (list[0] == -101) /* Undo round */
+			{
+				restart_loop = 6; /* RESTART_UNDO_ROUND */
+				g->game_over = 1;
+				return;
+			}
+			else if (list[0] == -102) /* Undo game */
+			{
+				restart_loop = 7; /* RESTART_UNDO_GAME */
+				g->game_over = 1;
+				return;
+			}
+			else if (list[0] == -103) /* Redo */
+			{
+				restart_loop = 8; /* RESTART_REDO */
+				g->game_over = 1;
+				return;
+			}
+			else if (list[0] == -104) /* Redo round */
+			{
+				restart_loop = 9; /* RESTART_REDO_ROUND */
+				g->game_over = 1;
+				return;
+			}
+			else if (list[0] == -105) /* Redo game */
+			{
+				restart_loop = 10; /* RESTART_REDO_GAME */
+				g->game_over = 1;
+				return;
+			}
+		}
+		
 		rv = 0;
 		break;
 	/* Choose consume powers */

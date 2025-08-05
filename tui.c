@@ -456,6 +456,30 @@ int get_card_choice(game *g, int who, int list[], int num, const char *prompt)
         {
             exit(0); // or handle quitting more gracefully if necessary
         }
+        else if (outcome == CMD_UNDO)
+        {
+            return -100; // Special value for undo
+        }
+        else if (outcome == CMD_UNDO_ROUND)
+        {
+            return -101; // Special value for undo round
+        }
+        else if (outcome == CMD_UNDO_GAME)
+        {
+            return -102; // Special value for undo game
+        }
+        else if (outcome == CMD_REDO)
+        {
+            return -103; // Special value for redo
+        }
+        else if (outcome == CMD_REDO_ROUND)
+        {
+            return -104; // Special value for redo round
+        }
+        else if (outcome == CMD_REDO_GAME)
+        {
+            return -105; // Special value for redo game
+        }
         else if (outcome == CMD_HANDLED)
         {
             continue; // The command was handled, continue the loop
@@ -524,6 +548,15 @@ void tui_choose_discard(game *g, int who, int list[], int *num, int discard)
     while (discard_count < discard)
     {
         int selected_card = get_card_choice(g, who, temp_list, *num - discard_count, "Enter card number to discard");
+
+        // Check for undo/redo commands
+        if (selected_card < -99)
+        {
+            // Signal undo/redo by setting special value in list[0]
+            list[0] = selected_card;
+            *num = 1;
+            return;
+        }
 
         // Add the selected card to the list of discarded cards
         list[discard_count] = temp_list[selected_card - 1];
@@ -1313,6 +1346,13 @@ int tui_choose_place(game *g, int who, int list[], int num, int phase, int speci
     // Get user choice
     choice = get_card_choice(g, who, list, num, "Enter the number of the card you want to play, or 0 to pass:");
 
+    // Check for undo/redo commands
+    if (choice < -99)
+    {
+        // Return the special value directly
+        return choice;
+    }
+
     // If the user chooses to pass
     if (choice == 0)
     {
@@ -1421,6 +1461,16 @@ void tui_choose_pay(game *g, int who, int which, int list[], int *num,
         while (!payment_complete)
         {
             int selected_card = get_card_choice(g, who, temp_list, combined_num - (total_regular + total_special), "Enter card number to use for payment");
+
+            // Check for undo/redo commands
+            if (selected_card < -99)
+            {
+                // Signal undo/redo by setting special value in list[0]
+                list[0] = selected_card;
+                *num = 1;
+                *num_special = 0;
+                return;
+            }
 
             // Check if this is a special card based on our tracking array
             if (is_special[selected_card - 1])
