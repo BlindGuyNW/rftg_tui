@@ -266,7 +266,7 @@ CommandOutcome handle_common_commands(game *g, char *input, int who)
         /* Return special redo game command */
         return CMD_REDO_GAME;
     }
-    else if (strcmp(input, "n") == 0)
+    else if (strcmp(input, "new") == 0)
     {
         /* Return new game command */
         return CMD_NEW_GAME;
@@ -2124,7 +2124,8 @@ int tui_new_game_menu(options *opt)
         printf("\033[2J\033[H");
         
         /* Display header */
-        printf("=== New Game Setup ===\n\n");
+        printf("=== New Game Setup ===\n");
+        printf("WARNING: Starting a new game will overwrite your existing autosave!\n\n");
         
         /* Display current settings */
         printf("Current settings:\n");
