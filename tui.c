@@ -2009,6 +2009,7 @@ int tui_new_game_menu(options *opt)
         printf("Enter number to change setting (1-7)\n");
         printf("Enter 's' to start game with these settings\n");
         printf("Enter 'l' to load saved game\n");
+        printf("Enter 'a' to continue from autosave\n");
         printf("Enter 'c' to cancel\n");
         printf("Choice: ");
         
@@ -2054,6 +2055,18 @@ int tui_new_game_menu(options *opt)
             }
             /* Load failed or cancelled - continue showing menu */
             continue;
+        }
+        
+        /* Check for autosave */
+        if (strcmp(input, "a") == 0)
+        {
+            /* Try to load autosave directly */
+            extern char *load_filename;
+            if (load_filename) free(load_filename);
+            load_filename = strdup("autosave.rftg");
+            
+            printf("Loading autosave...\n");
+            return 2; /* Special return code for "loaded game" */
         }
         
         /* Parse numeric choice */
