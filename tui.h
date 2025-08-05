@@ -51,7 +51,7 @@ void display_cards(game *g, int list[], int num, const char *message);
     void tui_choose_defend(game *g, int who, int list[], int *num);
     void tui_choose_takeover_prevent(game *g, int who, int list[], int *num, int special[]);
     void tui_choose_upgrade(game *g, int who, int list[], int *num, int special[], int *num_special);
-    int tui_choose_ante(game *g, int who, int min, int max);
+    int tui_choose_ante(game *g, int who, int list[], int num);
     void tui_choose_keep(game *g, int who, int list[], int *num, int min, int max);
     void tui_choose_produce(game *g, int who, int list[], int *num);
     void tui_choose_discard_produce(game *g, int who, int list[], int *num, int discard);

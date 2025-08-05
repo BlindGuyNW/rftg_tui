@@ -1435,7 +1435,7 @@ static void gui_make_choice(game *g, int who, int type, int list[], int *nl,
 	/* Choose ante for gambling */
 	case CHOICE_ANTE:
 
-		rv = tui_choose_ante(g, who, arg1, arg2);
+		rv = tui_choose_ante(g, who, list, *nl);
 		break;
 	/* Choose cards to keep */
 	case CHOICE_KEEP:

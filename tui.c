@@ -2455,11 +2455,19 @@ void tui_choose_upgrade(game *g, int who, int list[], int *num, int special[], i
 /*
  * Choose ante for gambling.
  */
-int tui_choose_ante(game *g, int who, int min, int max)
+int tui_choose_ante(game *g, int who, int list[], int num)
 {
     int choice;
     
-    printf("Choose ante to gamble (minimum %d, maximum %d): ", min, max);
+    /* Check for no cards available */
+    if (num == 0)
+    {
+        printf("No cards available to ante.\n");
+        return -1;
+    }
+    
+    /* Display available cards */
+    display_cards(g, list, num, "Choose a card to ante (0 to skip):");
     
     while (1)
     {
@@ -2474,13 +2482,19 @@ int tui_choose_ante(game *g, int who, int min, int max)
             continue;
         }
         
-        /* Validate choice */
-        if (choice >= min && choice <= max)
+        /* Check for skip */
+        if (choice == 0)
         {
-            return choice;
+            return -1;
         }
         
-        printf("Invalid choice. Please select %d-%d: ", min, max);
+        /* Validate choice */
+        if (choice >= 1 && choice <= num)
+        {
+            return list[choice - 1];
+        }
+        
+        printf("Invalid choice. Please select 1-%d or 0 to skip: ", num);
     }
 }
 
