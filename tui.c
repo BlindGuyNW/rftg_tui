@@ -2105,6 +2105,97 @@ void display_military(game *g)
 }
 
 /*
+ * Display campaign selection menu and get user choice.
+ * Returns selected campaign name or NULL for no campaign.
+ */
+static char* tui_select_campaign(void)
+{
+    char input[256];
+    int choice, i;
+    
+    while (1)
+    {
+        /* Clear screen */
+        printf("\033[2J\033[H");
+        
+        /* Display header */
+        printf("=== Select Campaign ===\n\n");
+        
+        /* Show "None" option */
+        printf("0. None (regular game)\n\n");
+        
+        /* Show available campaigns */
+        for (i = 0; i < num_campaign; i++)
+        {
+            printf("%d. %s\n", i + 1, camp_library[i].name);
+            
+            /* Show description if available */
+            if (camp_library[i].desc && strlen(camp_library[i].desc) > 0)
+            {
+                printf("   %s\n", camp_library[i].desc);
+            }
+            printf("\n");
+        }
+        
+        printf("Enter campaign number (0-%d) or 'x' to cancel: ", num_campaign);
+        
+        /* Get user input */
+        if (fgets(input, sizeof(input), stdin) == NULL)
+        {
+            return NULL;
+        }
+        input[strcspn(input, "\n")] = 0;
+        
+        /* Check for cancel */
+        if (strcmp(input, "x") == 0 || strcmp(input, "X") == 0)
+        {
+            return NULL;
+        }
+        
+        /* Parse choice */
+        choice = atoi(input);
+        
+        /* Check for "None" */
+        if (choice == 0)
+        {
+            return strdup(""); /* Empty string means no campaign */
+        }
+        
+        /* Validate campaign choice */
+        if (choice >= 1 && choice <= num_campaign)
+        {
+            return strdup(camp_library[choice - 1].name);
+        }
+        
+        /* Invalid choice */
+        printf("Invalid choice. Press Enter to continue...");
+        fgets(input, sizeof(input), stdin);
+    }
+}
+
+/*
+ * Find campaign by name in library.
+ * Returns pointer to campaign or NULL if not found.
+ */
+static campaign* tui_find_campaign(const char* name)
+{
+    int i;
+    
+    if (!name || strlen(name) == 0)
+        return NULL;
+    
+    for (i = 0; i < num_campaign; i++)
+    {
+        if (strcmp(camp_library[i].name, name) == 0)
+        {
+            return &camp_library[i];
+        }
+    }
+    
+    return NULL;
+}
+
+/*
  * Display new game menu and get parameters from user.
  * Returns 1 if user wants to start a new game, 2 if loaded a game, 0 if cancelled.
  */
@@ -2117,6 +2208,10 @@ int tui_new_game_menu(options *opt)
     
     /* Copy current options to temporary */
     memcpy(&temp_opt, opt, sizeof(options));
+    
+    /* Initialize campaign_name if needed */
+    if (!temp_opt.campaign_name)
+        temp_opt.campaign_name = "";
     
     while (1)
     {
@@ -2171,8 +2266,26 @@ int tui_new_game_menu(options *opt)
             printf("Random\n");
         }
         
+        /* Show campaign option */
+        printf("8. Campaign: ");
+        if (temp_opt.campaign_name && strlen(temp_opt.campaign_name) > 0)
+        {
+            printf("%s", temp_opt.campaign_name);
+            /* Show if campaign overrides settings */
+            campaign *camp = tui_find_campaign(temp_opt.campaign_name);
+            if (camp)
+            {
+                printf(" (overrides expansion/players/goals/takeovers)");
+            }
+        }
+        else
+        {
+            printf("None");
+        }
         printf("\n");
-        printf("Enter number to change setting (1-7)\n");
+        
+        printf("\n");
+        printf("Enter number to change setting (1-8)\n");
         printf("Enter 's' to start game with these settings\n");
         printf("Enter 'l' to load saved game\n");
         printf("Enter 'a' to continue from autosave\n");
@@ -2189,17 +2302,52 @@ int tui_new_game_menu(options *opt)
         /* Check for start game */
         if (strcmp(input, "s") == 0)
         {
-            /* Validate and adjust player count */
-            if (temp_opt.num_players > max_players)
+            campaign *selected_campaign = NULL;
+            
+            /* Check if campaign is selected and valid */
+            if (temp_opt.campaign_name && strlen(temp_opt.campaign_name) > 0)
             {
-                temp_opt.num_players = max_players;
+                selected_campaign = tui_find_campaign(temp_opt.campaign_name);
+                if (!selected_campaign)
+                {
+                    printf("Error: Campaign '%s' not found!\n", temp_opt.campaign_name);
+                    printf("Press Enter to continue...");
+                    fgets(input, sizeof(input), stdin);
+                    continue;
+                }
+                
+                /* Show campaign override warning */
+                printf("\nCampaign '%s' will override the following settings:\n", selected_campaign->name);
+                printf("- Expansion: %s\n", exp_names[selected_campaign->expanded]);
+                printf("- Players: %d\n", selected_campaign->num_players);
+                if (selected_campaign->advanced)
+                    printf("- Two-player advanced: Yes\n");
+                if (selected_campaign->goal_disabled)
+                    printf("- Goals: Disabled\n");
+                if (selected_campaign->takeover_disabled)
+                    printf("- Takeovers: Disabled\n");
+                printf("\nProceed? (y/n): ");
+                
+                if (fgets(input, sizeof(input), stdin) != NULL)
+                {
+                    input[strcspn(input, "\n")] = 0;
+                    if (strcmp(input, "y") != 0 && strcmp(input, "Y") != 0)
+                    {
+                        continue;
+                    }
+                }
+            }
+            else
+            {
+                /* Regular game - validate and adjust player count */
+                if (temp_opt.num_players > max_players)
+                {
+                    temp_opt.num_players = max_players;
+                }
             }
             
             /* Copy temporary options back */
             memcpy(opt, &temp_opt, sizeof(options));
-            
-            /* Clear campaign */
-            opt->campaign_name = "";
             
             return 1;
         }
@@ -2347,6 +2495,19 @@ int tui_new_game_menu(options *opt)
                         unsigned int seed = (unsigned int)strtoul(input, NULL, 10);
                         temp_opt.seed = seed;
                         temp_opt.customize_seed = 1;
+                    }
+                }
+                break;
+                
+            case 8:
+                /* Select campaign */
+                {
+                    char *new_campaign = tui_select_campaign();
+                    if (new_campaign != NULL)
+                    {
+                        if (temp_opt.campaign_name && temp_opt.campaign_name != opt->campaign_name)
+                            free(temp_opt.campaign_name);
+                        temp_opt.campaign_name = new_campaign;
                     }
                 }
                 break;
