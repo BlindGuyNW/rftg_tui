@@ -2792,6 +2792,16 @@ static char *name_produce(design *d_ptr, power *o_ptr, char *buf)
 	{
 		sprintf(buf, "Draw 1 card if %s produced a good", d_ptr->name);
 	}
+	/* Discard to produce combination */
+	else if ((o_ptr->code & P5_DISCARD) && (o_ptr->code & P5_PRODUCE))
+	{
+		sprintf(buf, "Discard 1 card to produce on %s", d_ptr->name);
+	}
+	/* Discard to produce windfall combination */
+	else if ((o_ptr->code & P5_DISCARD) && (o_ptr->code & P5_WINDFALL_ANY))
+	{
+		sprintf(buf, "Discard 1 card to produce on any windfall world");
+	}
 	/* Discard power modifier */
 	else if (o_ptr->code & P5_DISCARD)
 	{
@@ -2959,6 +2969,31 @@ char *name_settle(power *o_ptr, char *buf)
 		else if (o_ptr->code & P3_EXTRA_MILITARY)
 		{
 			sprintf(buf, "Discard this card to gain +%d military", o_ptr->value);
+		}
+		else if (o_ptr->code & P3_CONQUER_SETTLE)
+		{
+			if (o_ptr->code & P3_PRESTIGE)
+				sprintf(buf, "Discard this card to conquer a world with prestige");
+			else if (o_ptr->code & P3_NO_TAKEOVER)
+				sprintf(buf, "Discard this card to conquer a world (-%d defense, no takeover)", o_ptr->value);
+			else
+				sprintf(buf, "Discard this card to conquer a world");
+		}
+		else if (o_ptr->code & P3_TAKEOVER_MILITARY)
+		{
+			sprintf(buf, "Discard this card to perform military takeover");
+		}
+		else if (o_ptr->code & P3_TAKEOVER_IMPERIUM)
+		{
+			sprintf(buf, "Discard this card to perform Imperium takeover (-%d defense)", o_ptr->value);
+		}
+		else if (o_ptr->code & P3_PLACE_MILITARY)
+		{
+			sprintf(buf, "Discard this card to place as military world");
+		}
+		else if (o_ptr->code & P3_PLACE_ZERO)
+		{
+			sprintf(buf, "Discard this card to place as 0-cost development");
 		}
 		else
 		{
