@@ -3094,6 +3094,10 @@ char *name_settle(power *o_ptr, char *buf)
 	{
 		sprintf(buf, "+1 defense for military worlds, +2 for Rebel military worlds");
 	}
+	else if (o_ptr->code & P3_TAKEOVER_IMPERIUM)
+	{
+		sprintf(buf, "May perform Imperium takeover (-%d defense)", o_ptr->value);
+	}
 	else
 	{
 		sprintf(buf, "Unknown settle power");
