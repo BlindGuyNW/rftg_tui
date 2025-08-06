@@ -3078,6 +3078,22 @@ char *name_settle(power *o_ptr, char *buf)
 	{
 		sprintf(buf, "Gain prestige when you take over opponent worlds");
 	}
+	else if (o_ptr->code & P3_PAY_DISCOUNT)
+	{
+		if (o_ptr->value > 0)
+		{
+			sprintf(buf, "-%d cards when using 'pay for military' powers", 
+			        o_ptr->value);
+		}
+		else
+		{
+			sprintf(buf, "No discount when using 'pay for military' powers");
+		}
+	}
+	else if (o_ptr->code & P3_TAKEOVER_DEFENSE)
+	{
+		sprintf(buf, "+1 defense for military worlds, +2 for Rebel military worlds");
+	}
 	else
 	{
 		sprintf(buf, "Unknown settle power");
